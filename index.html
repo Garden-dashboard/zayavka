@@ -1,0 +1,2708 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zayavka Qidiruv</title>
+<style>
+  :root {
+    --bg: #eef1ee;
+    --surface: #ffffff;
+    --surface-2: #e3e7e0;
+    --text: #1c2420;
+    --text-muted: #5b6960;
+    --accent: #c1440e;
+    --accent-ink: #ffffff;
+    --accent-2: #2f6b4f;
+    --border: #d5dad1;
+    --shadow: 0 1px 2px rgba(28, 36, 32, 0.06), 0 4px 14px rgba(28, 36, 32, 0.05);
+    --overlay: rgba(20, 24, 20, 0.42);
+    --radius: 14px;
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12100b;
+      --surface: #1c1912;
+      --surface-2: #262219;
+      --text: #f1ece1;
+      --text-muted: #a89d89;
+      --accent: #ff7a3d;
+      --accent-ink: #1c1912;
+      --accent-2: #6ec096;
+      --border: #37311f;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+      --overlay: rgba(0, 0, 0, 0.6);
+      color-scheme: dark;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #12100b;
+    --surface: #1c1912;
+    --surface-2: #262219;
+    --text: #f1ece1;
+    --text-muted: #a89d89;
+    --accent: #ff7a3d;
+    --accent-ink: #1c1912;
+    --accent-2: #6ec096;
+    --border: #37311f;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+    --overlay: rgba(0, 0, 0, 0.6);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: contain;
+  }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    background: var(--bg);
+    padding: 18px 16px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 4px;
+  }
+
+  h1 {
+    margin: 0 0 14px;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  .search-wrap {
+    position: relative;
+  }
+
+  #q {
+    width: 100%;
+    font-size: 17px;
+    font-family: inherit;
+    padding: 14px 44px 14px 16px;
+    border-radius: var(--radius);
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+    box-shadow: var(--shadow);
+  }
+
+  #q:focus {
+    border-color: var(--accent);
+  }
+
+  #clearBtn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: var(--surface-2);
+    color: var(--text-muted);
+    border-radius: 50%;
+    font-size: 16px;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  #clearBtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  /* 2026-09-05: foydalanuvchi so'rovi bilan -- har bir login o'zi yuborgan
+     zayavkalarni sana bo'yicha ko'ra oladigan Arxiv paneli (barcha login/
+     destinatsiyalar uchun, sof QO'SHIMCHA -- mavjud qidiruv/savat oqimiga
+     hech qanday ta'sir qilmaydi). */
+  /* 2026-09-27: "Arxiv" tugmasi chap panelga ko'chdi (.sb-item),
+     shuning uchun eski .header-top-row / .archive-btn qoidalari olib tashlandi. */
+  .archive-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--overlay);
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 200;
+  }
+  .archive-overlay.open { display: flex; }
+  @media (min-width: 560px) {
+    .archive-overlay { align-items: center; }
+  }
+
+  .archive-panel {
+    background: var(--surface);
+    width: 100%;
+    max-width: 520px;
+    max-height: 85vh;
+    border-radius: 18px 18px 0 0;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow);
+  }
+  @media (min-width: 560px) {
+    .archive-panel { border-radius: 18px; max-height: 78vh; }
+  }
+
+  .archive-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .archive-head h2 { margin: 0; font-size: 16px; font-weight: 800; }
+  .archive-head .who { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .archive-close {
+    border: none;
+    background: var(--surface-2);
+    color: var(--text-muted);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .archive-close:hover { color: var(--text); }
+
+  .day-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 12px 18px 4px;
+    align-items: center;
+  }
+  .day-tabs-scroll {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    flex: 1;
+    min-width: 0;
+  }
+  .day-tab {
+    flex-shrink: 0;
+    border: 1.5px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text-muted);
+    border-radius: 999px;
+    padding: 7px 13px;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .day-tab.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .cal-toggle {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text);
+    font-size: 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .cal-toggle.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
+  .calendar {
+    display: none;
+    margin: 4px 18px 8px;
+    padding: 10px 4px 4px;
+    border-top: 1px solid var(--border);
+  }
+  .calendar.open { display: block; }
+  .cal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 6px 8px;
+  }
+  .cal-head .cal-month { font-size: 13.5px; font-weight: 800; }
+  .cal-nav {
+    border: none;
+    background: var(--surface-2);
+    color: var(--text);
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .cal-nav:disabled { opacity: 0.3; cursor: not-allowed; }
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+  }
+  .cal-dow {
+    text-align: center;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--text-muted);
+    padding: 4px 0 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+  .cal-day {
+    position: relative;
+    aspect-ratio: 1;
+    border: none;
+    background: none;
+    color: var(--text);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .cal-day:hover { background: var(--surface-2); }
+  .cal-day.other-month { color: var(--text-muted); opacity: 0.35; pointer-events: none; }
+  .cal-day.today { box-shadow: inset 0 0 0 1.5px var(--accent-2); }
+  .cal-day.selected { background: var(--accent); color: var(--accent-ink); }
+  .cal-day.future { color: var(--text-muted); opacity: 0.35; pointer-events: none; }
+  .cal-day .cal-dot {
+    position: absolute;
+    bottom: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--accent-2);
+  }
+  .cal-day.selected .cal-dot { background: var(--accent-ink); }
+
+  .archive-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px 18px 18px;
+  }
+  .archive-empty {
+    padding: 30px 4px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13.5px;
+  }
+  .archive-loading {
+    padding: 30px 4px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13.5px;
+  }
+
+  .dest-group { margin-top: 16px; }
+  .dest-group:first-child { margin-top: 10px; }
+  .dest-name {
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--accent-2);
+    margin-bottom: 6px;
+  }
+  .arch-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+  .arch-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: var(--surface-2);
+    border-radius: 9px;
+    padding: 8px 11px;
+    font-size: 13.5px;
+  }
+  .arch-item .qty { font-variant-numeric: tabular-nums; color: var(--text-muted); flex-shrink: 0; }
+
+  .archive-summary {
+    padding: 10px 18px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+  }
+  .archive-summary b { color: var(--text); }
+
+  /* 2026-09-27: chap panelli joylashuvda `main` va `.cart` endi ustunlar
+     ichida turadi -- eski "markazga tortish" (max-width + margin:auto)
+     olib tashlandi, ular ustun kengligini to'liq egallaydi. */
+  main {
+    flex: 1;
+    width: 100%;
+    padding: 12px 0 0;
+  }
+
+  .cart {
+    width: 400px;
+    flex-shrink: 0;
+    align-self: flex-start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 14px 0;
+    display: block;
+  }
+
+  .cart-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .cart-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .cart-clear {
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    font-size: 12px;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 4px;
+  }
+  .cart-date-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .cart-date-label {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  /* .cart-date-input olib tashlandi -- qabul qiluvchi tanlovi tepa qatorga
+     ko'chdi (.ctl-select). .cart-date-row/.cart-date-label hamon
+     Inventarizatsiya bo'limidagi sana tanlovi uchun ishlatiladi. */
+  .date-toggle {
+    flex: 1;
+    display: flex;
+    gap: 6px;
+  }
+  .date-toggle-btn {
+    flex: 1;
+    font-size: 13.5px;
+    font-family: inherit;
+    font-weight: 600;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+  }
+  .date-toggle-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+  }
+
+  ul#cartList {
+    list-style: none;
+    margin: 0 0 10px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  li.cart-item {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 9px 8px 9px 12px;
+    display: flex;
+    flex-direction: column;
+  }
+  .cart-item-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .comment-toggle {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 15px;
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .comment-toggle:hover { background: var(--border); }
+  .comment-toggle.has-comment { color: var(--accent-2); }
+  .comment-box { display: none; margin-top: 6px; }
+  .comment-box.open { display: block; }
+  .comment-box input {
+    width: 100%;
+    font-family: inherit;
+    font-size: 16px;
+    padding: 7px 9px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+  }
+  .comment-box input:focus { border-color: var(--accent); }
+  .comment-pill {
+    margin-top: 4px;
+    font-size: 11.5px;
+    color: var(--accent-2);
+    cursor: pointer;
+  }
+
+  .cart-item-name {
+    flex: 1;
+    font-size: 13.5px;
+    line-height: 1.35;
+  }
+
+  .cart-qty {
+    width: 80px;
+    flex-shrink: 0;
+    font-size: 16px;
+    font-family: inherit;
+    padding: 7px 6px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    text-align: center;
+  }
+  .cart-qty:focus { outline: none; border-color: var(--accent); }
+  .cart-qty-unit { font-size: 11px; color: var(--text-muted); flex-shrink: 0; min-width: 18px; }
+
+  .cart-remove {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 17px;
+    cursor: pointer;
+    border-radius: 50%;
+  }
+  .cart-remove:hover { background: var(--border); }
+
+  .cart-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .cart-send-btn, .cart-copy-btn {
+    flex: 1;
+    padding: 13px;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 14.5px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .cart-send-btn {
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+  .cart-copy-btn {
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .cart-send-btn:active, .cart-copy-btn:active { opacity: 0.85; }
+
+  .idle {
+    padding: 40px 8px 8px;
+    color: var(--text-muted);
+  }
+  .idle p { margin: 0 0 10px; font-size: 14px; line-height: 1.6; }
+  .idle .hint-examples {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .hint-chip {
+    font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    cursor: pointer;
+  }
+  .hint-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  ul#results {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  li.result {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 13px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: transform 0.08s ease;
+  }
+  li.result:active { transform: scale(0.98); }
+  li.result:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .result-name {
+    font-size: 15px;
+    line-height: 1.4;
+    font-weight: 600;
+  }
+  .result-name mark {
+    background: transparent;
+    color: var(--accent);
+    font-weight: 800;
+  }
+
+  .copy-affordance {
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 5px 9px;
+    white-space: nowrap;
+  }
+
+  .empty-state {
+    padding: 32px 8px;
+    text-align: center;
+    color: var(--text-muted);
+  }
+  .empty-state .big { font-size: 28px; margin-bottom: 8px; }
+
+  #toast {
+    position: fixed;
+    left: 50%;
+    bottom: 22px;
+    transform: translate(-50%, 12px);
+    background: var(--accent);
+    color: var(--accent-ink);
+    padding: 11px 20px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 700;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    box-shadow: var(--shadow);
+    z-index: 50;
+    max-width: calc(100vw - 32px);
+    text-align: center;
+  }
+  #toast.show {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    li.result, #toast { transition: none; }
+  }
+
+  .lock-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .lock-card {
+    width: 100%;
+    max-width: 340px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 26px 22px;
+  }
+  .lock-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 4px;
+  }
+  .lock-title {
+    margin: 0 0 18px;
+    font-size: 19px;
+    font-weight: 800;
+  }
+  .lock-field {
+    margin-bottom: 12px;
+  }
+  .lock-field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+  }
+  .lock-field input {
+    width: 100%;
+    font-size: 16px;
+    font-family: inherit;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+  }
+  .lock-field input:focus { outline: none; border-color: var(--accent); }
+  .lock-btn {
+    width: 100%;
+    margin-top: 6px;
+    padding: 13px;
+    border: none;
+    border-radius: var(--radius);
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .lock-btn:active { opacity: 0.85; }
+  .lock-error {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--accent);
+    text-align: center;
+    min-height: 18px;
+  }
+
+  footer {
+    text-align: center;
+    padding: 20px 16px 26px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  footer p { margin: 4px 0; }
+  .qr-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 10px !important;
+  }
+  .qr-hint {
+    max-width: 260px;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    line-height: 1.5;
+  }
+  .qr-img {
+    display: block;
+    margin: 0 auto 8px;
+    border-radius: 8px;
+    background: #fff;
+    padding: 6px;
+    box-shadow: var(--shadow);
+  }
+
+  /* 2026-09-22: foydalanuvchi so'rovi bilan -- Горячий склад (Sawa/Suxrob)
+     loginlari uchun "Inventarizatsiya" bo'limi. Faqat shu loginlar uchun
+     ko'rinadi, "Zayavka" oqimiga hech qanday ta'sir qilmaydi. */
+  /* ---- 2026-09-27: "haqiqiy dastur" ko'rinishi -- chap panel (sidebar).
+     Namuna foydalanuvchi tomonidan tasdiqlangач joylandi. Barcha id'lar
+     va JS mantig'i o'zgarmagan, faqat joylashuv va uslub. Telefonda chap
+     panel PASTKI qatorga aylanadi (oshpazlar telefonda ishlaydi). ---- */
+  .app { display: flex; min-height: 100vh; align-items: stretch; }
+
+  .sidebar {
+    width: 236px;
+    flex-shrink: 0;
+    background: #141a17;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 0 16px;
+  }
+  .sb-brand {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 16px 18px; margin-bottom: 12px;
+    border-bottom: 1px solid #253029;
+  }
+  .sb-logo {
+    width: 34px; height: 34px; flex-shrink: 0; border-radius: 9px;
+    background: var(--accent); display: flex; align-items: center; justify-content: center;
+  }
+  .sb-brand-text { display: flex; flex-direction: column; min-width: 0; }
+  .sb-brand-name { color: #ffffff; font-size: 14px; font-weight: 700; letter-spacing: -0.01em; }
+  .sb-brand-sub { color: #8b9a90; font-size: 11.5px; margin-top: 1px; }
+
+  .sb-nav { display: flex; flex-direction: column; gap: 4px; padding: 0 10px; }
+  .sb-item {
+    display: flex; align-items: center; gap: 11px;
+    min-height: 46px; padding: 0 13px;
+    border: none; border-radius: 10px;
+    background: none; color: #b3c1b8;
+    font-family: inherit; font-size: 14px; font-weight: 500;
+    text-align: left; cursor: pointer;
+  }
+  .sb-ico { flex-shrink: 0; }
+  .sb-item:hover { background: #1e2a23; color: #ffffff; }
+  .sb-item.active { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .sb-item.active:hover { background: var(--accent); color: var(--accent-ink); }
+
+  .sb-user {
+    margin-top: auto; padding: 13px 16px 0;
+    border-top: 1px solid #253029;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .sb-avatar {
+    width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%;
+    background: var(--accent-2); color: #ffffff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; text-transform: uppercase;
+  }
+  .sb-user-text { display: flex; flex-direction: column; min-width: 0; }
+  .sb-user-name { color: #ffffff; font-size: 13px; font-weight: 600; }
+  .sb-user-role { color: #8b9a90; font-size: 11px; }
+
+  .app-main { flex-grow: 1; min-width: 0; display: flex; flex-direction: column; }
+
+  .topbar {
+    flex-shrink: 0;
+    padding: 16px 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  .topbar-text { flex-grow: 1; min-width: 180px; }
+  .topbar-text h1 { margin: 0; font-size: 21px; }
+  .topbar-controls { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .ctl-group { display: flex; align-items: center; gap: 8px; }
+  .ctl-label { font-size: 12.5px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+  .ctl-select {
+    min-height: 44px; min-width: 180px; padding: 0 10px;
+    font-size: 16px; font-family: inherit;
+    border-radius: 10px; border: 1.5px solid var(--border);
+    background: var(--surface); color: var(--text);
+  }
+  .ctl-select:focus { outline: none; border-color: var(--accent); }
+
+  .app-body { flex-grow: 1; min-height: 0; display: flex; gap: 18px; padding: 18px 20px 28px; }
+  .col-left { flex-grow: 1; min-width: 0; display: flex; flex-direction: column; }
+
+  body.mode-inventory .col-left,
+  body.mode-inventory .cart,
+  body.mode-adminlist .col-left,
+  body.mode-adminlist .cart { display: none !important; }
+  #inventorySection { display: none; flex-grow: 1; min-width: 0; }
+  body.mode-inventory #inventorySection { display: block; }
+
+  .inv-sub { margin: 0 0 16px; font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+  ul#inventoryList { list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  li.inv-item {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 9px 12px;
+  }
+  .inv-item-name { flex: 1; font-size: 13.5px; }
+  .inv-qty {
+    width: 84px; flex-shrink: 0; font-size: 16px; font-family: inherit;
+    padding: 7px 6px; border-radius: 8px; border: 1.5px solid var(--border);
+    background: var(--surface); color: var(--text); text-align: center;
+  }
+  .inv-qty:focus { outline: none; border-color: var(--accent); }
+  .inv-unit { font-size: 11px; color: var(--text-muted); flex-shrink: 0; min-width: 22px; }
+  .inv-result { font-size: 13px; color: var(--accent-2); min-height: 18px; margin: 8px 2px 0; }
+
+  /* 2026-09-27: FAQAT admin login uchun -- "Ro'yxat" bo'limi. Zayavka
+     ro'yxatlariga iikodagi mahsulotni qo'shish/olib tashlash, ombor
+     (manba) belgilash. Zayavka/Inventarizatsiya oqimlariga tegmaydi. */
+  body.mode-adminlist #inventorySection { display: none !important; }
+  #adminListSection { display: none; flex-grow: 1; min-width: 0; }
+  body.mode-adminlist #adminListSection { display: block; }
+  .al-cols { display: flex; gap: 16px; align-items: flex-start; }
+  .al-col { flex: 1 1 0; min-width: 0; }
+
+  /* Katta ekranda chap panel va tepa qator joyida turadi, faqat ichki
+     qism aylanadi -- haqiqiy dastur hissi shundan. */
+  @media (min-width: 901px) {
+    .sidebar { position: sticky; top: 0; height: 100vh; }
+    .topbar { position: sticky; top: 0; z-index: 10; }
+    footer { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--border); }
+  }
+
+  /* ---- TELEFON: chap panel PASTKI qatorga aylanadi ---- */
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 120;
+      width: auto; height: auto;
+      flex-direction: row; gap: 4px;
+      padding: 7px 7px calc(7px + env(safe-area-inset-bottom, 0px));
+      border-top: 1px solid #253029;
+    }
+    .sb-brand, .sb-user { display: none; }
+    .sb-nav {
+      flex-direction: row; flex-grow: 1; gap: 4px; padding: 0;
+    }
+    .sb-item {
+      flex: 1 1 0; min-width: 0;
+      flex-direction: column; justify-content: center; gap: 3px;
+      min-height: 52px; padding: 0 4px;
+      font-size: 10.5px; font-weight: 600; text-align: center;
+    }
+    .sb-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+    .app-main { padding-bottom: 74px; }
+    .topbar { padding: 14px 16px; gap: 12px; }
+    .topbar-text h1 { font-size: 19px; }
+    .topbar-controls { width: 100%; flex-direction: column; align-items: stretch; gap: 9px; }
+    .ctl-group { justify-content: space-between; }
+    .ctl-select { flex-grow: 1; min-width: 0; }
+    .app-body { flex-direction: column; gap: 14px; padding: 14px 16px 20px; }
+    .cart { width: auto; align-self: stretch; }
+    .al-cols { flex-direction: column; }
+  }
+
+  .al-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .al-label { font-size: 12.5px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+  .al-select {
+    flex: 1; min-width: 200px; font-size: 16px; font-family: inherit;
+    padding: 9px 10px; border-radius: 8px; border: 1.5px solid var(--border);
+    background: var(--surface); color: var(--text);
+  }
+  .al-select:focus { outline: none; border-color: var(--accent); }
+  .al-search {
+    width: 100%; font-size: 16px; font-family: inherit;
+    padding: 12px 14px; border-radius: 10px; border: 1.5px solid var(--border);
+    background: var(--surface); color: var(--text); box-shadow: var(--shadow);
+  }
+  .al-search:focus { outline: none; border-color: var(--accent); }
+  .al-section-title {
+    font-size: 11.5px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--text-muted); margin: 18px 0 8px;
+  }
+  ul.al-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+  li.al-item {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 9px; padding: 8px 10px 8px 12px;
+  }
+  li.al-item.al-new { border-color: var(--accent-2); background: color-mix(in srgb, var(--accent-2) 10%, var(--surface-2)); }
+  .al-name { flex: 1; font-size: 13.5px; line-height: 1.35; }
+  .al-unit { font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
+  .al-src { font-size: 10.5px; color: var(--text-muted); flex-shrink: 0; max-width: 130px; text-align: right; }
+  .al-src.al-missing { color: var(--accent); font-weight: 700; }
+  .al-btn {
+    flex-shrink: 0; border: none; border-radius: 7px; cursor: pointer;
+    font-family: inherit; font-size: 12px; font-weight: 700; padding: 7px 11px;
+  }
+  .al-add { background: var(--accent-2); color: #fff; }
+  .al-del { background: none; color: var(--text-muted); font-size: 20px; line-height: 1; padding: 2px 8px; }
+  .al-srcpick { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+  .al-srcpick button {
+    border: 1.5px solid var(--border); background: var(--surface); color: var(--text);
+    border-radius: 7px; padding: 6px 9px; font-size: 11.5px; font-family: inherit; cursor: pointer;
+  }
+  .al-srcpick button:hover { border-color: var(--accent); }
+  .al-hint { font-size: 12px; color: var(--text-muted); line-height: 1.5; margin: 0 0 14px; }
+  .al-status { font-size: 13px; min-height: 20px; margin: 12px 2px 0; color: var(--accent-2); }
+  .al-status.al-err { color: var(--accent); }
+  .al-save {
+    width: 100%; margin-top: 16px; padding: 14px; border: none; border-radius: 12px;
+    background: var(--accent); color: var(--accent-ink);
+    font-size: 15px; font-weight: 800; font-family: inherit; cursor: pointer;
+  }
+  .al-save:disabled { opacity: 0.55; cursor: default; }
+  .al-dirty { color: var(--accent); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-card">
+    <p class="lock-eyebrow">Zagotovka</p>
+    <h2 class="lock-title">Kirish</h2>
+    <form id="lockForm">
+      <div class="lock-field">
+        <label for="lockLogin">Login</label>
+        <input type="text" id="lockLogin" autocomplete="username" autocapitalize="off" spellcheck="false" />
+      </div>
+      <div class="lock-field">
+        <label for="lockPass">Parol</label>
+        <input type="password" id="lockPass" autocomplete="current-password" inputmode="numeric" />
+      </div>
+      <button type="submit" class="lock-btn" id="lockSubmitBtn">Kirish</button>
+      <p class="lock-error" id="lockError"></p>
+    </form>
+  </div>
+</div>
+
+<div class="app" id="app">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-brand">
+      <span class="sb-logo" aria-hidden="true">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4z"></path><path d="M3 12l9 4 9-4"></path><path d="M3 17l9 4 9-4"></path></svg>
+      </span>
+      <span class="sb-brand-text">
+        <span class="sb-brand-name">Olimp Zagotovka</span>
+        <span class="sb-brand-sub">Zayavka tizimi</span>
+      </span>
+    </div>
+
+    <nav class="sb-nav" id="modeTabs">
+      <button class="sb-item active" id="tabZayavkaBtn" type="button">
+        <svg class="sb-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6a1 1 0 011 1v1H8V4a1 1 0 011-1z"></path><path d="M16 5h2a1 1 0 011 1v14a1 1 0 01-1 1H6a1 1 0 01-1-1V6a1 1 0 011-1h2"></path><path d="M9 11h6M9 15h4"></path></svg>
+        <span>Zayavka</span>
+      </button>
+      <button class="sb-item" id="tabInventoryBtn" type="button">
+        <svg class="sb-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="6" rx="1"></rect><path d="M5 10v9a1 1 0 001 1h12a1 1 0 001-1v-9"></path><path d="M10 14h4"></path></svg>
+        <span>Inventarizatsiya</span>
+      </button>
+      <button class="sb-item" id="tabAdminListBtn" type="button" style="display:none">
+        <svg class="sb-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M4 12h16M4 18h7"></path><circle cx="18" cy="6" r="2"></circle><circle cx="15" cy="18" r="2"></circle></svg>
+        <span>Ro'yxat</span>
+      </button>
+      <button class="sb-item" id="archiveBtn" type="button">
+        <svg class="sb-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="4" rx="1"></rect><path d="M5 8v11a1 1 0 001 1h12a1 1 0 001-1V8"></path><path d="M10 12h4"></path></svg>
+        <span>Arxiv</span>
+      </button>
+    </nav>
+
+    <div class="sb-user">
+      <span class="sb-avatar" id="sbAvatar">&middot;</span>
+      <span class="sb-user-text">
+        <span class="sb-user-name" id="sbLogin">&nbsp;</span>
+        <span class="sb-user-role" id="sbRole">&nbsp;</span>
+      </span>
+    </div>
+  </aside>
+
+  <div class="app-main">
+
+    <header class="topbar">
+      <div class="topbar-text">
+        <p class="eyebrow" id="pageEyebrow">Zagotovka &middot; Ombor katalogi</p>
+        <h1 id="pageTitle">Mahsulot nomini toping</h1>
+      </div>
+      <div class="topbar-controls" id="topbarControls">
+        <div class="ctl-group">
+          <label class="ctl-label" for="cartDestSelect">🏢 Qabul qiluvchi</label>
+          <select class="ctl-select" id="cartDestSelect"></select>
+        </div>
+        <div class="ctl-group">
+          <span class="ctl-label">📅 Sana</span>
+          <div class="date-toggle" id="dateToggle">
+            <button type="button" class="date-toggle-btn active" data-day="0">Bugun</button>
+            <button type="button" class="date-toggle-btn" data-day="1">Ertaga</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="app-body">
+
+      <section class="col-left" id="colLeft">
+        <div class="search-wrap">
+          <input id="q" type="text" placeholder="Masalan: qusqavoy, gijduvon..." autocomplete="off" autocapitalize="off" spellcheck="false" />
+          <button id="clearBtn" aria-label="Tozalash">&times;</button>
+        </div>
+        <div class="meta-row">
+          <span id="countLabel">3000+ mahsulot</span>
+          <span id="statusLabel"></span>
+        </div>
+
+        <main>
+          <div id="idleState" class="idle">
+            <p>Lotincha, xato yoki qisqartma yozsangiz ham — katalogdagi <strong>to'g'ri nom</strong>ni topamiz. Natijaga bosing — ro'yxatga qo'shiladi, soni yozing, oxirida <strong>"Guruhga yuborish"</strong> bilan Telegram'da to'g'ridan-to'g'ri yuborasiz.</p>
+            <div class="hint-examples" id="hintExamples"></div>
+          </div>
+          <ul id="results"></ul>
+        </main>
+
+        <footer>
+          <p class="qr-title">📱 Bu sahifaga tez kirish uchun QR kod</p>
+          <img src="qr.png" alt="Zayavka Qidiruv QR kodi" class="qr-img" width="120" height="120" />
+          <p class="qr-hint">Telefon kamerasi bilan skanerlang — shu sahifa (Zayavka Qidiruv) ochiladi.<br>Boshqa xodimlarga ulashish uchun shu rasmni yuborishingiz yoki ekrandan skanerlatishingiz mumkin.</p>
+          <p>Olimp Zagotovka &middot; mahalliy katalog, internetga bog'liq emas</p>
+        </footer>
+      </section>
+
+      <aside class="cart" id="cart">
+        <div class="cart-head">
+          <span class="cart-title" id="cartTitle">Tanlangan (0)</span>
+          <button class="cart-clear" id="cartClearBtn" type="button">Hammasini tozalash</button>
+        </div>
+        <ul id="cartList"></ul>
+        <div class="cart-actions">
+          <button class="cart-send-btn" id="cartSendBtn" type="button">Guruhga yuborish</button>
+          <button class="cart-copy-btn" id="cartCopyBtn" type="button">Nusxalash</button>
+        </div>
+      </aside>
+
+      <section id="inventorySection">
+        <p class="inv-sub">Har mahsulot yoniga omborda hozir haqiqatda bor miqdorni yozing. Bo'sh qoldirilgan bandlar yuborilmaydi.</p>
+        <div class="cart-date-row">
+          <label class="cart-date-label">📅 Sana</label>
+          <div class="date-toggle" id="invDateToggle">
+            <button type="button" class="date-toggle-btn active" data-day="0">Bugun</button>
+            <button type="button" class="date-toggle-btn" data-day="1">Ertaga</button>
+          </div>
+        </div>
+        <ul id="inventoryList"></ul>
+        <div class="cart-actions">
+          <button class="cart-send-btn" id="inventorySendBtn" type="button">Yuborish</button>
+        </div>
+        <p class="inv-result" id="inventoryResult"></p>
+      </section>
+
+      <section id="adminListSection">
+        <p class="al-hint">Qabul qiluvchini tanlang → joriy ro'yxatni ko'ring → iikodagi mahsulotni qidirib qo'shing yoki keraksizini <b>×</b> bilan olib tashlang. Oxirida <b>Saqlash</b>ni bosing — o'zgarish darhol barcha xodimlarda ko'rinadi.</p>
+
+        <div class="al-row">
+          <label class="al-label" for="alDestSelect">🏢 Qabul qiluvchi</label>
+          <select class="al-select" id="alDestSelect"></select>
+        </div>
+
+        <div class="al-cols">
+          <div class="al-col">
+            <p class="al-section-title" id="alCurrentTitle">Joriy ro'yxat</p>
+            <ul class="al-list" id="alCurrentList"></ul>
+          </div>
+          <div class="al-col">
+            <p class="al-section-title">iikodan qo'shish</p>
+            <input class="al-search" id="alSearchInput" type="text" placeholder="Mahsulot nomini yozing (lotincha ham bo'ladi)..." autocomplete="off" autocapitalize="off" spellcheck="false" />
+            <ul class="al-list" id="alSearchResults" style="margin-top:8px"></ul>
+          </div>
+        </div>
+
+        <button class="al-save" id="alSaveBtn" type="button" disabled>💾 Saqlash</button>
+        <p class="al-status" id="alStatus"></p>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<div class="archive-overlay" id="archiveOverlay">
+  <div class="archive-panel" role="dialog" aria-modal="true" aria-labelledby="archiveTitle">
+    <div class="archive-head">
+      <div>
+        <h2 id="archiveTitle">Mening arxivim</h2>
+        <p class="who" id="archiveWho">faqat o'zingiz yuborgan zayavkalar</p>
+      </div>
+      <button class="archive-close" id="archiveCloseBtn" type="button" aria-label="Yopish">×</button>
+    </div>
+    <div class="day-tabs">
+      <div class="day-tabs-scroll" id="dayTabs"></div>
+      <button class="cal-toggle" id="calToggleBtn" type="button" aria-label="Kalendardan sana tanlash">📅</button>
+    </div>
+    <div class="calendar" id="calendar">
+      <div class="cal-head">
+        <button class="cal-nav" id="calPrevBtn" type="button" aria-label="Oldingi oy">‹</button>
+        <span class="cal-month" id="calMonthLabel"></span>
+        <button class="cal-nav" id="calNextBtn" type="button" aria-label="Keyingi oy">›</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+    <div class="archive-body" id="archiveBody"></div>
+    <div class="archive-summary" id="archiveSummary"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script id="catalog-data" type="application/json">["1-свой Напалеон,Рулет маринад кг п\\ф", "2-свой Напалеон маринад (думба) кг п\\ф", "2-свой Рулет маринад (думба) кг п\\ф", "7 Уп", "Heinz Кетчуп", "Автомат сода", "Адана шашлик (шт) п/ф", "Аджика п/ф", "Адреналин 0,45", "Аланга бурунч", "Алпен Голд", "Ананас Консерва катта п/ф", "Ананас консерва катта", "Анти жир", "Арк Теа 1.25л", "Арк-Теа 0.5л", "Баклажан", "Барбекю колбаса", "Бедана (пишган) п\\ф", "Бешбармак хамир п/ф", "Бешбармок гушт п/ф", "Бифштекс  ижжон п/ф  кг", "Близна", "Бодринг салёный п/ф", "Болгарский", "Боржоми", "Борщ П/Ф", "Борщ П/Ф (олимп)", "Боунтий кичик", "Бумажный салфетка", "Бургер булика 130гр  п\\ф", "Бургер булика 80гр  п\\ф", "Вагури п/ф", "Вико 1л", "Вилка  одноразовая", "Вириска стейк п\\ф", "Влажний салфетка 1шт", "Вырезка", "Гарох 1л", "Гиждуван шашлик 200гр п\\ф", "Гиждувон 100гр (шт) п/ф", "Гиждувон 80гр (шт) п/ф", "Гиждувон маринад (кг) п\\ф", "Голд Сари йог", "Голубцы п/ф", "Гречка", "Гугурт (тавар) шт", "Гужа п/ф", "Гужа хом", "Гумма кофте п\\ф", "Гупка", "Гурвак шт", "Гушт 2-сорт", "Гушт 3-сорт", "Гушт 4-сорт", "Гушт Манти  п/ф", "Гушт йоги", "Гушт прес п/ф", "Дери", "Дил пишган п/ф", "Дода барак п\\ф", "Докторская Колбаса", "Думба", "Думба шашлик (шт) п/ф", "Етикетка стикер", "Жидки мило 5л", "Жужа (200гр) шт", "Жуйан Курдик п/ф", "Жуйан хамир п/ф", "Зайчик молоко", "Зелен", "Зира", "Зубочистка", "Ижжон (1 чикарилган) п/ф", "Ижжон (2 чикарилган) п/ф", "Ижжон шашлик (шт)  П/ф", "Ижжон шашлик 200гр п\\ф", "Индейка", "Индейка п/ф", "Исмалок п/ф", "КОРМА гушт п/ф", "Кади Манти п/ф", "Кайнаган картошка  п/ф", "Кайнаган лавлаги п/ф", "Карам", "Карам Китай", "Карам салёний п/ф", "Карейс туз", "Картошка", "Картошка Коврилган п/ф (олимп)", "Картошка коврилган п/ф", "Картошка фри", "Катик", "Катик (литр)", "Катта Бедана (пишган) п\\ф", "Кенза (зелен)", "Кенза (переправа)", "Кепка", "Кетчуп", "Кизил бурч (майдаланган)", "Кизил сабзи", "Кишмиш", "КоВРилган лавлаги п/ф", "Коврилган гушт п\\ф", "Ковун (шт)", "Кози", "Козок ун", "Козон кабоб п\\ф", "Кола 0,5", "Кола 1 л", "Кола 1,5 л", "Кола баночний 0,45", "Кола баночный 0,25", "Контейнер кичик 500 гр", "Контр Вырезка", "Копкокли идиш катта", "Кора бурч (майда)", "Кора чой кг", "Корин туйок п/ф", "Кофе лавазза кг(зерновой)", "Кофте п/ф", "Кошик одноразовая", "Крахмал", "Крылиишки маринад (кг) п\\ф", "Крылишки шашлик (шт)  п/ф", "Куза Тушонка п\\ф", "Куза Шорва Мол п/ф", "Кузикорин п/ф", "Куй буйин п/ф", "Кук Памидор Саленний п/ф", "Кук Ушок барак (КГ)  п/ф", "Кук чой кг", "Кукуруз (макка) 1л", "Кунжут", "Кусковой куй  маринад (кг) п\\ф", "Кусковой куй (шт) п/ф", "Кусковой мол (шт) П/ф", "Кусковой мол маринад (кг) п\\ф", "Кухиний крылишка п\\ф", "Лаваш хамр", "Лагмон хамир п/ф", "Ланч катлет 40 гр п/ф", "Лимон сироп", "Лозер бурунч", "Лули фарш  п/ф", "Макарон", "Макка", "Манти (гуштли) Ассорти п/ф", "Манти (кади) Ассорти п/ф", "Манти (янги) п/ф", "Маунтинт дюв 1л", "Маянез", "Маянез бутилка", "Мева безак (КИЧИК)", "Местний товук п/ф", "Миллий кола 0,5л", "Миллий лимоо 1,5л шт", "Миллий миксни котлети п/ф", "Мини котлет (шт) п/ф", "Мини котлет 40 гр п/ф", "Миринда 1,5л", "Мишак- пишган п/ф", "Мохито 0,45", "Мохито сироп", "Муср пакет", "Муср пакет катта", "Напалеон  шашлик (шт) п/ф", "Норин гушт П/Ф", "Норин хамир п/ф", "Нуш пийоз", "Однаразовой идиш кичик", "Одноразовая Перчатка", "Одноразовый Стакан", "Ок куйлак", "Окорочка Фаршированный п\\ф", "Оливка", "Оливка п\\ф", "Олимп Пакет 3 кг", "Олимп кулча п/ф", "Олимп товук п\\ф", "Олот сомса гушт тугралган п/ф", "Орбит", "Освижитель", "Осма шорва п/ф", "Пакет 3кг", "Пакет рулон", "Пакет рулон (кичик)", "Памидор кг", "Паприка", "Патир шашлик (шт) п/ф", "Пахта йоги", "Пепси (баночный) 0.45", "Пепси 0,5л", "Пепси 1,5л", "Пепси 1л", "Перчатка кора", "Пийоз", "Плиточный (КиЧиК)", "Плиточный (катта)", "Пол трапка", "Преправа унверсал", "Принтер чек когоз (шт)", "Приправа шашлик", "Разрихител", "Ред-булл 0.25", "Резинка Перчатка сори", "Рулет  шашлик (шт) п\\ф", "Сабзи сарик", "Салат гушт п/ф", "Салат лист", "Салфетка", "Салют шт", "Салёни помидор п/ф", "Сарик катта стреч", "Свежи Аччи бурч", "Семечка йог", "Сетка товук п/ф", "Сим чутка (шт)", "Сникерс катта шт", "Сникерс кичик шт", "Сода", "Сок 1 л", "Сок детски", "Солихан Салфетка", "Сомса гушт тугралган п/ф", "Сомса томчи (кг) п/ф", "Соус идиш (250гр)", "Соус идиш 40гр", "Соя соус (литр)", "Спрайт 0,5л", "Спрайт 1,5л", "Спрайт 1л", "Спрей 500 мл", "Стейк карейка кг п/ф", "Стейк куй  п/ф", "Стейк мол кухня п/ф", "Стейк мол п\\ф", "Стреч катта", "Сув 0,5л", "Сув 1,5л", "Сув 1л", "Сув 1л (сайхун)", "Сут", "Сут лактел", "Сухарик п/ф", "Сыр янтар", "Тала гел", "Тарвуз шт", "Тифтел п/ф", "Товук Филе (пишган) п/ф", "Товук Шорва п/ф", "Товук катта (суйак)", "Товук кози", "Товук козон кабоб п\\ф", "Товук фарш (загатовка)  п/ф", "Товук филе", "Товук шашлик маринад П/Ф", "Товук шашлик п/ф", "Томатний паста", "Тошкент Суви 0,5л", "Туалетный бумага", "Туз", "Туйок п\\ф", "Тухум", "Уксус 100%", "Уксус яблочний", "Умонник Салфетка", "Уноши Шарик п/ф", "Уноши хамир п/ф", "Урама долма п/ф", "Урганч УН", "Урдак сели п\\ф", "Урдак шашлик мариновка п\\ф", "Урдак шашлик п\\ф", "Урик компот п/ф", "Ушок барак  (КГ)  П/ф", "Фалга", "Фанта 0,5л", "Фанта 1,5л", "Фанта 1л", "Фартук", "Фергамент когоз", "Флеш 0,45", "Фрит жир", "Футболка", "Хон п/ф", "Хохланд сыр (сыр) шт", "Хуроз чихомбил п/ф", "Хуроз шорва п\\ф", "Чеснок", "Чили сладки соус (ЛИТР)", "Чит перечатка", "Чия компот п/ф", "Чококрем", "Чорток 0,5", "ШОРВА гушти П/ф", "Шакар 1шт (пакетли)", "Шакар кг", "Шампинион банка", "Шарик маккен (картошка)", "Шашлик Полка шт", "Шашлик ижжон (кг) п/ф", "Шивит оши хамир п/ф", "Шпажки  бургер чоп", "Щедрое лето", "держатель для стакана", "кетчуп идиш", "коврилган кузикорин п/ф", "кола бутылка 0,250", "кофе стакан", "раквина сетка", "фанта бутылка 0,250"]</script>
+<script id="checklist-data" type="application/json">{"OLIMP 1: Барак склад": [{"name": "Аджика п/ф", "unit": "кг"}, {"name": "Голд Сари йог", "unit": "кг"}, {"name": "Гушт Манти  п/ф", "unit": "шт"}, {"name": "Ижжон (1 чикарилган) п/ф", "unit": "кг"}, {"name": "Исмалок п/ф", "unit": "кг"}, {"name": "Кади Манти п/ф", "unit": "шт"}, {"name": "Кук Ушок барак (КГ)  п/ф", "unit": "кг"}, {"name": "Манти (гуштли) Ассорти п/ф", "unit": "шт"}, {"name": "Манти (кади) Ассорти п/ф", "unit": "шт"}, {"name": "Семечка йог", "unit": "л"}, {"name": "Соус идиш (250гр)", "unit": "шт"}, {"name": "Соус идиш 40гр", "unit": "шт"}, {"name": "Туз", "unit": "кг"}, {"name": "Тухум", "unit": "шт"}, {"name": "Ушок барак  (КГ)  П/ф", "unit": "кг"}, {"name": "Шивит оши хамир п/ф", "unit": "кг"}], "OLIMP 1: Кухня склад": [{"name": "Аджика п/ф", "unit": "кг"}, {"name": "Ананас консерва катта", "unit": "шт"}, {"name": "Бедана (пишган) п\\ф", "unit": "шт"}, {"name": "Бешбармак хамир п/ф", "unit": "кг"}, {"name": "Бешбармок гушт п/ф", "unit": "кг"}, {"name": "Бифштекс  ижжон п/ф  кг", "unit": "кг"}, {"name": "Болгарский", "unit": "кг"}, {"name": "Борщ П/Ф", "unit": "шт"}, {"name": "Бургер булика 130гр  п\\ф", "unit": "шт"}, {"name": "Бургер булика 80гр  п\\ф", "unit": "шт"}, {"name": "Вагури п/ф", "unit": "кг"}, {"name": "Вырезка", "unit": "кг"}, {"name": "Голубцы п/ф", "unit": "шт"}, {"name": "Гречка", "unit": "кг"}, {"name": "Гушт 2-сорт", "unit": "кг"}, {"name": "Гушт йоги", "unit": "кг"}, {"name": "Гушт прес п/ф", "unit": "кг"}, {"name": "Дил пишган п/ф", "unit": "кг"}, {"name": "Жуйан Курдик п/ф", "unit": "порц"}, {"name": "Жуйан хамир п/ф", "unit": "кг"}, {"name": "Ижжон (2 чикарилган) п/ф", "unit": "кг"}, {"name": "Индейка", "unit": "кг"}, {"name": "КОРМА гушт п/ф", "unit": "кг"}, {"name": "Кайнаган лавлаги п/ф", "unit": "кг"}, {"name": "Карейс туз", "unit": "кг"}, {"name": "Картошка", "unit": "кг"}, {"name": "Картошка фри", "unit": "кг"}, {"name": "Катта Бедана (пишган) п\\ф", "unit": "шт"}, {"name": "Кетчуп", "unit": "шт"}, {"name": "Кизил бурч (майдаланган)", "unit": "кг"}, {"name": "Кизил сабзи", "unit": "кг"}, {"name": "КоВРилган лавлаги п/ф", "unit": "кг"}, {"name": "Коврилган гушт п\\ф", "unit": "кг"}, {"name": "Кози", "unit": "кг"}, {"name": "Козон кабоб п\\ф", "unit": "кг"}, {"name": "Кола 0,5", "unit": "шт"}, {"name": "Кола 1,5 л", "unit": "шт"}, {"name": "Контр Вырезка", "unit": "кг"}, {"name": "Копкокли идиш катта", "unit": "шт"}, {"name": "Кора бурч (майда)", "unit": "кг"}, {"name": "Крылиишки маринад (кг) п\\ф", "unit": "кг"}, {"name": "Куза Тушонка п\\ф", "unit": "порц"}, {"name": "Куза Шорва Мол п/ф", "unit": "порц"}, {"name": "Кук чой кг", "unit": "кг"}, {"name": "Лагмон хамир п/ф", "unit": "кг"}, {"name": "Лозер бурунч", "unit": "кг"}, {"name": "Лули фарш  п/ф", "unit": "кг"}, {"name": "Макка", "unit": "шт"}, {"name": "Маянез", "unit": "шт"}, {"name": "Маянез бутилка", "unit": "шт"}, {"name": "Мева безак (КИЧИК)", "unit": "шт"}, {"name": "Местний товук п/ф", "unit": "шт"}, {"name": "Окорочка Фаршированный п\\ф", "unit": "шт"}, {"name": "Олимп кулча п/ф", "unit": "шт"}, {"name": "Олимп товук п\\ф", "unit": "шт"}, {"name": "Осма шорва п/ф", "unit": "порц"}, {"name": "Паприка", "unit": "кг"}, {"name": "Пахта йоги", "unit": "л"}, {"name": "Пийоз", "unit": "кг"}, {"name": "Приправа шашлик", "unit": "кг"}, {"name": "Семечка йог", "unit": "л"}, {"name": "Соус идиш (250гр)", "unit": "шт"}, {"name": "Соус идиш 40гр", "unit": "шт"}, {"name": "Соя соус (литр)", "unit": "л"}, {"name": "Сыр янтар", "unit": "кг"}, {"name": "Тарвуз шт", "unit": "шт"}, {"name": "Тифтел п/ф", "unit": "шт"}, {"name": "Товук Шорва п/ф", "unit": "шт"}, {"name": "Товук кози", "unit": "кг"}, {"name": "Товук козон кабоб п\\ф", "unit": "порц"}, {"name": "Товук фарш (загатовка)  п/ф", "unit": "кг"}, {"name": "Товук филе", "unit": "кг"}, {"name": "Томатний паста", "unit": "шт"}, {"name": "Тошкент Суви 0,5л", "unit": "шт"}, {"name": "Туз", "unit": "кг"}, {"name": "Туйок п\\ф", "unit": "шт"}, {"name": "Тухум", "unit": "шт"}, {"name": "Уксус 100%", "unit": "л"}, {"name": "Уноши Шарик п/ф", "unit": "кг"}, {"name": "Уноши хамир п/ф", "unit": "кг"}, {"name": "Урама долма п/ф", "unit": "шт"}, {"name": "Урдак сели п\\ф", "unit": "шт"}, {"name": "Урик компот п/ф", "unit": "л"}, {"name": "Ушок барак  (КГ)  П/ф", "unit": "кг"}, {"name": "Фалга", "unit": "шт"}, {"name": "Фрит жир", "unit": "кг"}, {"name": "Хон п/ф", "unit": "порц"}, {"name": "Хохланд сыр (сыр) шт", "unit": "шт"}, {"name": "Хуроз чихомбил п/ф", "unit": "порц"}, {"name": "Хуроз шорва п\\ф", "unit": "порц"}, {"name": "Чеснок", "unit": "кг"}, {"name": "Чили сладки соус (ЛИТР)", "unit": "л"}, {"name": "Чия компот п/ф", "unit": "л"}, {"name": "ШОРВА гушти П/ф", "unit": "кг"}, {"name": "Шампинион банка", "unit": "шт"}, {"name": "Шашлик ижжон (кг) п/ф", "unit": "кг"}, {"name": "Щедрое лето", "unit": "кг"}], "OLIMP GARDEN: Барак склад": [{"name": "Голд Сари йог", "unit": "кг"}, {"name": "Манти (янги) п/ф", "unit": "шт"}, {"name": "Дода барак п\\ф", "unit": "кг"}, {"name": "Ижжон (1 чикарилган) п/ф", "unit": "кг"}, {"name": "Исмалок п/ф", "unit": "кг"}, {"name": "Кади Манти п/ф", "unit": "шт"}, {"name": "Кук Ушок барак (КГ)  п/ф", "unit": "кг"}, {"name": "Манти (гуштли) Ассорти п/ф", "unit": "шт"}, {"name": "Манти (кади) Ассорти п/ф", "unit": "шт"}, {"name": "Олимп кулча п/ф", "unit": "шт"}, {"name": "Сут", "unit": "л"}, {"name": "Туз", "unit": "кг"}, {"name": "Тухум", "unit": "шт"}, {"name": "Ушок барак  (КГ)  П/ф", "unit": "кг"}, {"name": "Шивит оши хамир п/ф", "unit": "кг"}], "OLIMP 1: Балик склад": [{"name": "Кади Манти п/ф", "unit": "шт"}, {"name": "Карейс туз", "unit": "кг"}, {"name": "Маянез бутилка", "unit": "шт"}, {"name": "Пахта йоги", "unit": "л"}, {"name": "Приправа шашлик", "unit": "кг"}, {"name": "Семечка йог", "unit": "л"}, {"name": "Томатний паста", "unit": "шт"}, {"name": "Туз", "unit": "кг"}, {"name": "Урганч УН", "unit": "кг"}, {"name": "Шивит оши хамир п/ф", "unit": "кг"}], "OLIMP 1: Бар 1 склад": [{"name": "Адреналин 0,45", "unit": "шт"}, {"name": "Алпен Голд", "unit": "шт"}, {"name": "Арк Теа 1.25л", "unit": "шт"}, {"name": "Арк-Теа 0.5л", "unit": "шт"}, {"name": "Боржоми", "unit": "шт"}, {"name": "Боунтий кичик", "unit": "шт"}, {"name": "Вико 1л", "unit": "шт"}, {"name": "Влажний салфетка 1шт", "unit": "шт"}, {"name": "Кола 0,5", "unit": "шт"}, {"name": "Кола 1 л", "unit": "шт"}, {"name": "Кола 1,5 л", "unit": "шт"}, {"name": "Кола баночний 0,45", "unit": "шт"}, {"name": "Кола баночный 0,25", "unit": "шт"}, {"name": "Копкокли идиш катта", "unit": "шт"}, {"name": "Кора чой кг", "unit": "кг"}, {"name": "Кук чой кг", "unit": "кг"}, {"name": "Миллий кола 0,5л", "unit": "шт"}, {"name": "Мохито 0,45", "unit": "шт"}, {"name": "Олимп кулча п/ф", "unit": "шт"}, {"name": "Орбит", "unit": "шт"}, {"name": "Пепси (баночный) 0.45", "unit": "шт"}, {"name": "Пепси 0,5л", "unit": "шт"}, {"name": "Пепси 1,5л", "unit": "шт"}, {"name": "Пепси 1л", "unit": "шт"}, {"name": "Плиточный (КиЧиК)", "unit": "шт"}, {"name": "Плиточный (катта)", "unit": "шт"}, {"name": "Ред-булл 0.25", "unit": "шт"}, {"name": "Салют шт", "unit": "шт"}, {"name": "Сникерс катта шт", "unit": "шт"}, {"name": "Сникерс кичик шт", "unit": "шт"}, {"name": "Сок 1 л", "unit": "шт"}, {"name": "Сок детски", "unit": "шт"}, {"name": "Спрайт 0,5л", "unit": "шт"}, {"name": "Спрайт 1,5л", "unit": "шт"}, {"name": "Спрайт 1л", "unit": "шт"}, {"name": "Сув 0,5л", "unit": "шт"}, {"name": "Сув 1,5л", "unit": "шт"}, {"name": "Сув 1л", "unit": "шт"}, {"name": "Сув 1л (сайхун)", "unit": "шт"}, {"name": "Тошкент Суви 0,5л", "unit": "шт"}, {"name": "Урик компот п/ф", "unit": "л"}, {"name": "Фанта 0,5л", "unit": "шт"}, {"name": "Фанта 1,5л", "unit": "шт"}, {"name": "Фанта 1л", "unit": "шт"}, {"name": "Флеш 0,45", "unit": "шт"}, {"name": "Чорток 0,5", "unit": "шт"}], "OLIMP 1: Бар 2 склад": [{"name": "Адреналин 0,45", "unit": "шт"}, {"name": "Аланга бурунч", "unit": "кг"}, {"name": "Алпен Голд", "unit": "шт"}, {"name": "Арк Теа 1.25л", "unit": "шт"}, {"name": "Арк-Теа 0.5л", "unit": "шт"}, {"name": "Баклажан", "unit": "кг"}, {"name": "Болгарский", "unit": "кг"}, {"name": "Боржоми", "unit": "шт"}, {"name": "Боунтий кичик", "unit": "шт"}, {"name": "Вико 1л", "unit": "шт"}, {"name": "Влажний салфетка 1шт", "unit": "шт"}, {"name": "Гречка", "unit": "кг"}, {"name": "Гужа хом", "unit": "кг"}, {"name": "Гушт 3-сорт", "unit": "кг"}, {"name": "Гушт 4-сорт", "unit": "кг"}, {"name": "Дил пишган п/ф", "unit": "кг"}, {"name": "Ижжон (2 чикарилган) п/ф", "unit": "кг"}, {"name": "Карам", "unit": "кг"}, {"name": "Карам Китай", "unit": "кг"}, {"name": "Карейс туз", "unit": "кг"}, {"name": "Картошка", "unit": "кг"}, {"name": "Катик", "unit": "шт"}, {"name": "Катик (литр)", "unit": "л"}, {"name": "Кенза (зелен)", "unit": "кг"}, {"name": "Кенза (переправа)", "unit": "кг"}, {"name": "Кизил сабзи", "unit": "кг"}, {"name": "Кишмиш", "unit": "кг"}, {"name": "Коврилган гушт п\\ф", "unit": "кг"}, {"name": "Козок ун", "unit": "кг"}, {"name": "Кола 0,5", "unit": "шт"}, {"name": "Кола 1 л", "unit": "шт"}, {"name": "Кола 1,5 л", "unit": "шт"}, {"name": "Контр Вырезка", "unit": "кг"}, {"name": "Копкокли идиш катта", "unit": "шт"}, {"name": "Кора бурч (майда)", "unit": "кг"}, {"name": "Кора чой кг", "unit": "кг"}, {"name": "Кук чой кг", "unit": "кг"}, {"name": "Лозер бурунч", "unit": "кг"}, {"name": "Макарон", "unit": "кг"}, {"name": "Местний товук п/ф", "unit": "шт"}, {"name": "Миллий кола 0,5л", "unit": "шт"}, {"name": "Мохито 0,45", "unit": "шт"}, {"name": "Олимп кулча п/ф", "unit": "шт"}, {"name": "Олимп товук п\\ф", "unit": "шт"}, {"name": "Памидор кг", "unit": "кг"}, {"name": "Паприка", "unit": "кг"}, {"name": "Пахта йоги", "unit": "л"}, {"name": "Пепси (баночный) 0.45", "unit": "шт"}, {"name": "Пепси 0,5л", "unit": "шт"}, {"name": "Пепси 1л", "unit": "шт"}, {"name": "Пийоз", "unit": "кг"}, {"name": "Плиточный (КиЧиК)", "unit": "шт"}, {"name": "Плиточный (катта)", "unit": "шт"}, {"name": "Преправа унверсал", "unit": "кг"}, {"name": "Ред-булл 0.25", "unit": "шт"}, {"name": "Сабзи сарик", "unit": "кг"}, {"name": "Салат гушт п/ф", "unit": "кг"}, {"name": "Салют шт", "unit": "шт"}, {"name": "Свежи Аччи бурч", "unit": "кг"}, {"name": "Семечка йог", "unit": "л"}, {"name": "Сникерс катта шт", "unit": "шт"}, {"name": "Сникерс кичик шт", "unit": "шт"}, {"name": "Сок 1 л", "unit": "шт"}, {"name": "Спрайт 0,5л", "unit": "шт"}, {"name": "Спрайт 1,5л", "unit": "шт"}, {"name": "Спрайт 1л", "unit": "шт"}, {"name": "Сув 0,5л", "unit": "шт"}, {"name": "Сув 1,5л", "unit": "шт"}, {"name": "Сув 1л", "unit": "шт"}, {"name": "Сув 1л (сайхун)", "unit": "шт"}, {"name": "Сут", "unit": "л"}, {"name": "Товук Филе (пишган) п/ф", "unit": "кг"}, {"name": "Товук катта (суйак)", "unit": "кг"}, {"name": "Товук козон кабоб п\\ф", "unit": "порц"}, {"name": "Товук филе", "unit": "кг"}, {"name": "Томатний паста", "unit": "шт"}, {"name": "Тошкент Суви 0,5л", "unit": "шт"}, {"name": "Туз", "unit": "кг"}, {"name": "Тухум", "unit": "шт"}, {"name": "Урик компот п/ф", "unit": "л"}, {"name": "Фанта 0,5л", "unit": "шт"}, {"name": "Фанта 1,5л", "unit": "шт"}, {"name": "Фанта 1л", "unit": "шт"}, {"name": "Флеш 0,45", "unit": "шт"}, {"name": "Чеснок", "unit": "кг"}, {"name": "Чия компот п/ф", "unit": "л"}, {"name": "Чорток 0,5", "unit": "шт"}, {"name": "ШОРВА гушти П/ф", "unit": "кг"}, {"name": "Шакар кг", "unit": "кг"}, {"name": "Щедрое лето", "unit": "кг"}], "OLIMP 1: Бар 3 склад": [{"name": "Влажний салфетка 1шт", "unit": "шт"}, {"name": "Кизил сабзи", "unit": "кг"}, {"name": "Кофе лавазза кг(зерновой)", "unit": "кг"}, {"name": "Лимон сироп", "unit": "л"}, {"name": "Миллий лимоо 1,5л шт", "unit": "шт"}, {"name": "Мохито сироп", "unit": "л"}, {"name": "Разрихител", "unit": "кг"}, {"name": "Семечка йог", "unit": "л"}, {"name": "Сув 1,5л", "unit": "шт"}, {"name": "Сут лактел", "unit": "л"}, {"name": "Туз", "unit": "кг"}, {"name": "Чококрем", "unit": "кг"}, {"name": "Шакар 1шт (пакетли)", "unit": "шт"}], "OLIMP 1: Будка": [{"name": "Арк Теа 1.25л", "unit": "шт"}, {"name": "Арк-Теа 0.5л", "unit": "шт"}, {"name": "Барбекю колбаса", "unit": "кг"}, {"name": "Кола 0,5", "unit": "шт"}, {"name": "Кола 1 л", "unit": "шт"}, {"name": "Кола 1,5 л", "unit": "шт"}, {"name": "Крылиишки маринад (кг) п\\ф", "unit": "кг"}, {"name": "Пепси 1л", "unit": "шт"}, {"name": "Спрайт 1л", "unit": "шт"}, {"name": "Сув 0,5л", "unit": "шт"}, {"name": "Сув 1,5л", "unit": "шт"}, {"name": "Сув 1л", "unit": "шт"}, {"name": "Сув 1л (сайхун)", "unit": "шт"}, {"name": "Урдак шашлик мариновка п\\ф", "unit": "кг"}, {"name": "Фанта 1,5л", "unit": "шт"}, {"name": "Фанта 1л", "unit": "шт"}, {"name": "Шашлик Полка шт", "unit": "шт"}, {"name": "кола бутылка 0,250", "unit": "шт"}, {"name": "фанта бутылка 0,250", "unit": "шт"}], "OLIMP 1: Мангал склад": [{"name": "2-свой Напалеон маринад (думба) кг п\\ф", "unit": "кг"}, {"name": "2-свой Рулет маринад (думба) кг п\\ф", "unit": "кг"}, {"name": "Адана шашлик (шт) п/ф", "unit": "шт"}, {"name": "Барбекю колбаса", "unit": "кг"}, {"name": "Вырезка", "unit": "кг"}, {"name": "Гиждуван шашлик 200гр п\\ф", "unit": "шт"}, {"name": "Гиждувон 100гр (шт) п/ф", "unit": "шт"}, {"name": "Гиждувон 80гр (шт) п/ф", "unit": "шт"}, {"name": "Гиждувон маринад (кг) п\\ф", "unit": "кг"}, {"name": "Гумма кофте п\\ф", "unit": "шт"}, {"name": "Гушт йоги", "unit": "кг"}, {"name": "Думба", "unit": "кг"}, {"name": "Думба шашлик (шт) п/ф", "unit": "шт"}, {"name": "Жужа (200гр) шт", "unit": "шт"}, {"name": "Ижжон шашлик (шт)  П/ф", "unit": "шт"}, {"name": "Ижжон шашлик 200гр п\\ф", "unit": "шт"}, {"name": "Картошка", "unit": "кг"}, {"name": "Кетчуп", "unit": "шт"}, {"name": "Контр Вырезка", "unit": "кг"}, {"name": "Кофте п/ф", "unit": "шт"}, {"name": "Крылиишки маринад (кг) п\\ф", "unit": "кг"}, {"name": "Крылишки шашлик (шт)  п/ф", "unit": "шт"}, {"name": "Куй буйин п/ф", "unit": "кг"}, {"name": "Кусковой куй  маринад (кг) п\\ф", "unit": "кг"}, {"name": "Кусковой куй (шт) п/ф", "unit": "шт"}, {"name": "Кусковой мол (шт) П/ф", "unit": "шт"}, {"name": "Кусковой мол маринад (кг) п\\ф", "unit": "кг"}, {"name": "Лаваш хамр", "unit": "шт"}, {"name": "Макка", "unit": "шт"}, {"name": "Маянез", "unit": "шт"}, {"name": "Маянез бутилка", "unit": "шт"}, {"name": "Мини котлет (шт) п/ф", "unit": "шт"}, {"name": "Мини котлет 40 гр п/ф", "unit": "шт"}, {"name": "Напалеон  шашлик (шт) п/ф", "unit": "шт"}, {"name": "Пакет 3кг", "unit": "шт"}, {"name": "Паприка", "unit": "кг"}, {"name": "Патир шашлик (шт) п/ф", "unit": "шт"}, {"name": "Пийоз", "unit": "кг"}, {"name": "Приправа шашлик", "unit": "кг"}, {"name": "Рулет  шашлик (шт) п\\ф", "unit": "шт"}, {"name": "Семечка йог", "unit": "л"}, {"name": "Сетка товук п/ф", "unit": "шт"}, {"name": "Соус идиш (250гр)", "unit": "шт"}, {"name": "Соус идиш 40гр", "unit": "шт"}, {"name": "Стейк карейка кг п/ф", "unit": "кг"}, {"name": "Стейк куй  п/ф", "unit": "кг"}, {"name": "Стейк мол п\\ф", "unit": "кг"}, {"name": "Товук филе", "unit": "кг"}, {"name": "Товук шашлик маринад П/Ф", "unit": "кг"}, {"name": "Товук шашлик п/ф", "unit": "шт"}, {"name": "Томатний паста", "unit": "шт"}, {"name": "Тухум", "unit": "шт"}, {"name": "Урдак шашлик п\\ф", "unit": "шт"}, {"name": "Хохланд сыр (сыр) шт", "unit": "шт"}, {"name": "Чеснок", "unit": "кг"}, {"name": "Чит перечатка", "unit": "шт"}, {"name": "Шашлик Полка шт", "unit": "шт"}, {"name": "Шашлик ижжон (кг) п/ф", "unit": "кг"}, {"name": "Шпажки  бургер чоп", "unit": "шт"}, {"name": "Щедрое лето", "unit": "кг"}, {"name": "Ланч катлет 40 гр п/ф", "unit": "шт"}], "OLIMP 1: Салат склад": [{"name": "Бодринг салёный п/ф", "unit": "кг"}, {"name": "Гарох 1л", "unit": "шт"}, {"name": "Гужа п/ф", "unit": "кг"}, {"name": "Дил пишган п/ф", "unit": "кг"}, {"name": "Докторская Колбаса", "unit": "кг"}, {"name": "Зайчик молоко", "unit": "шт"}, {"name": "Зира", "unit": "кг"}, {"name": "Индейка", "unit": "кг"}, {"name": "Кайнаган картошка  п/ф", "unit": "кг"}, {"name": "Кайнаган лавлаги п/ф", "unit": "кг"}, {"name": "Карам салёний п/ф", "unit": "кг"}, {"name": "Карейс туз", "unit": "кг"}, {"name": "Картошка коврилган п/ф", "unit": "кг"}, {"name": "Кенза (переправа)", "unit": "кг"}, {"name": "Кизил бурч (майдаланган)", "unit": "кг"}, {"name": "Кизил сабзи", "unit": "кг"}, {"name": "Кози", "unit": "кг"}, {"name": "Контейнер кичик 500 гр", "unit": "шт"}, {"name": "Копкокли идиш катта", "unit": "шт"}, {"name": "Кора бурч (майда)", "unit": "кг"}, {"name": "Крахмал", "unit": "кг"}, {"name": "Кузикорин п/ф", "unit": "кг"}, {"name": "Кукуруз (макка) 1л", "unit": "шт"}, {"name": "Кунжут", "unit": "кг"}, {"name": "Лимон сироп", "unit": "л"}, {"name": "Маянез", "unit": "шт"}, {"name": "Мева безак (КИЧИК)", "unit": "шт"}, {"name": "Норин гушт П/Ф", "unit": "кг"}, {"name": "Норин хамир п/ф", "unit": "кг"}, {"name": "Паприка", "unit": "кг"}, {"name": "Пийоз", "unit": "кг"}, {"name": "Разрихител", "unit": "кг"}, {"name": "Салат гушт п/ф", "unit": "кг"}, {"name": "Салёни помидор п/ф", "unit": "шт"}, {"name": "Свежи Аччи бурч", "unit": "кг"}, {"name": "Семечка йог", "unit": "л"}, {"name": "Соус идиш (250гр)", "unit": "шт"}, {"name": "Соус идиш 40гр", "unit": "шт"}, {"name": "Соя соус (литр)", "unit": "л"}, {"name": "Сут", "unit": "л"}, {"name": "Сухарик п/ф", "unit": "кг"}, {"name": "Сыр янтар", "unit": "кг"}, {"name": "Товук Филе (пишган) п/ф", "unit": "кг"}, {"name": "Томатний паста", "unit": "шт"}, {"name": "Туз", "unit": "кг"}, {"name": "Тухум", "unit": "шт"}, {"name": "Уксус 100%", "unit": "л"}, {"name": "Уксус яблочний", "unit": "шт"}, {"name": "Чеснок", "unit": "кг"}, {"name": "Чили сладки соус (ЛИТР)", "unit": "л"}, {"name": "Чококрем", "unit": "кг"}, {"name": "Шампинион банка", "unit": "шт"}, {"name": "Кук Памидор Саленний п/ф", "unit": "кг"}], "OLIMP 1: Сомса склад": [{"name": "Гушт йоги", "unit": "кг"}, {"name": "Зира", "unit": "кг"}, {"name": "Ижжон (2 чикарилган) п/ф", "unit": "кг"}, {"name": "Исмалок п/ф", "unit": "кг"}, {"name": "Карейс туз", "unit": "кг"}, {"name": "Кенза (переправа)", "unit": "кг"}, {"name": "Козок ун", "unit": "кг"}, {"name": "Кора бурч (майда)", "unit": "кг"}, {"name": "Кунжут", "unit": "кг"}, {"name": "Лимон сироп", "unit": "л"}, {"name": "Олот сомса гушт тугралган п/ф", "unit": "кг"}, {"name": "Пийоз", "unit": "кг"}, {"name": "Семечка йог", "unit": "л"}, {"name": "Сомса гушт тугралган п/ф", "unit": "кг"}, {"name": "Сомса томчи (кг) п/ф", "unit": "кг"}, {"name": "Сув 1,5л", "unit": "шт"}, {"name": "Сув 1л", "unit": "шт"}, {"name": "Сут", "unit": "л"}, {"name": "Туз", "unit": "кг"}, {"name": "Тухум", "unit": "шт"}, {"name": "Фалга", "unit": "шт"}, {"name": "Фергамент когоз", "unit": "шт"}, {"name": "Чили сладки соус (ЛИТР)", "unit": "л"}, {"name": "Щедрое лето", "unit": "кг"}], "OLIMP 1: Спорт Зал": [{"name": "Кола баночный 0,25", "unit": "шт"}, {"name": "Сув 0,5л", "unit": "шт"}, {"name": "Сув 1,5л", "unit": "шт"}, {"name": "Сув 1л", "unit": "шт"}, {"name": "Сув 1л (сайхун)", "unit": "шт"}, {"name": "Футболка", "unit": "шт"}], "OLIMP 1: Упаковка склад": [{"name": "2-свой Напалеон маринад (думба) кг п\\ф", "unit": "кг"}, {"name": "2-свой Рулет маринад (думба) кг п\\ф", "unit": "кг"}, {"name": "Вилка  одноразовая", "unit": "шт"}, {"name": "Влажний салфетка 1шт", "unit": "шт"}, {"name": "Гиждувон маринад (кг) п\\ф", "unit": "кг"}, {"name": "Гушт йоги", "unit": "кг"}, {"name": "Думба", "unit": "кг"}, {"name": "Кошик одноразовая", "unit": "шт"}, {"name": "Крылиишки маринад (кг) п\\ф", "unit": "кг"}, {"name": "Кусковой куй  маринад (кг) п\\ф", "unit": "кг"}, {"name": "Кусковой мол маринад (кг) п\\ф", "unit": "кг"}, {"name": "Одноразовый Стакан", "unit": "шт"}, {"name": "Стейк куй  п/ф", "unit": "кг"}, {"name": "Стейк мол п\\ф", "unit": "кг"}, {"name": "Товук шашлик маринад П/Ф", "unit": "кг"}, {"name": "Урдак шашлик мариновка п\\ф", "unit": "кг"}, {"name": "Шашлик Полка шт", "unit": "шт"}, {"name": "Шашлик ижжон (кг) п/ф", "unit": "кг"}], "OLIMP 1: Хоз товар Олимп": [{"name": "Автомат сода", "unit": "шт"}, {"name": "Анти жир", "unit": "шт"}, {"name": "Близна", "unit": "шт"}, {"name": "Бумажный салфетка", "unit": "шт"}, {"name": "Вилка  одноразовая", "unit": "шт"}, {"name": "Влажний салфетка 1шт", "unit": "шт"}, {"name": "Гугурт (тавар) шт", "unit": "шт"}, {"name": "Гупка", "unit": "шт"}, {"name": "Гурвак шт", "unit": "шт"}, {"name": "Дери", "unit": "шт"}, {"name": "Жидки мило 5л", "unit": "шт"}, {"name": "Зубочистка", "unit": "шт"}, {"name": "Кепка", "unit": "шт"}, {"name": "Кизил бурч (майдаланган)", "unit": "кг"}, {"name": "Ковун (шт)", "unit": "шт"}, {"name": "Контейнер кичик 500 гр", "unit": "шт"}, {"name": "Кора бурч (майда)", "unit": "кг"}, {"name": "Кошик одноразовая", "unit": "шт"}, {"name": "Муср пакет", "unit": "шт"}, {"name": "Муср пакет катта", "unit": "шт"}, {"name": "Одноразовая Перчатка", "unit": "шт"}, {"name": "Одноразовый Стакан", "unit": "шт"}, {"name": "Ок куйлак", "unit": "шт"}, {"name": "Олимп Пакет 3 кг", "unit": "кг"}, {"name": "Орбит", "unit": "шт"}, {"name": "Освижитель", "unit": "шт"}, {"name": "Пакет 3кг", "unit": "шт"}, {"name": "Пакет рулон", "unit": "шт"}, {"name": "Пакет рулон (кичик)", "unit": "шт"}, {"name": "Перчатка кора", "unit": "шт"}, {"name": "Пол трапка", "unit": "шт"}, {"name": "Принтер чек когоз (шт)", "unit": "шт"}, {"name": "Резинка Перчатка сори", "unit": "шт"}, {"name": "Салфетка", "unit": "шт"}, {"name": "Сарик катта стреч", "unit": "шт"}, {"name": "Сим чутка (шт)", "unit": "шт"}, {"name": "Сода", "unit": "шт"}, {"name": "Солихан Салфетка", "unit": "шт"}, {"name": "Соус идиш (250гр)", "unit": "шт"}, {"name": "Спрей 500 мл", "unit": "шт"}, {"name": "Стреч катта", "unit": "шт"}, {"name": "Тала гел", "unit": "шт"}, {"name": "Тарвуз шт", "unit": "шт"}, {"name": "Туалетный бумага", "unit": "шт"}, {"name": "Туз", "unit": "кг"}, {"name": "Уксус яблочний", "unit": "шт"}, {"name": "Умонник Салфетка", "unit": "шт"}, {"name": "Фалга", "unit": "шт"}, {"name": "Фартук", "unit": "шт"}, {"name": "Фергамент когоз", "unit": "шт"}, {"name": "Футболка", "unit": "шт"}, {"name": "Чит перечатка", "unit": "шт"}, {"name": "Шакар кг", "unit": "кг"}, {"name": "держатель для стакана", "unit": "шт"}, {"name": "раквина сетка", "unit": "шт"}], "OLIMP GARDEN: Балик склад": [{"name": "Приправа шашлик", "unit": "кг"}, {"name": "Томатний паста", "unit": "шт"}, {"name": "Туз", "unit": "кг"}, {"name": "Урганч УН", "unit": "кг"}, {"name": "Чит перечатка", "unit": "шт"}], "OLIMP GARDEN: Бар 1 склад": [{"name": "7 Уп", "unit": "шт"}, {"name": "Адреналин 0,45", "unit": "шт"}, {"name": "Алпен Голд", "unit": "шт"}, {"name": "Арк Теа 1.25л", "unit": "шт"}, {"name": "Арк-Теа 0.5л", "unit": "шт"}, {"name": "Боржоми", "unit": "шт"}, {"name": "Боунтий кичик", "unit": "шт"}, {"name": "Вико 1л", "unit": "шт"}, {"name": "Влажний салфетка 1шт", "unit": "шт"}, {"name": "Зубочистка", "unit": "шт"}, {"name": "Кола 0,5", "unit": "шт"}, {"name": "Кола 1 л", "unit": "шт"}, {"name": "Кола 1,5 л", "unit": "шт"}, {"name": "Кола баночний 0,45", "unit": "шт"}, {"name": "Кола баночный 0,25", "unit": "шт"}, {"name": "Копкокли идиш катта", "unit": "шт"}, {"name": "Маунтинт дюв 1л", "unit": "шт"}, {"name": "Миллий кола 0,5л", "unit": "шт"}, {"name": "Миринда 1,5л", "unit": "шт"}, {"name": "Мохито 0,45", "unit": "шт"}, {"name": "Орбит", "unit": "шт"}, {"name": "Пепси (баночный) 0.45", "unit": "шт"}, {"name": "Пепси 0,5л", "unit": "шт"}, {"name": "Пепси 1,5л", "unit": "шт"}, {"name": "Пепси 1л", "unit": "шт"}, {"name": "Плиточный (КиЧиК)", "unit": "шт"}, {"name": "Плиточный (катта)", "unit": "шт"}, {"name": "Ред-булл 0.25", "unit": "шт"}, {"name": "Салют шт", "unit": "шт"}, {"name": "Сникерс катта шт", "unit": "шт"}, {"name": "Сникерс кичик шт", "unit": "шт"}, {"name": "Сок 1 л", "unit": "шт"}, {"name": "Сок детски", "unit": "шт"}, {"name": "Спрайт 0,5л", "unit": "шт"}, {"name": "Спрайт 1,5л", "unit": "шт"}, {"name": "Спрайт 1л", "unit": "шт"}, {"name": "Сув 0,5л", "unit": "шт"}, {"name": "Сув 1,5л", "unit": "шт"}, {"name": "Сув 1л", "unit": "шт"}, {"name": "Сув 1л (сайхун)", "unit": "шт"}, {"name": "Тошкент Суви 0,5л", "unit": "шт"}, {"name": "Фанта 0,5л", "unit": "шт"}, {"name": "Фанта 1,5л", "unit": "шт"}, {"name": "Фанта 1л", "unit": "шт"}, {"name": "Флеш 0,45", "unit": "шт"}, {"name": "Чорток 0,5", "unit": "шт"}], "OLIMP GARDEN: Бар 3 склад": [{"name": "Кофе лавазза кг(зерновой)", "unit": "кг"}, {"name": "Кук чой кг", "unit": "кг"}, {"name": "Лимон сироп", "unit": "л"}, {"name": "Миллий лимоо 1,5л шт", "unit": "шт"}, {"name": "Мохито сироп", "unit": "л"}, {"name": "Разрихител", "unit": "кг"}, {"name": "Сув 1,5л", "unit": "шт"}, {"name": "Сут лактел", "unit": "л"}, {"name": "Туз", "unit": "кг"}, {"name": "Чококрем", "unit": "кг"}, {"name": "Шакар кг", "unit": "кг"}], "OLIMP GARDEN: Горячий склад": [{"name": "Аджика п/ф", "unit": "кг"}, {"name": "Аланга бурунч", "unit": "кг"}, {"name": "Ананас консерва катта", "unit": "шт"}, {"name": "Барбекю колбаса", "unit": "кг"}, {"name": "Бедана (пишган) п\\ф", "unit": "шт"}, {"name": "Бешбармак хамир п/ф", "unit": "кг"}, {"name": "Бешбармок гушт п/ф", "unit": "кг"}, {"name": "Борщ П/Ф", "unit": "шт"}, {"name": "Бургер булика 130гр  п\\ф", "unit": "шт"}, {"name": "Вагури п/ф", "unit": "кг"}, {"name": "Вириска стейк п\\ф", "unit": "кг"}, {"name": "Вырезка", "unit": "кг"}, {"name": "Голубцы п/ф", "unit": "шт"}, {"name": "Гумма кофте п\\ф", "unit": "шт"}, {"name": "Гушт 2-сорт", "unit": "кг"}, {"name": "Гушт прес п/ф", "unit": "кг"}, {"name": "Дил пишган п/ф", "unit": "кг"}, {"name": "Индейка", "unit": "кг"}, {"name": "КОРМА гушт п/ф", "unit": "кг"}, {"name": "Картошка фри", "unit": "кг"}, {"name": "Катта Бедана (пишган) п\\ф", "unit": "шт"}, {"name": "Кетчуп", "unit": "шт"}, {"name": "КоВРилган лавлаги п/ф", "unit": "кг"}, {"name": "Коврилган гушт п\\ф", "unit": "кг"}, {"name": "Кози", "unit": "кг"}, {"name": "Козон кабоб п\\ф", "unit": "кг"}, {"name": "Контр Вырезка", "unit": "кг"}, {"name": "Копкокли идиш катта", "unit": "шт"}, {"name": "Кора бурч (майда)", "unit": "кг"}, {"name": "Куза Тушонка п\\ф", "unit": "порц"}, {"name": "Куза Шорва Мол п/ф", "unit": "порц"}, {"name": "Кухиний крылишка п\\ф", "unit": "кг"}, {"name": "Лаваш хамр", "unit": "шт"}, {"name": "Лагмон хамир п/ф", "unit": "кг"}, {"name": "Лозер бурунч", "unit": "кг"}, {"name": "Маянез бутилка", "unit": "шт"}, {"name": "Мева безак (КИЧИК)", "unit": "шт"}, {"name": "Местний товук п/ф", "unit": "шт"}, {"name": "Миллий миксни котлети п/ф", "unit": "шт"}, {"name": "Мини котлет (шт) п/ф", "unit": "шт"}, {"name": "Мишак- пишган п/ф", "unit": "кг"}, {"name": "Окорочка Фаршированный п\\ф", "unit": "шт"}, {"name": "Оливка", "unit": "кг"}, {"name": "Олимп товук п\\ф", "unit": "шт"}, {"name": "Осма шорва п/ф", "unit": "порц"}, {"name": "Преправа унверсал", "unit": "кг"}, {"name": "Соус идиш (250гр)", "unit": "шт"}, {"name": "Стейк мол кухня п/ф", "unit": "кг"}, {"name": "Сут", "unit": "л"}, {"name": "Сыр янтар", "unit": "кг"}, {"name": "Тарвуз шт", "unit": "шт"}, {"name": "Тифтел п/ф", "unit": "шт"}, {"name": "Товук кози", "unit": "кг"}, {"name": "Туз", "unit": "кг"}, {"name": "Туйок п\\ф", "unit": "шт"}, {"name": "Уноши Шарик п/ф", "unit": "кг"}, {"name": "Уноши хамир п/ф", "unit": "кг"}, {"name": "Урама долма п/ф", "unit": "шт"}, {"name": "Урик компот п/ф", "unit": "л"}, {"name": "Фрит жир", "unit": "кг"}, {"name": "Хон п/ф", "unit": "порц"}, {"name": "Хохланд сыр (сыр) шт", "unit": "шт"}, {"name": "Хуроз чихомбил п/ф", "unit": "порц"}, {"name": "Чия компот п/ф", "unit": "л"}, {"name": "ШОРВА гушти П/ф", "unit": "кг"}, {"name": "Шарик маккен (картошка)", "unit": "кг"}, {"name": "Шашлик ижжон (кг) п/ф", "unit": "кг"}, {"name": "Шивит оши хамир п/ф", "unit": "кг"}, {"name": "Шпажки  бургер чоп", "unit": "шт"}, {"name": "Щедрое лето", "unit": "кг"}, {"name": "Корин туйок п/ф", "unit": "порц"}], "OLIMP GARDEN: Коча бар склад": [{"name": "Кофе лавазза кг(зерновой)", "unit": "кг"}, {"name": "Лимон сироп", "unit": "л"}, {"name": "Миллий лимоо 1,5л шт", "unit": "шт"}, {"name": "Мохито сироп", "unit": "л"}, {"name": "Разрихител", "unit": "кг"}, {"name": "Спрайт 1,5л", "unit": "шт"}, {"name": "Спрайт 1л", "unit": "шт"}, {"name": "Сув 1,5л", "unit": "шт"}, {"name": "Чококрем", "unit": "кг"}], "OLIMP GARDEN: Мангал склад": [{"name": "Барбекю колбаса", "unit": "кг"}, {"name": "Вырезка", "unit": "кг"}, {"name": "Гиждувон 100гр (шт) п/ф", "unit": "шт"}, {"name": "Гиждувон 80гр (шт) п/ф", "unit": "шт"}, {"name": "Гумма кофте п\\ф", "unit": "шт"}, {"name": "Думба шашлик (шт) п/ф", "unit": "шт"}, {"name": "Жужа (200гр) шт", "unit": "шт"}, {"name": "Ижжон шашлик (шт)  П/ф", "unit": "шт"}, {"name": "Кофте п/ф", "unit": "шт"}, {"name": "Крылишки шашлик (шт)  п/ф", "unit": "шт"}, {"name": "Куй буйин п/ф", "unit": "кг"}, {"name": "Кусковой куй (шт) п/ф", "unit": "шт"}, {"name": "Кусковой мол (шт) П/ф", "unit": "шт"}, {"name": "Лаваш хамр", "unit": "шт"}, {"name": "Макка", "unit": "шт"}, {"name": "Мини котлет (шт) п/ф", "unit": "шт"}, {"name": "Напалеон  шашлик (шт) п/ф", "unit": "шт"}, {"name": "Патир шашлик (шт) п/ф", "unit": "шт"}, {"name": "Пийоз", "unit": "кг"}, {"name": "Рулет  шашлик (шт) п\\ф", "unit": "шт"}, {"name": "Сетка товук п/ф", "unit": "шт"}, {"name": "Соус идиш (250гр)", "unit": "шт"}, {"name": "Стейк карейка кг п/ф", "unit": "кг"}, {"name": "Стейк куй  п/ф", "unit": "кг"}, {"name": "Стейк мол п\\ф", "unit": "кг"}, {"name": "Товук шашлик п/ф", "unit": "шт"}, {"name": "Томатний паста", "unit": "шт"}, {"name": "Урдак шашлик п\\ф", "unit": "шт"}, {"name": "Фергамент когоз", "unit": "шт"}, {"name": "Чит перечатка", "unit": "шт"}], "OLIMP GARDEN: Нон чой склад": [{"name": "Кора чой кг", "unit": "кг"}, {"name": "Кофе лавазза кг(зерновой)", "unit": "кг"}, {"name": "Кук чой кг", "unit": "кг"}, {"name": "Олимп кулча п/ф", "unit": "шт"}, {"name": "Соус идиш (250гр)", "unit": "шт"}, {"name": "Шакар кг", "unit": "кг"}], "OLIMP GARDEN: Салат склад": [{"name": "Бодринг салёный п/ф", "unit": "кг"}, {"name": "Гарох 1л", "unit": "шт"}, {"name": "Дил пишган п/ф", "unit": "кг"}, {"name": "Зелен", "unit": "кг"}, {"name": "Зира", "unit": "кг"}, {"name": "Индейка", "unit": "кг"}, {"name": "Кайнаган картошка  п/ф", "unit": "кг"}, {"name": "Кайнаган лавлаги п/ф", "unit": "кг"}, {"name": "Карам салёний п/ф", "unit": "кг"}, {"name": "Картошка коврилган п/ф", "unit": "кг"}, {"name": "Кенза (зелен)", "unit": "кг"}, {"name": "Кенза (переправа)", "unit": "кг"}, {"name": "Кизил сабзи", "unit": "кг"}, {"name": "Кора бурч (майда)", "unit": "кг"}, {"name": "Крахмал", "unit": "кг"}, {"name": "Кузикорин п/ф", "unit": "кг"}, {"name": "Кукуруз (макка) 1л", "unit": "шт"}, {"name": "Кунжут", "unit": "кг"}, {"name": "Лимон сироп", "unit": "л"}, {"name": "Маянез", "unit": "шт"}, {"name": "Норин гушт П/Ф", "unit": "кг"}, {"name": "Норин хамир п/ф", "unit": "кг"}, {"name": "Нуш пийоз", "unit": "кг"}, {"name": "Паприка", "unit": "кг"}, {"name": "Преправа унверсал", "unit": "кг"}, {"name": "Салат гушт п/ф", "unit": "кг"}, {"name": "Салат лист", "unit": "кг"}, {"name": "Салёни помидор п/ф", "unit": "шт"}, {"name": "Соя соус (литр)", "unit": "л"}, {"name": "Сухарик п/ф", "unit": "кг"}, {"name": "Сыр янтар", "unit": "кг"}, {"name": "Товук Филе (пишган) п/ф", "unit": "кг"}, {"name": "Товук кози", "unit": "кг"}, {"name": "Томатний паста", "unit": "шт"}, {"name": "Туз", "unit": "кг"}, {"name": "Уксус 100%", "unit": "л"}, {"name": "Уксус яблочний", "unit": "шт"}, {"name": "Чеснок", "unit": "кг"}, {"name": "Чили сладки соус (ЛИТР)", "unit": "л"}, {"name": "Шампинион банка", "unit": "шт"}, {"name": "Кук Памидор Саленний п/ф", "unit": "кг"}], "OLIMP GARDEN: Склад Olimp garden": [{"name": "Анти жир", "unit": "шт"}, {"name": "Близна", "unit": "шт"}, {"name": "Бумажный салфетка", "unit": "шт"}, {"name": "Вилка  одноразовая", "unit": "шт"}, {"name": "Влажний салфетка 1шт", "unit": "шт"}, {"name": "Гугурт (тавар) шт", "unit": "шт"}, {"name": "Гупка", "unit": "шт"}, {"name": "Дери", "unit": "шт"}, {"name": "Етикетка стикер", "unit": "кг"}, {"name": "Жидки мило 5л", "unit": "шт"}, {"name": "Зубочистка", "unit": "шт"}, {"name": "Карейс туз", "unit": "кг"}, {"name": "Картошка", "unit": "кг"}, {"name": "Кепка", "unit": "шт"}, {"name": "Кора бурч (майда)", "unit": "кг"}, {"name": "Кошик одноразовая", "unit": "шт"}, {"name": "Муср пакет", "unit": "шт"}, {"name": "Муср пакет катта", "unit": "шт"}, {"name": "Норин гушт П/Ф", "unit": "кг"}, {"name": "Норин хамир п/ф", "unit": "кг"}, {"name": "Одноразовая Перчатка", "unit": "шт"}, {"name": "Ок куйлак", "unit": "шт"}, {"name": "Олимп Пакет 3 кг", "unit": "кг"}, {"name": "Орбит", "unit": "шт"}, {"name": "Освижитель", "unit": "шт"}, {"name": "Пакет 3кг", "unit": "шт"}, {"name": "Пакет рулон", "unit": "шт"}, {"name": "Пакет рулон (кичик)", "unit": "шт"}, {"name": "Пахта йоги", "unit": "л"}, {"name": "Перчатка кора", "unit": "шт"}, {"name": "Пийоз", "unit": "кг"}, {"name": "Пол трапка", "unit": "шт"}, {"name": "Принтер чек когоз (шт)", "unit": "шт"}, {"name": "Резинка Перчатка сори", "unit": "шт"}, {"name": "Салат гушт п/ф", "unit": "кг"}, {"name": "Салфетка", "unit": "шт"}, {"name": "Сарик катта стреч", "unit": "шт"}, {"name": "Семечка йог", "unit": "л"}, {"name": "Сим чутка (шт)", "unit": "шт"}, {"name": "Сода", "unit": "шт"}, {"name": "Солихан Салфетка", "unit": "шт"}, {"name": "Спрей 500 мл", "unit": "шт"}, {"name": "Стреч катта", "unit": "шт"}, {"name": "Сухарик п/ф", "unit": "кг"}, {"name": "Тала гел", "unit": "шт"}, {"name": "Товук Филе (пишган) п/ф", "unit": "кг"}, {"name": "Туалетный бумага", "unit": "шт"}, {"name": "Туз", "unit": "кг"}, {"name": "Уксус яблочний", "unit": "шт"}, {"name": "Умонник Салфетка", "unit": "шт"}, {"name": "Фалга", "unit": "шт"}, {"name": "Фартук", "unit": "шт"}, {"name": "Фергамент когоз", "unit": "шт"}, {"name": "Футболка", "unit": "шт"}, {"name": "Чит перечатка", "unit": "шт"}, {"name": "кофе стакан", "unit": "шт"}, {"name": "раквина сетка", "unit": "шт"}], "OLIMP GARDEN: Сомса склад": [{"name": "Болгарский", "unit": "кг"}, {"name": "Гушт 2-сорт", "unit": "кг"}, {"name": "Гушт йоги", "unit": "кг"}, {"name": "Зира", "unit": "кг"}, {"name": "Ижжон (1 чикарилган) п/ф", "unit": "кг"}, {"name": "Ижжон (2 чикарилган) п/ф", "unit": "кг"}, {"name": "Исмалок п/ф", "unit": "кг"}, {"name": "Кенза (переправа)", "unit": "кг"}, {"name": "Козок ун", "unit": "кг"}, {"name": "Кора бурч (майда)", "unit": "кг"}, {"name": "Кунжут", "unit": "кг"}, {"name": "Олот сомса гушт тугралган п/ф", "unit": "кг"}, {"name": "Сомса гушт тугралган п/ф", "unit": "кг"}, {"name": "Сомса томчи (кг) п/ф", "unit": "кг"}, {"name": "Сут", "unit": "л"}, {"name": "Товук филе", "unit": "кг"}, {"name": "Туз", "unit": "кг"}, {"name": "Тухум", "unit": "шт"}, {"name": "Фергамент когоз", "unit": "шт"}, {"name": "Хохланд сыр (сыр) шт", "unit": "шт"}], "OLIMP 1: Олимп склад (БОЗОР)": [{"name": "Болгарский", "unit": "кг"}], "OLIMP GARDEN: Хоз.товар склад": [{"name": "Аланга бурунч", "unit": "кг"}, {"name": "Баклажан", "unit": "кг"}, {"name": "Болгарский", "unit": "кг"}, {"name": "Бумажный салфетка", "unit": "шт"}, {"name": "Гречка", "unit": "кг"}, {"name": "Гужа хом", "unit": "кг"}, {"name": "Гушт 3-сорт", "unit": "кг"}, {"name": "Гушт 4-сорт", "unit": "кг"}, {"name": "Дил пишган п/ф", "unit": "кг"}, {"name": "Ижжон (2 чикарилган) п/ф", "unit": "кг"}, {"name": "Карам", "unit": "кг"}, {"name": "Карам Китай", "unit": "кг"}, {"name": "Карейс туз", "unit": "кг"}, {"name": "Картошка", "unit": "кг"}, {"name": "Катик", "unit": "шт"}, {"name": "Катик (литр)", "unit": "л"}, {"name": "Кенза (зелен)", "unit": "кг"}, {"name": "Кенза (переправа)", "unit": "кг"}, {"name": "Кизил сабзи", "unit": "кг"}, {"name": "Кишмиш", "unit": "кг"}, {"name": "Коврилган гушт п\\ф", "unit": "кг"}, {"name": "Козок ун", "unit": "кг"}, {"name": "Контр Вырезка", "unit": "кг"}, {"name": "Кора бурч (майда)", "unit": "кг"}, {"name": "Лозер бурунч", "unit": "кг"}, {"name": "Макарон", "unit": "кг"}, {"name": "Местний товук п/ф", "unit": "шт"}, {"name": "Одноразовая Перчатка", "unit": "шт"}, {"name": "Олимп товук п\\ф", "unit": "шт"}, {"name": "Пакет рулон", "unit": "шт"}, {"name": "Памидор кг", "unit": "кг"}, {"name": "Паприка", "unit": "кг"}, {"name": "Пахта йоги", "unit": "л"}, {"name": "Перчатка кора", "unit": "шт"}, {"name": "Пийоз", "unit": "кг"}, {"name": "Преправа унверсал", "unit": "кг"}, {"name": "Сабзи сарик", "unit": "кг"}, {"name": "Салат гушт п/ф", "unit": "кг"}, {"name": "Свежи Аччи бурч", "unit": "кг"}, {"name": "Семечка йог", "unit": "л"}, {"name": "Сут", "unit": "л"}, {"name": "Товук Филе (пишган) п/ф", "unit": "кг"}, {"name": "Товук катта (суйак)", "unit": "кг"}, {"name": "Товук филе", "unit": "кг"}, {"name": "Томатний паста", "unit": "шт"}, {"name": "Туз", "unit": "кг"}, {"name": "Тухум", "unit": "шт"}, {"name": "Урганч УН", "unit": "кг"}, {"name": "Урик компот п/ф", "unit": "л"}, {"name": "Чеснок", "unit": "кг"}, {"name": "Чия компот п/ф", "unit": "л"}, {"name": "ШОРВА гушти П/ф", "unit": "кг"}, {"name": "Шакар кг", "unit": "кг"}, {"name": "Щедрое лето", "unit": "кг"}]}</script>
+<script id="units-data" type="application/json">{"Рамозон сув 0.5": "шт", "1-свой Напалеон,Рулет маринад кг п\\ф": "кг", "2-свой Напалеон маринад (думба) кг п\\ф": "кг", "2-свой Рулет маринад (думба) кг п\\ф": "кг", "2-сорт (салат гушт)": "кг", "3 панжа п/ф": "порц", "7 Уп": "шт", "Автомат сода": "шт", "Агита чивин дори": "шт", "Адана мариновка (кг) п\\ф": "кг", "Адана шашлик (шт) п/ф": "шт", "Аджика п/ф": "кг", "Адреналин 0,45": "шт", "Аланга бурунч": "кг", "Алпен Голд": "шт", "Ананас Свежие": "шт", "Ананас консерва катта": "шт", "Андижан мороженное": "кг", "Анти жир": "шт", "Апелсин кг": "кг", "Апелсин шт": "шт", "Аригано": "кг", "Арк Теа 1.25л": "шт", "Арк-Теа 0.5л": "шт", "Арча преправа": "кг", "Баклажан": "кг", "Балик Коробка": "шт", "Банан шт": "шт", "Банка": "шт", "Барбекю колбаса": "кг", "Батарея шт": "шт", "Батон (1шт)": "шт", "Батон кг": "кг", "Бедана (пишган) п\\ф": "шт", "Бедана Катта хом": "шт", "Бедана хом  (шт)": "шт", "Бешбармак хамир п/ф": "кг", "Бешбармок гушт п/ф": "кг", "Биг чиз": "шт", "Бифштекс  ижжон п/ф  кг": "кг", "Блендр": "шт", "Близна": "шт", "Бодринг кг": "кг", "Бодринг салёный п/ф": "кг", "Бодринг соленний банка п/ф": "шт", "Бодринг туз": "кг", "Болгарский": "кг", "Болгарский (Тозаланган) п\\ф": "кг", "Бон филе п/ф": "кг", "Боржоми": "шт", "Борщ П/Ф": "шт", "Боунтий кичик": "шт", "Бумажный салфетка": "шт", "Бургер булика 130гр  п\\ф": "шт", "Бургер булика 80гр  п\\ф": "шт", "Бургер котлет (шт) п/ф": "шт", "Буханка (1шт)": "шт", "Вагури п/ф": "кг", "Вакум пакет": "шт", "Вантуз": "шт", "Варонка": "шт", "Вико 1л": "шт", "Вилка  одноразовая": "шт", "Вириска стейк п\\ф": "кг", "Влажний салфетка 1шт": "шт", "Вырезка": "кг", "Гарох": "шт", "Гарох (персонал)": "кг", "Гарох 1л": "шт", "Гиждуван шашлик 200гр п\\ф": "шт", "Гиждувон 100гр (шт) п/ф": "шт", "Гиждувон 80 гр маринад кг п/ф": "кг", "Гиждувон 80гр (шт) п/ф": "шт", "Гиждувон маринад (кг) п\\ф": "кг", "Голд Сари йог": "кг", "Голубцы п/ф": "шт", "Горчитца": "кг", "Грейфрут шт": "шт", "Гречка": "кг", "Груша шт": "шт", "Гугурт (тавар) шт": "шт", "Гужа п/ф": "кг", "Гужа хом": "кг", "Гумма кофте п\\ф": "шт", "Гупка": "шт", "Гурвак шт": "шт", "Гушт 2-сорт": "кг", "Гушт 3-сорт": "кг", "Гушт 4-сорт": "кг", "Гушт 5-сорт": "кг", "Гушт Манти  п/ф": "шт", "Гушт йоги": "кг", "Гушт касадон пила уста": "шт", "Гушт кесиладиган ускуна": "шт", "Гушт прес п/ф": "кг", "Дери": "шт", "Дил": "кг", "Дил (отходсиз)": "кг", "Дил пишган п/ф": "кг", "Дода барак п\\ф": "кг", "Докторская Колбаса": "кг", "Донг йог (шедрое лето)": "кг", "Драгон мева": "шт", "Дрожа": "кг", "Дрожа суйук": "кг", "Думба": "кг", "Думба шашлик (шт) п/ф": "шт", "Економка": "шт", "Еско сироп": "л", "Етикетка стикер": "кг", "Жакет": "шт", "Желотин": "кг", "Жигар": "кг", "Жидки мило 5л": "шт", "Жидкий мило кичик": "шт", "Жужа (200гр) шт": "шт", "Жуйан Курдик п/ф": "порц", "Жуйан ун": "кг", "Жуйан хамир п/ф": "кг", "Зажигалка": "шт", "Зайчик молоко": "шт", "Зелен": "кг", "Зигрик кг": "кг", "Зира": "кг", "Зубочистка": "шт", "Идиш кичик": "шт", "Ижжон (1 чикарилган) п/ф": "кг", "Ижжон (2 чикарилган) п/ф": "кг", "Ижжон катлет (80гр)": "шт", "Ижжон шашлик (шт)  П/ф": "шт", "Ижжон шашлик 200гр п\\ф": "шт", "Индейка": "кг", "Исмалак": "кг", "Исмалок п/ф": "кг", "Йогич": "шт", "Йон ковурга п/ф": "порц", "Йон соми (Стейк)": "кг", "Йон суми (отходсиз)": "кг", "КАЙМОК кг": "кг", "КОРМА гушт п/ф": "кг", "КФС Мариновка п\\ф": "кг", "Кади Манти п/ф": "шт", "Кайнаган картошка  п/ф": "кг", "Кайнаган лавлаги (тозаланган) П/ф": "кг", "Кайнаган лавлаги п/ф": "кг", "Карам": "кг", "Карам Китай": "кг", "Карам салёний п/ф": "кг", "Карамли долма п/ф": "шт", "Карейс туз": "кг", "Картошка": "кг", "Картошка (тозаланган) п\\ф": "кг", "Картошка коврилган п/ф": "кг", "Картошка фри": "кг", "Касса чек когоз (шт)": "шт", "Катик": "шт", "Катик (литр)": "л", "Катта Бедана (пишган) п\\ф": "шт", "Кенза (зелен)": "кг", "Кенза (переправа)": "кг", "Кепка": "шт", "Кетчуп": "шт", "Киви": "кг", "Киви шт": "шт", "Киевский котлет п/ф": "шт", "Кизил бурч (майдаланган)": "кг", "Кизил сабзи": "кг", "Кизил сабзи кайнаган п\\ф": "кг", "Кир совун": "шт", "Кишмиш": "кг", "КоВРилган лавлаги п/ф": "кг", "Ковок": "кг", "Коврилган гушт п\\ф": "кг", "Ковун (шт)": "шт", "Ковурга маринад п\\ф": "кг", "Ковурга шашлик 200гр п\\ф": "шт", "Кози": "кг", "Козок ун": "кг", "Козон кабоб п\\ф": "кг", "Козон кавоб (4-сорт)": "кг", "Кола 0,3 л": "шт", "Кола 0,5": "шт", "Кола 1 л": "шт", "Кола 1,5 л": "шт", "Кола баночний 0,45": "шт", "Кола баночный 0,25": "шт", "Коммунарка 200гр": "шт", "Компот каструлка": "шт", "Контейнер идиш 1.250 гр": "шт", "Контейнер кичик 500 гр": "шт", "Контр (отходсиз)": "кг", "Контр Вырезка": "кг", "Контр гушт (отходсиз)": "кг", "Копкокли идиш катта": "шт", "Кора бурч (майда)": "кг", "Кора чой кг": "кг", "Корали": "кг", "Корин": "кг", "Корин туйок п/ф": "порц", "Кофе лавазза кг(зерновой)": "кг", "Кофте ижжон п\\ф": "кг", "Кофте п/ф": "шт", "Кошик одноразовая": "шт", "Краситеь": "шт", "Крахмал": "кг", "Крахмал картофелни": "кг", "Крылиишки маринад (кг) п\\ф": "кг", "Крылишки": "кг", "Крылишки (отходсиз)": "кг", "Крылишки шашлик (шт)  п/ф": "шт", "Куза Тушонка п\\ф": "порц", "Куза Шорва Мол п/ф": "порц", "Куза идиш": "кг", "Кузикорин": "кг", "Кузикорин п/ф": "кг", "Куй 1-сорт": "кг", "Куй 1-сорт (Вагурий)": "кг", "Куй 1-сорт (Карейка)": "кг", "Куй 2-сорт": "кг", "Куй 2-сорт (Вагурий)": "кг", "Куй 2-сорт (отходсиз)": "кг", "Куй 4-сорт": "кг", "Куй 4-сорт (Буйин)": "кг", "Куй 5-сорт": "кг", "Куй Бутун": "кг", "Куй Чуммик шт": "шт", "Куй буйин п/ф": "кг", "Куй карейка кухня п/ф": "кг", "Куй карейка п/ф": "кг", "Кук Памидор Саленний п/ф": "кг", "Кук Ушок барак (КГ)  п/ф": "кг", "Кук памидор": "кг", "Кук чой кг": "кг", "Кукуруз (макка) 1л": "шт", "Кумир 5 секунд": "шт", "Кунжут": "кг", "Куркума": "кг", "Кусковой куй  маринад (кг) п\\ф": "кг", "Кусковой куй (шт) п/ф": "шт", "Кусковой мол (шт) П/ф": "шт", "Кусковой мол маринад (кг) п\\ф": "кг", "Кухиний крылишка п\\ф": "кг", "Лаваш хамр": "шт", "Лавлаги": "кг", "Лавро лист переправа": "кг", "Лаган": "шт", "Лагмон хамир п/ф": "кг", "Лимон": "кг", "Лимон Кислота кг": "кг", "Лимон сироп": "л", "Лимонад п/ф": "л", "Липка": "шт", "Ловя": "кг", "Лозер бурунч": "кг", "Лули фарш  п/ф": "кг", "МОЛ ГУШТИ": "кг", "Макарон": "кг", "Макка": "шт", "Мандарин шт": "шт", "Манти (гуштли) Ассорти п/ф": "шт", "Манти (кади) Ассорти п/ф": "шт", "Манти (обичний гуштли) начинка п/ф": "кг", "Маркер апарат": "шт", "Маркировка когоз": "шт", "Марс кичик": "шт", "Маселка": "кг", "Маунтинт дюв 1л": "шт", "Маянез": "шт", "Маянез бутилка": "шт", "Маянез махеевь кг": "кг", "Мева безак (КИЧИК)": "шт", "Медовка  мандарин шт": "шт", "Местний Товук (шт)": "шт", "Местний товук (кг)": "кг", "Местний товук п/ф": "шт", "Миллий кола 0,5л": "шт", "Миллий лимоо 1,5л шт": "шт", "Миллий микс п/ф": "порц", "Миллий миксни котлети п/ф": "шт", "Мини котлет (шт) п/ф": "шт", "Мини котлет 40 гр п/ф": "шт", "Миринда 1,5л": "шт", "Мишак- пишган п/ф": "кг", "Мол ковурга маринад п\\ф": "кг", "Мохито 0,45": "шт", "Мохито сироп": "л", "Мохито стакан": "шт", "Мохито стакан (одноразовый)": "шт", "Моцарелла сыр": "кг", "Мош персонал": "кг", "Муср пакет": "шт", "Муср пакет катта": "шт", "Мясорубка Чарх": "шт", "Мясорубка диш": "шт", "Мята": "кг", "Напалеон  шашлик (шт) п/ф": "шт", "Ноисй сок (тавар) 1,2л": "шт", "Ноисй сок 0,5л": "шт", "Норин гушт П/Ф": "кг", "Норин хамир п/ф": "кг", "Нухат": "кг", "Нухат п/ф": "кг", "Нуш пийоз": "кг", "Одноразовая Перчатка": "шт", "Одноразовый Стакан": "шт", "Ок куйлак": "шт", "Окорочка Фаршированный п\\ф": "шт", "Оливка": "кг", "Оливковое масло": "л", "Олимп Гушт": "шт", "Олимп Пакет 3 кг": "кг", "Олимп гушт п/ф": "шт", "Олимп кулча п/ф": "шт", "Олимп товук п\\ф": "шт", "Олма Шт (Гарден)": "шт", "Олот сомса гушт тугралган п/ф": "кг", "Орбит": "шт", "Орегано преправа": "кг", "Освижител балончик": "шт", "Освижитель": "шт", "Осма шорва (гуштли) п/ф": "порц", "Осма шорва п/ф": "порц", "Падаркага чашка": "шт", "Пакет 10кг": "шт", "Пакет 3кг": "шт", "Пакет рулон": "шт", "Пакет рулон (кичик)": "шт", "Палов Заказной 1 кг п/ф": "кг", "Палов оддий (спец заказ учун) п/ф": "кг", "Палов оддий п/ф": "кг", "Памидор кг": "кг", "Памидор туз": "кг", "Паприка": "кг", "Патир хамир шт п\\ф": "шт", "Патир шашлик (шт) п/ф": "шт", "Пахта йоги": "л", "Пепси (баночный) 0.45": "шт", "Пепси 0,5л": "шт", "Пепси 1,5л": "шт", "Пепси 1л": "шт", "Перловка (персонал)": "кг", "Персонал кампот п\\ф": "л", "Перчатка кора": "шт", "Пийоз": "кг", "Пийоз (Тозаланган) п\\ф": "кг", "Плиточный (КиЧиК)": "шт", "Плиточный (катта)": "шт", "Пол трапка": "шт", "Преправа унверсал": "кг", "Принтер чек когоз (шт)": "шт", "Приправа шашлик": "кг", "Пул резинка": "кг", "Разрихител": "кг", "Рамозан холваси": "кг", "Рамозон хурмоси": "кг", "Рангли салфетка": "шт", "Ред-булл 0.25": "шт", "Редиска": "кг", "Резинка Перчатка сори": "шт", "Резинка доска": "шт", "Розмарин": "кг", "Рокстар енергетик": "шт", "Ролтон (преправа)": "кг", "Рулет  шашлик (шт) п\\ф": "шт", "СУВ": "л", "Сабзи сарик": "кг", "Сабой каробка": "шт", "Сабой каробка кичик": "шт", "Салат гушт п/ф": "кг", "Салат идиш шт": "шт", "Салат лист": "кг", "Салфетка": "шт", "Салфетнитса": "шт", "Салют шт": "шт", "Салёни помидор п/ф": "шт", "Салёний Помидор (кичик) п/ф": "шт", "Сапак": "шт", "Сарик катта стреч": "шт", "Свежи Аччи бурч": "кг", "Селдерей": "кг", "Семечка йог": "л", "Сетка товук п/ф": "шт", "Сим чутка (шт)": "шт", "Сита": "шт", "Сихак": "шт", "Сметана": "кг", "Сникерс катта шт": "шт", "Сникерс кичик шт": "шт", "Сода": "шт", "Сок 1 л": "шт", "Сок детски": "шт", "Солений бодринг банка": "кг", "Солихан Салфетка": "шт", "Сомса гушт тугралган п/ф": "кг", "Сомса томчи (кг) п/ф": "кг", "Соус Танхо 330гр": "шт", "Соус идиш (250гр)": "шт", "Соус идиш 0.5": "шт", "Соус идиш 40гр": "шт", "Соя соус (литр)": "л", "Спрайт 0,5л": "шт", "Спрайт 1,5л": "шт", "Спрайт 1л": "шт", "Спрей 500 мл": "шт", "Стейк карейка кг п/ф": "кг", "Стейк куй  п/ф": "кг", "Стейк мол кухня п/ф": "кг", "Стейк мол п\\ф": "кг", "Стейк рибай п/ф": "кг", "Стреч катта": "шт", "Стреч кулонка": "кг", "Сув 0,5л": "шт", "Сув 1,5л": "шт", "Сув 1л": "шт", "Сув 1л (сайхун)": "шт", "Сут": "л", "Сут лактел": "л", "Сухарик п/ф": "кг", "Сыр янтар": "кг", "Тала гел": "шт", "Тала гел 5л": "шт", "Таплени масло": "кг", "Таракан дори": "шт", "Тарвуз шт": "шт", "Тарози усто": "шт", "Твикс  кичик": "шт", "Творожный сыр": "кг", "Тесс чой шт": "шт", "Тифтел п/ф": "шт", "Товох": "шт", "Товук 1.1 кг": "шт", "Товук 1.5 кг": "шт", "Товук КАТТА (кг)": "кг", "Товук Филе (пишган) п/ф": "кг", "Товук Шорва п/ф": "шт", "Товук гушти (окорачка)": "кг", "Товук катта (соми)": "кг", "Товук катта (суйак)": "кг", "Товук кг": "кг", "Товук кози": "кг", "Товук козон кабоб п\\ф": "порц", "Товук окорачка (отходсиз)": "кг", "Товук окорочка п/ф": "кг", "Товук фарш (загатовка)  п/ф": "кг", "Товук филе": "кг", "Товук филе (отходсиз)": "кг", "Товук шашлик маринад П/Ф": "кг", "Товук шашлик п/ф": "шт", "Томатний паста": "шт", "Томчи сомса ижжон  П/ф": "кг", "Тошкент Суви 0,5л": "шт", "Туалетный бумага": "шт", "Туз": "кг", "Туйок": "шт", "Туйок п\\ф": "шт", "Турп": "кг", "Тухум": "шт", "Узум (Гарден)": "кг", "Узум япрок": "кг", "Уксус 100%": "л", "Уксус яблочний": "шт", "Умонник Салфетка": "шт", "Уноши Шарик п/ф": "кг", "Уноши хамир п/ф": "кг", "Урама долма п/ф": "шт", "Урганч УН": "кг", "Урдак сели п\\ф": "шт", "Урдак филе": "кг", "Урдак филе (отходсиз)": "кг", "Урдак шашлик мариновка п\\ф": "кг", "Урдак шашлик п\\ф": "шт", "Урдак шт": "шт", "Урик коки": "кг", "Урик компот п/ф": "л", "Урик шт": "шт", "Ушок барак  (КГ)  П/ф": "кг", "Ушок барак ижжон п/ф": "кг", "Ушок барак хамир п/ф": "кг", "Фалга": "шт", "Фанта 0,5л": "шт", "Фанта 1,5л": "шт", "Фанта 1л": "шт", "Фартук": "шт", "Фартук кожа": "шт", "Фергамент когоз": "шт", "Флеш 0,45": "шт", "Фрит жир": "кг", "Фрит масло": "л", "Футболка": "шт", "Хасп": "кг", "Холодец кг": "кг", "Холто": "шт", "Хон п/ф": "порц", "Хохланд сыр (сыр) шт": "шт", "Хрен": "шт", "Хураз шт": "шт", "Хурмо мева шт": "шт", "Хуроз чихомбил п/ф": "порц", "Хуроз шорва п\\ф": "порц", "Чайник": "шт", "Чакида мазали": "кг", "Чашка": "шт", "Черри памидор": "кг", "Чеснок": "кг", "Чечевица (кг)": "кг", "Чили сладки соус (ЛИТР)": "л", "Чит перечатка": "шт", "Чия": "кг", "Чия компот п/ф": "л", "Чококрем": "кг", "Чопер": "шт", "Чорток 0,5": "шт", "Чоткол 0.5": "шт", "Чумич (шт)": "шт", "Чуммик пишган п/ф (шт)": "шт", "ШОРВА гушти П/ф": "кг", "Шакар 1шт (пакетли)": "шт", "Шакар кг": "кг", "Шампинион банка": "шт", "Шарик маккен (картошка)": "кг", "Шашлик Полка шт": "шт", "Шашлик ижжон (кг) п/ф": "кг", "Шивит куритилган": "шт", "Шивит оши хамир п/ф": "кг", "Шиповник": "кг", "Шиповник компот п/ф": "л", "Шпажки  бургер чоп": "шт", "Щедрое лето": "кг", "держатель для стакана": "шт", "духовка коллик": "шт", "заказной пичок": "шт", "исвант": "шт", "кола бутылка 0,250": "шт", "контенер": "шт", "котлет босодон": "шт", "кофе стакан": "шт", "краска чотка": "шт", "кулонка деш": "шт", "лифта запчас": "кг", "маркер": "шт", "марожни кошик": "шт", "муср бочок": "шт", "мясорубка ремонт": "кг", "нержавика капкак": "шт", "отход": "кг", "пичак": "шт", "пичок чарх": "шт", "пол тайок": "шт", "понировка": "кг", "принтер когоз": "кг", "раквина сетка": "шт", "раквина тозолидон": "шт", "рангли стикер": "шт", "резинка лапатка": "шт", "сипса": "шт", "тарази": "шт", "тарази уста": "шт", "тахта хона": "шт", "тикач": "шт", "тйорка": "шт", "фанта бутылка 0,250": "шт", "чайни сода": "шт", "чанак": "шт", "чолпи": "шт", "шпател": "шт", "Манти (янги) п/ф": "шт", "Ланч катлет 40 гр п/ф": "шт"}</script>
+<script>
+(function () {
+  "use strict";
+
+  // ---- Manba (zagotovka ombori) endi QO'LDA tanlanmaydi -- har mahsulot
+  // "Ombor belgilash" sahifasida admin tomonidan oldindan belgilangan
+  // xaritaga qarab avtomatik aniqlanadi (накладnoy yaratilganda serverda).
+  // Bu yerda ROUTES faqat "qaysi qabul qiluvchilar mavjud" ro'yxatini
+  // (barcha manbalar bo'yicha birlashtirilgan holda) hosil qilish uchun. ----
+  var ROUTES = {
+    "БАРАК ЗАГАТОВКА": ["OLIMP 1: Барак склад", "OLIMP 1: Кухня склад", "OLIMP GARDEN: Барак склад"],
+    "ГЛАВНИЙ ЗАГАТОВКА": [
+      "OLIMP 1: Балик склад", "OLIMP 1: Бар 1 склад", "OLIMP 1: Бар 2 склад", "OLIMP 1: Бар 3 склад",
+      "OLIMP 1: Барак склад", "OLIMP 1: Будка", "OLIMP 1: Кухня склад", "OLIMP 1: Мангал склад",
+      "OLIMP 1: Салат склад", "OLIMP 1: Сомса склад", "OLIMP 1: Спорт Зал", "OLIMP 1: Упаковка склад",
+      "OLIMP 1: Хоз товар Олимп", "OLIMP GARDEN: Балик склад", "OLIMP GARDEN: Бар 1 склад",
+      "OLIMP GARDEN: Бар 3 склад", "OLIMP GARDEN: Барак склад", "OLIMP GARDEN: Горячий склад",
+      "OLIMP GARDEN: Коча бар склад", "OLIMP GARDEN: Мангал склад", "OLIMP GARDEN: Нон чой склад",
+      "OLIMP GARDEN: Салат склад", "OLIMP GARDEN: Склад Olimp garden", "OLIMP GARDEN: Сомса склад",
+    ],
+    "ГУШТ ЗАГАТОВОКА": [
+      "OLIMP 1: Барак склад", "OLIMP 1: Будка", "OLIMP 1: Кухня склад", "OLIMP 1: Мангал склад",
+      "OLIMP 1: Сомса склад", "OLIMP GARDEN: Барак склад", "OLIMP GARDEN: Горячий склад",
+      "OLIMP GARDEN: Мангал склад", "OLIMP GARDEN: Салат склад", "OLIMP GARDEN: Сомса склад",
+    ],
+    "КУХНЯ ЗАГАТОВКА": [
+      "OLIMP 1: Бар 2 склад", "OLIMP 1: Инвентар", "OLIMP 1: Кухня склад", "OLIMP 1: Мангал склад",
+      "OLIMP 1: Олимп склад (БОЗОР)", "OLIMP 1: Сомса склад", "OLIMP GARDEN: Горячий склад",
+      "OLIMP GARDEN: Мангал склад", "OLIMP GARDEN: Сомса склад", "OLIMP GARDEN: Хоз.товар склад",
+    ],
+    "МАНГАЛ ЗАГАТОВКА": [
+      "OLIMP 1: Будка", "OLIMP 1: Кухня склад", "OLIMP 1: Мангал склад", "OLIMP 1: Упаковка склад",
+      "OLIMP GARDEN: Мангал склад", "OLIMP GARDEN: Сомса склад",
+    ],
+    "САЛАТ ЗАГАТОВКА": ["OLIMP 1: Салат склад", "OLIMP GARDEN: Горячий склад", "OLIMP GARDEN: Салат склад"],
+    "ХАМИР ЗАГАТОВКА": [
+      "OLIMP 1: Бар 1 склад", "OLIMP 1: Барак склад", "OLIMP 1: Кухня склад", "OLIMP 1: Сомса склад",
+      "OLIMP GARDEN: Барак склад", "OLIMP GARDEN: Горячий склад", "OLIMP GARDEN: Нон чой склад",
+    ],
+  };
+
+  // ---- Kirish (login/parol) -- har login faqat o'z tashkilotiga (OLIMP GARDEN
+  // yoki OLIMP 1) tegishli qabul qiluvchilarni ko'radi ----
+  // Ba'zi loginlar (masalan aniq bir ombor xodimi) qo'shimcha "dest"ga ega --
+  // bunday login kirganda qabul qiluvchi tanlash ro'yxati chiqmaydi, avtomatik
+  // shu qiymatga o'rnatiladi (tanlov o'chirilgan holda ko'rsatiladi). Serverda
+  // ham majburan shu qiymat ishlatiladi (client tomon soxtalashtira olmaydi).
+  // Asosiy 2 ta rol shu yerda qattiq -- qolgan (aniq bir omborga bog'langan)
+  // loginlar endi admin.html "Loginlar" bo'limi orqali qo'shiladi/o'chiriladi,
+  // sahifa ochilganda serverdan (GET /admin/roles) yuklanib shu ob'ektga qo'shiladi.
+  var SEND_ENDPOINT = atob("aHR0cHM6Ly96YWdvdG92a2EtemF5YXZrYS1zZW5kLm9saW1wemFnb3RvdmthLndvcmtlcnMuZGV2");
+  var ROLES = {
+    "Garden": { pass: "0038", org: "OLIMP GARDEN" },
+    "Olimp": { pass: "0038", org: "OLIMP 1" },
+  };
+  var siteAuth = { login: "", pass: "" };
+  var lockScreen = document.getElementById("lockScreen");
+  var lockForm = document.getElementById("lockForm");
+  var lockError = document.getElementById("lockError");
+  var lockSubmitBtn = document.getElementById("lockSubmitBtn");
+  var cartDestSelect = document.getElementById("cartDestSelect");
+  var productSourceMap = {}; // GET /admin/map orqali yuklanadi -- faqat "❓" belgisi uchun
+
+  lockSubmitBtn.disabled = true;
+  lockError.textContent = "Yuklanmoqda...";
+  fetch(SEND_ENDPOINT + "/admin/roles")
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (data.ok && data.roles) {
+        Object.keys(data.roles).forEach(function (login) { ROLES[login] = data.roles[login]; });
+      }
+      lockSubmitBtn.disabled = false;
+      lockError.textContent = "";
+    })
+    .catch(function () {
+      lockSubmitBtn.disabled = false;
+      lockError.textContent = "";
+    });
+
+  // 2026-09-27: chap panel pastida kim kirgani ko'rinadi (haqiqiy dastur kabi).
+  function fillSidebarUser(login, role) {
+    var av = document.getElementById("sbAvatar");
+    var nm = document.getElementById("sbLogin");
+    var rl = document.getElementById("sbRole");
+    if (av) av.textContent = (login || "?").charAt(0);
+    if (nm) nm.textContent = login || "";
+    if (rl) {
+      var sub = "";
+      if (role && role.admin) sub = "Admin";
+      else if (role && role.dest) sub = role.dest.replace(role.org + ": ", "");
+      else if (role && role.org) sub = role.org;
+      rl.textContent = sub;
+    }
+  }
+
+  function populateDestOptions() {
+    var role = ROLES[siteAuth.login];
+    var org = role ? role.org : "";
+
+    if (role && role.dest) {
+      // Login qabul qiluvchiga qattiq bog'langan -- tanlov emas, faqat ko'rsatish.
+      cartDestSelect.innerHTML = "";
+      var fixedOpt = document.createElement("option");
+      fixedOpt.value = role.dest;
+      fixedOpt.textContent = role.dest.replace(org + ": ", "");
+      cartDestSelect.appendChild(fixedOpt);
+      cartDestSelect.disabled = true;
+      return;
+    }
+
+    cartDestSelect.disabled = false;
+    var allDests = {};
+    Object.keys(ROUTES).forEach(function (src) {
+      ROUTES[src].forEach(function (d) {
+        if (d.indexOf(org + ":") === 0) allDests[d] = true;
+      });
+    });
+    cartDestSelect.innerHTML = "";
+    Object.keys(allDests).sort().forEach(function (d) {
+      var opt = document.createElement("option");
+      opt.value = d;
+      opt.textContent = d.replace(org + ": ", "");
+      cartDestSelect.appendChild(opt);
+    });
+  }
+
+  // Login/dest ma'lum bo'lishi bilan (yoki qo'lda dest o'zgartirilganda),
+  // savat o'sha qabul qiluvchiga tez-tez ketadigan mahsulotlar bilan
+  // oldindan to'ldiriladi -- qidirish shart emas, faqat sonini yozish kifoya
+  // (2026-09-01, foydalanuvchi so'rovi bilan). Qo'lda qidirib qo'shilgan
+  // bandlarga tegilmaydi, faqat oldingi checklist-bandlari almashtiriladi.
+  function prefillChecklist(dest) {
+    cart = cart.filter(function (it) { return !it.fromChecklist; });
+    // 2026-09-04: foydalanuvchi so'rovi bilan -- Горячий склад uchun ENDI
+    // avtomatik checklist ko'rsatilmaydi (savat bo'sh boshlanadi). Buning
+    // o'rniga oddiy oqim: qidiruv qatoriga yozadi -> mos mahsulot(lar) tepada
+    // chiqadi -> bosilgani savatga qo'shiladi. Boshqa barcha destinatsiyalar
+    // uchun avtomatik checklist o'zgarishsiz qoladi.
+    if (dest !== GORACHIY_DEST) {
+      var items = DEST_CHECKLISTS[dest] || [];
+      items.forEach(function (it) {
+        if (findCartIndex(it.name) !== -1) return; // qo'lda qo'shilgan bo'lsa, qayta qo'shmaymiz
+        cart.push({ name: it.name, qty: "", fromChecklist: true });
+      });
+    }
+    renderCart();
+    updateCountLabel(); // Горячий tanlansa qidiruv ro'yxati ham cheklanadi -- sonini yangilaymiz
+  }
+
+  cartDestSelect.addEventListener("change", function () { prefillChecklist(cartDestSelect.value); });
+
+  lockForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var login = document.getElementById("lockLogin").value.trim();
+    var pass = document.getElementById("lockPass").value.trim();
+    var role = ROLES[login];
+    if (role && role.pass === pass) {
+      siteAuth.login = login;
+      siteAuth.pass = pass;
+      lockScreen.style.display = "none";
+      lockError.textContent = "";
+      applyDefaultDayOffset();
+      populateDestOptions();
+      prefillChecklist(cartDestSelect.value);
+      setMode("zayavka");
+      // Chap paneldagi bo'limlar faqat huquqi bor loginlarda ko'rinadi:
+      // Инвентаризация -- Горячий склад loginlari, "Ro'yxat" -- admin.
+      document.getElementById("tabInventoryBtn").style.display = hasInventoryAccess() ? "" : "none";
+      document.getElementById("tabAdminListBtn").style.display = hasAdminAccess() ? "" : "none";
+      fillSidebarUser(login, role);
+      fetch(SEND_ENDPOINT + "/admin/map")
+        .then(function (r) { return r.json(); })
+        .then(function (data) { if (data.ok) productSourceMap = data.map || {}; })
+        .catch(function () {});
+    } else {
+      lockError.textContent = "Login yoki parol noto'g'ri";
+    }
+  });
+
+  var RAW_NAMES = JSON.parse(document.getElementById("catalog-data").textContent);
+  // Har qabul qiluvchi uchun накладnoy tarixidan aniqlangan tez-tez buyurtma
+  // qilinadigan mahsulotlar ro'yxati (2026-09-01) -- login/dest ma'lum bo'lishi
+  // bilan savat shular bilan oldindan to'ldiriladi, qidirmasdan.
+  var DEST_CHECKLISTS = JSON.parse(document.getElementById("checklist-data").textContent);
+  // Mahsulot -> o'lchov birligi (кг/шт/л/порц), savatda ko'rsatish uchun.
+  var GLOBAL_UNITS = JSON.parse(document.getElementById("units-data").textContent);
+
+  function buildIndex(names) {
+    var list = [];
+    for (var i = 0; i < names.length; i++) {
+      var name = names[i];
+      var lower = name.toLowerCase();
+      var tokens = lower.split(/[\s()\\\/,]+/).filter(Boolean);
+      list.push({ name: name, lower: lower, tokens: tokens });
+    }
+    return list;
+  }
+
+  function buildTokenIndex(index) {
+    var map = {};
+    for (var i = 0; i < index.length; i++) {
+      var toks = index[i].tokens;
+      for (var j = 0; j < toks.length; j++) {
+        var t = toks[j];
+        if (!t) continue;
+        var fc = t.charAt(0);
+        if (!map[fc]) map[fc] = [];
+        map[fc].push({ token: t, name: index[i].name });
+      }
+    }
+    return map;
+  }
+
+  var GLOBAL_INDEX = buildIndex(RAW_NAMES);
+  var GLOBAL_TOKEN_INDEX = buildTokenIndex(GLOBAL_INDEX);
+
+  // 2026-09-04: foydalanuvchi so'rovi bilan -- Горячий склад uchun qidiruv
+  // ham xuddi checklist kabi FAQAT shu omborga tegishli mahsulotlar bilan
+  // cheklanadi (boshqa destinatsiyalar uchun qidiruv hozirgidek global
+  // qoladi). "avvalgidek" -- Горячий'ning o'ziga xos, kichik ro'yxati.
+  var GORACHIY_DEST = "OLIMP GARDEN: Горячий склад";
+  var GORACHIY_NAMES = (DEST_CHECKLISTS[GORACHIY_DEST] || []).map(function (it) { return it.name; });
+  var GORACHIY_INDEX = buildIndex(GORACHIY_NAMES);
+  var GORACHIY_TOKEN_INDEX = buildTokenIndex(GORACHIY_INDEX);
+
+  // 2026-09-27: ro'yxatlar endi admin tomonidan sayt ichidan tahrirlanadi.
+  // Statik (yuqoridagi, index.html ichiga o'rnatilgan) ro'yxat -- ASOS/ZAXIRA;
+  // serverda (KV) saqlangan o'zgartirish bo'lsa, shu ASOS USTIGA qo'yiladi.
+  // Worker ishlamasa yoki internet bo'lmasa -- sayt eski ro'yxat bilan
+  // muammosiz ishlayveradi (ataylab shunday qilingan).
+  function rebuildCatalogIndexes() {
+    GLOBAL_INDEX = buildIndex(RAW_NAMES);
+    GLOBAL_TOKEN_INDEX = buildTokenIndex(GLOBAL_INDEX);
+    GORACHIY_NAMES = (DEST_CHECKLISTS[GORACHIY_DEST] || []).map(function (it) { return it.name; });
+    GORACHIY_INDEX = buildIndex(GORACHIY_NAMES);
+    GORACHIY_TOKEN_INDEX = buildTokenIndex(GORACHIY_INDEX);
+  }
+
+  function applyChecklistOverrides(data) {
+    if (!data || !data.ok) return;
+    var checklists = data.checklists || {};
+    var changed = false;
+    Object.keys(checklists).forEach(function (dest) {
+      if (!Array.isArray(checklists[dest])) return;
+      DEST_CHECKLISTS[dest] = checklists[dest];
+      changed = true;
+    });
+    var units = data.units || {};
+    Object.keys(units).forEach(function (n) { GLOBAL_UNITS[n] = units[n]; });
+    // Yangi qo'shilgan nomlar qidiruvda ham topilsin -- global katalogga qo'shamiz.
+    var known = {};
+    RAW_NAMES.forEach(function (n) { known[n] = true; });
+    Object.keys(checklists).forEach(function (dest) {
+      (checklists[dest] || []).forEach(function (it) {
+        if (it && it.name && !known[it.name]) {
+          known[it.name] = true;
+          RAW_NAMES.push(it.name);
+          changed = true;
+        }
+      });
+    });
+    if (!changed) return;
+    rebuildCatalogIndexes();
+    updateCountLabel();
+    // Allaqachon login qilingan bo'lsa, ro'yxat darhol yangilanadi.
+    if (siteAuth.login && cartDestSelect && cartDestSelect.value) {
+      prefillChecklist(cartDestSelect.value);
+    }
+  }
+
+  fetch(SEND_ENDPOINT + "/checklist/live")
+    .then(function (r) { return r.json(); })
+    .then(applyChecklistOverrides)
+    .catch(function () {});
+
+  function activeCatalog() {
+    if (cartDestSelect && cartDestSelect.value === GORACHIY_DEST) {
+      return { names: GORACHIY_NAMES, index: GORACHIY_INDEX, tokenIndex: GORACHIY_TOKEN_INDEX };
+    }
+    return { names: RAW_NAMES, index: GLOBAL_INDEX, tokenIndex: GLOBAL_TOKEN_INDEX };
+  }
+
+  function updateCountLabel() {
+    document.getElementById("countLabel").textContent = activeCatalog().names.length + " mahsulot";
+  }
+  updateCountLabel();
+
+  var LATIN_MULTI = [["sh", "ш"], ["ch", "ч"], ["yu", "ю"], ["ya", "я"], ["ts", "ц"], ["o'", "ў"], ["g'", "ғ"]];
+  var LATIN_MAP = {
+    a: "а", b: "б", c: "к", d: "д", e: "е", f: "ф", g: "г", h: "х",
+    i: "и", j: "ж", k: "к", l: "л", m: "м", n: "н", o: "о", p: "п",
+    q: "к", r: "р", s: "с", t: "т", u: "у", v: "в", w: "в", x: "х",
+    y: "й", z: "з"
+  };
+
+  function toCyrillicPhonetic(latin) {
+    var s = latin.toLowerCase().replace(/[’ʻ‘`ʼ]/g, "'");
+    for (var i = 0; i < LATIN_MULTI.length; i++) {
+      s = s.split(LATIN_MULTI[i][0]).join(LATIN_MULTI[i][1]);
+    }
+    var out = "";
+    for (var j = 0; j < s.length; j++) {
+      var ch = s[j];
+      out += LATIN_MAP.hasOwnProperty(ch) ? LATIN_MAP[ch] : ch;
+    }
+    return out;
+  }
+
+  function levenshtein(a, b) {
+    var la = a.length, lb = b.length;
+    if (la === 0) return lb;
+    if (lb === 0) return la;
+    var prev = new Array(lb + 1);
+    var curr = new Array(lb + 1);
+    for (var j = 0; j <= lb; j++) prev[j] = j;
+    for (var i = 1; i <= la; i++) {
+      curr[0] = i;
+      for (j = 1; j <= lb; j++) {
+        var cost = a[i - 1] === b[j - 1] ? 0 : 1;
+        var del = prev[j] + 1;
+        var ins = curr[j - 1] + 1;
+        var sub = prev[j - 1] + cost;
+        curr[j] = Math.min(del, ins, sub);
+      }
+      var tmp = prev; prev = curr; curr = tmp;
+    }
+    return prev[lb];
+  }
+
+  var CYRILLIC_RE = /[Ѐ-ӿ]/;
+  var LATIN_RE = /[a-z]/;
+
+  // 2026-09-27: 3-parametr `catalogOverride` qo'shildi -- admin "Ro'yxat"
+  // bo'limi iikoning JONLI katalogi ustidan xuddi shu qidiruv mantig'idan
+  // (lotin->kirill, xatoga chidamli) foydalanadi. Berilmasa -- eski xatti-harakat.
+  function search(rawQuery, limit, catalogOverride) {
+    var q = rawQuery.trim().toLowerCase();
+    if (q.length < 2) return [];
+    if (LATIN_RE.test(q) && !CYRILLIC_RE.test(q)) {
+      q = toCyrillicPhonetic(q);
+    }
+
+    var active = catalogOverride || activeCatalog();
+    var PRODUCT_INDEX = active.index;
+    var TOKEN_INDEX = active.tokenIndex;
+
+    var exact = [];
+    for (var i = 0; i < PRODUCT_INDEX.length; i++) {
+      if (PRODUCT_INDEX[i].lower.indexOf(q) !== -1) exact.push(PRODUCT_INDEX[i].name);
+    }
+    if (exact.length >= 5) return exact.slice(0, limit);
+
+    var queryTokens = q.split(/\s+/).filter(Boolean);
+    var perTokenMatches = [];
+    for (var t = 0; t < queryTokens.length; t++) {
+      var qt = queryTokens[t];
+      var fc = qt.charAt(0);
+      var candidates = TOKEN_INDEX[fc] || [];
+      var bestPerName = {};
+      for (var c = 0; c < candidates.length; c++) {
+        var tok = candidates[c].token;
+        var cmpLen = Math.min(tok.length, qt.length + 2);
+        var prefix = tok.length > cmpLen ? tok.slice(0, cmpLen) : tok;
+        var dist = levenshtein(qt, prefix);
+        var nm = candidates[c].name;
+        if (!(nm in bestPerName) || dist < bestPerName[nm]) bestPerName[nm] = dist;
+      }
+      perTokenMatches.push(bestPerName);
+    }
+
+    var resultDist = {};
+    if (perTokenMatches.length > 0) {
+      var th0 = Math.max(1, Math.ceil(queryTokens[0].length / 4));
+      for (var k in perTokenMatches[0]) {
+        if (perTokenMatches[0][k] <= th0) resultDist[k] = perTokenMatches[0][k];
+      }
+      for (var ti = 1; ti < perTokenMatches.length; ti++) {
+        var th = Math.max(1, Math.ceil(queryTokens[ti].length / 4));
+        var newResult = {};
+        for (var k2 in resultDist) {
+          if (perTokenMatches[ti].hasOwnProperty(k2) && perTokenMatches[ti][k2] <= th) {
+            newResult[k2] = resultDist[k2] + perTokenMatches[ti][k2];
+          }
+        }
+        resultDist = newResult;
+      }
+    }
+
+    var exactSet = {};
+    exact.forEach(function (e) { exactSet[e] = true; });
+    var fuzzy = Object.keys(resultDist)
+      .filter(function (n) { return !exactSet[n]; })
+      .sort(function (a, b) { return resultDist[a] - resultDist[b]; });
+
+    return exact.concat(fuzzy).slice(0, limit);
+  }
+
+  function highlight(name, rawQuery) {
+    var q = rawQuery.trim();
+    if (!q) return escapeHtml(name);
+    var lowerName = name.toLowerCase();
+    var lowerQ = q.toLowerCase();
+    var idx = lowerName.indexOf(lowerQ);
+    if (idx === -1) return escapeHtml(name);
+    return (
+      escapeHtml(name.slice(0, idx)) +
+      "<mark>" + escapeHtml(name.slice(idx, idx + q.length)) + "</mark>" +
+      escapeHtml(name.slice(idx + q.length))
+    );
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  var qInput = document.getElementById("q");
+  var resultsEl = document.getElementById("results");
+  var idleEl = document.getElementById("idleState");
+  var clearBtn = document.getElementById("clearBtn");
+  var statusLabel = document.getElementById("statusLabel");
+  var toast = document.getElementById("toast");
+  var toastTimer = null;
+
+  var cartEl = document.getElementById("cart");
+  var cartListEl = document.getElementById("cartList");
+  var cartTitleEl = document.getElementById("cartTitle");
+  var dateToggle = document.getElementById("dateToggle");
+  var selectedDayOffset = 0; // 0 = Bugun, 1 = Ertaga
+  var cartClearBtn = document.getElementById("cartClearBtn");
+  var cartCopyBtn = document.getElementById("cartCopyBtn");
+  var cartSendBtn = document.getElementById("cartSendBtn");
+  var cart = []; // { name, qty }
+
+  function tashkentParts(date) {
+    var fmt = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Tashkent",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+    var map = {};
+    fmt.formatToParts(date).forEach(function (p) { map[p.type] = p.value; });
+    return map;
+  }
+
+  function selectedDateDisplay() {
+    // "Bugun"/"Ertaga" tugmasiga qarab -- kalendar/vaqt kiritish o'rniga
+    // (2026-08-26, foydalanuvchi so'rovi bilan soddalashtirildi).
+    var d = new Date(Date.now() + selectedDayOffset * 24 * 60 * 60 * 1000);
+    var p = tashkentParts(d);
+    return p.day + "." + p.month + "." + p.year;
+  }
+
+  dateToggle.addEventListener("click", function (e) {
+    var btn = e.target.closest(".date-toggle-btn");
+    if (!btn) return;
+    selectedDayOffset = parseInt(btn.getAttribute("data-day"), 10);
+    Array.prototype.forEach.call(dateToggle.querySelectorAll(".date-toggle-btn"), function (b) {
+      b.classList.toggle("active", b === btn);
+    });
+  });
+
+  function applyDefaultDayOffset() {
+    // 20:30 (Toshkent) dan keyin kirilsa, standart tanlov "Ertaga" bo'lsin --
+    // shu vaqtdan keyin yozilgan zayavka odatda ertangi kun uchun bo'ladi
+    // (2026-09-02, foydalanuvchi so'rovi bilan).
+    var p = tashkentParts(new Date());
+    var afterCutoff = parseInt(p.hour, 10) * 60 + parseInt(p.minute, 10) >= 20 * 60 + 30;
+    selectedDayOffset = afterCutoff ? 1 : 0;
+    Array.prototype.forEach.call(dateToggle.querySelectorAll(".date-toggle-btn"), function (b) {
+      b.classList.toggle("active", parseInt(b.getAttribute("data-day"), 10) === selectedDayOffset);
+    });
+  }
+
+  function filledCart() {
+    // Checklist orqali oldindan to'ldirilgan, lekin soni yozilmagan bandlar
+    // yuborilmaydi -- faqat haqiqatan soni kiritilganlar hisoblanadi.
+    return cart.filter(function (item) { return item.qty.trim(); });
+  }
+
+  function buildZayavkaText() {
+    var lines = filledCart().map(function (item) {
+      var flag = productSourceMap[item.name] ? "" : " ❓";
+      var line = item.name + " - " + item.qty.trim() + flag;
+      if (item.comment && item.comment.trim()) line += "\n    💬 " + item.comment.trim();
+      return line;
+    });
+    var when = selectedDateDisplay();
+    var headerLines = [cartDestSelect.value];
+    if (when) headerLines.push("📅 " + when);
+    return headerLines.join("\n") + "\n" + lines.join("\n");
+  }
+
+  function findCartIndex(name) {
+    for (var i = 0; i < cart.length; i++) if (cart[i].name === name) return i;
+    return -1;
+  }
+
+  function renderCart(focusName) {
+    cartTitleEl.textContent = "Tanlangan (" + filledCart().length + " / " + cart.length + ")";
+    cartEl.classList.toggle("has-items", cart.length > 0);
+    cartListEl.innerHTML = "";
+    cart.forEach(function (item, idx) {
+      var li = document.createElement("li");
+      li.className = "cart-item";
+
+      var row = document.createElement("div");
+      row.className = "cart-item-row";
+
+      var nameSpan = document.createElement("span");
+      nameSpan.className = "cart-item-name";
+      nameSpan.textContent = item.name + (productSourceMap[item.name] ? "" : " ❓");
+
+      var qtyInput = document.createElement("input");
+      qtyInput.className = "cart-qty";
+      qtyInput.type = "text";
+      qtyInput.inputMode = "decimal";
+      qtyInput.placeholder = "soni";
+      qtyInput.value = item.qty;
+      qtyInput.addEventListener("input", function () {
+        cart[idx].qty = qtyInput.value;
+      });
+
+      var unit = GLOBAL_UNITS[item.name];
+      var unitSpan = null;
+      if (unit) {
+        unitSpan = document.createElement("span");
+        unitSpan.className = "cart-qty-unit";
+        unitSpan.textContent = unit;
+      }
+
+      // 2026-09-09: foydalanuvchi so'rovi bilan -- har bandga kichik izoh
+      // (masalan "yog'siz bo'lsin") qo'shish imkoniyati, guruh xabarida
+      // shu mahsulot qatori ostida ko'rsatiladi.
+      var commentBox = document.createElement("div");
+      commentBox.className = "comment-box";
+      var commentInput = document.createElement("input");
+      commentInput.type = "text";
+      commentInput.placeholder = "Izoh yozing (masalan: yog'siz bo'lsin)";
+      commentInput.maxLength = 60;
+      commentInput.value = item.comment || "";
+      commentBox.appendChild(commentInput);
+
+      var commentPill = document.createElement("div");
+      commentPill.className = "comment-pill";
+      commentPill.style.display = "none";
+
+      function updateCommentUi() {
+        var v = commentInput.value.trim();
+        cart[idx].comment = v;
+        commentToggle.classList.toggle("has-comment", !!v);
+        var boxOpen = commentBox.classList.contains("open");
+        if (v && !boxOpen) {
+          commentPill.style.display = "block";
+          commentPill.textContent = "💬 " + v;
+        } else {
+          commentPill.style.display = "none";
+        }
+      }
+
+      var commentToggle = document.createElement("button");
+      commentToggle.className = "comment-toggle";
+      commentToggle.type = "button";
+      commentToggle.setAttribute("aria-label", "Izoh qo'shish");
+      commentToggle.textContent = "💬";
+      commentToggle.addEventListener("click", function () {
+        commentBox.classList.toggle("open");
+        if (commentBox.classList.contains("open")) commentInput.focus();
+        updateCommentUi();
+      });
+      commentPill.addEventListener("click", function () {
+        commentBox.classList.add("open");
+        commentInput.focus();
+        updateCommentUi();
+      });
+      commentInput.addEventListener("input", updateCommentUi);
+
+      var removeBtn = document.createElement("button");
+      removeBtn.className = "cart-remove";
+      removeBtn.type = "button";
+      removeBtn.setAttribute("aria-label", "O'chirish");
+      removeBtn.textContent = "×";
+      removeBtn.addEventListener("click", function () {
+        cart.splice(idx, 1);
+        renderCart();
+      });
+
+      row.appendChild(nameSpan);
+      row.appendChild(qtyInput);
+      if (unitSpan) row.appendChild(unitSpan);
+      row.appendChild(commentToggle);
+      row.appendChild(removeBtn);
+      li.appendChild(row);
+      li.appendChild(commentBox);
+      li.appendChild(commentPill);
+      cartListEl.appendChild(li);
+
+      updateCommentUi();
+
+      if (item.name === focusName) {
+        setTimeout(function () { qtyInput.focus(); }, 30);
+      }
+    });
+  }
+
+  function addToCart(name) {
+    var idx = findCartIndex(name);
+    if (idx === -1) {
+      cart.push({ name: name, qty: "" });
+      renderCart(name);
+    } else {
+      renderCart(name);
+    }
+  }
+
+  cartClearBtn.addEventListener("click", function () {
+    cart = [];
+    prefillChecklist(cartDestSelect.value); // ro'yxatning o'zi qolaveradi, faqat kiritilgan sonlar tozalanadi
+  });
+
+  cartCopyBtn.addEventListener("click", function () {
+    var filled = filledCart();
+    if (filled.length === 0) return;
+    copyText(buildZayavkaText(), "Ro'yxat nusxalandi (" + filled.length + " ta)");
+  });
+
+  cartSendBtn.addEventListener("click", function () {
+    if (filledCart().length === 0) return;
+
+    // Oshpazlar "Bugun"/"Ertaga" tugmasini bosishni unutib qo'yishmasin deb
+    // (2026-08-27, foydalanuvchi so'rovi bilan) -- yuborishdan oldin oxirgi
+    // marta aniq ko'rsatib tasdiqlatiladi.
+    var dayLabel = selectedDayOffset === 0 ? "BUGUN" : "ERTAGA";
+    var confirmed = window.confirm("🗓 " + dayLabel + " (" + selectedDateDisplay() + ") uchun yuborilmoqda.\n\nTo'g'rimi?");
+    if (!confirmed) return;
+
+    // To'g'ridan-to'g'ri, Telegram ilovasini ochmasdan yuboradi -- kichik
+    // xavfsiz vositachi (Cloudflare Worker) orqali, bot TOKEN faqat o'sha
+    // vositachida yashirin saqlanadi, bu sahifada hech qachon ko'rinmaydi.
+    var originalLabel = cartSendBtn.textContent;
+    cartSendBtn.disabled = true;
+    cartSendBtn.textContent = "Yuborilmoqda...";
+
+    fetch(SEND_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        login: siteAuth.login,
+        pass: siteAuth.pass,
+        dest: cartDestSelect.value,
+        when: selectedDateDisplay(),
+        items: filledCart().map(function (it) { return { name: it.name, qty: it.qty, comment: it.comment || "" }; }),
+      }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.ok) {
+          showToast("Guruhga yuborildi ✓");
+          cart = [];
+          prefillChecklist(cartDestSelect.value); // keyingi zayavka uchun ro'yxat darhol qayta tayyor bo'lsin
+        } else {
+          showToast("Xato: " + (data.error || "yuborilmadi"));
+        }
+      })
+      .catch(function () {
+        showToast("Ulanishda xato — internetni tekshiring");
+      })
+      .finally(function () {
+        cartSendBtn.disabled = false;
+        cartSendBtn.textContent = originalLabel;
+      });
+  });
+
+  var EXAMPLES = ["qusqavoy", "gijduvon", "ijjon shashlik", "krilishka"];
+  var hintWrap = document.getElementById("hintExamples");
+  EXAMPLES.forEach(function (ex) {
+    var chip = document.createElement("button");
+    chip.className = "hint-chip";
+    chip.type = "button";
+    chip.textContent = ex;
+    chip.addEventListener("click", function () {
+      qInput.value = ex;
+      qInput.dispatchEvent(new Event("input"));
+      qInput.focus();
+    });
+    hintWrap.appendChild(chip);
+  });
+
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add("show");
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 1600);
+  }
+
+  function copyText(text, toastMsg) {
+    var msg = toastMsg || ("Nusxa olindi: " + text);
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(
+        function () { showToast(msg); },
+        function () { fallbackCopy(text, msg); }
+      );
+    } else {
+      fallbackCopy(text, msg);
+    }
+  }
+
+  function fallbackCopy(text, toastMsg) {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try {
+      document.execCommand("copy");
+      showToast(toastMsg || "Nusxa olindi");
+    } catch (e) {
+      showToast("Nusxa olinmadi — qo'lda yozib oling");
+    }
+    document.body.removeChild(ta);
+  }
+
+  function render(query) {
+    var trimmed = query.trim();
+    if (trimmed.length === 0) {
+      idleEl.style.display = "block";
+      resultsEl.style.display = "none";
+      resultsEl.innerHTML = "";
+      statusLabel.textContent = "";
+      clearBtn.style.display = "none";
+      return;
+    }
+
+    clearBtn.style.display = "flex";
+    idleEl.style.display = "none";
+    resultsEl.style.display = "flex";
+
+    var t0 = performance.now();
+    var matches = search(trimmed, 40);
+    var elapsed = (performance.now() - t0).toFixed(0);
+    statusLabel.textContent = matches.length + " ta topildi · " + elapsed + "ms";
+
+    if (matches.length === 0) {
+      resultsEl.innerHTML = '<li class="empty-state"><div class="big">—</div>Hech narsa topilmadi.<br>Boshqacha yozib ko’ring.</li>';
+      return;
+    }
+
+    resultsEl.innerHTML = "";
+    matches.forEach(function (name) {
+      var li = document.createElement("li");
+      li.className = "result";
+      li.tabIndex = 0;
+      var already = findCartIndex(name) !== -1;
+      li.innerHTML =
+        '<span class="result-name">' + highlight(name, trimmed) + "</span>" +
+        '<span class="copy-affordance">' + (already ? "✓ Tanlandi" : "+ Qo'shish") + "</span>";
+      li.addEventListener("click", function () { selectResult(name); });
+      li.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectResult(name); }
+      });
+      resultsEl.appendChild(li);
+    });
+  }
+
+  function selectResult(name) {
+    addToCart(name);
+    qInput.value = "";
+    render("");
+    qInput.focus();
+  }
+
+  qInput.addEventListener("input", function () { render(qInput.value); });
+  clearBtn.addEventListener("click", function () {
+    qInput.value = "";
+    qInput.focus();
+    render("");
+  });
+
+  // ---- Arxiv (2026-09-05, foydalanuvchi so'rovi bilan): har login o'zi
+  // yuborgan zayavkalarni sana bo'yicha ko'radi -- barcha login/destinatsiya
+  // uchun, sof QO'SHIMCHA (qidiruv/savat oqimiga ta'sir qilmaydi). Backend:
+  // POST /archive/month {login,pass,year,month} -> {ok, days:{ "YYYY-MM-DD":
+  // {dests,items} }} (faqat shu loginning o'zi uchun).
+  var archiveBtn = document.getElementById("archiveBtn");
+  var archiveOverlay = document.getElementById("archiveOverlay");
+  var archiveCloseBtn = document.getElementById("archiveCloseBtn");
+  var archiveWho = document.getElementById("archiveWho");
+  var dayTabsEl = document.getElementById("dayTabs");
+  var archiveBodyEl = document.getElementById("archiveBody");
+  var archiveSummaryEl = document.getElementById("archiveSummary");
+  var calToggleBtn = document.getElementById("calToggleBtn");
+  var calendarEl = document.getElementById("calendar");
+  var calGridEl = document.getElementById("calGrid");
+  var calMonthLabel = document.getElementById("calMonthLabel");
+  var calPrevBtn = document.getElementById("calPrevBtn");
+  var calNextBtn = document.getElementById("calNextBtn");
+
+  var MONTH_NAMES = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentyabr", "Oktyabr", "Noyabr", "Dekabr"];
+  var DOW_NAMES = ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"];
+  var monthCache = {}; // "YYYY-MM" -> {days}
+  var activeArchiveDay = null;
+  var calViewYear, calViewMonth;
+
+  function apad2(n) { return n < 10 ? "0" + n : String(n); }
+  function archiveDateKey(y, m, d) { return y + "-" + apad2(m + 1) + "-" + apad2(d); }
+  function archiveIsSameDay(a, b) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
+  function monthKeyOf(y, m) { return y + "-" + apad2(m + 1); }
+
+  function formatArchiveQty(it) {
+    var n = it.num;
+    var display = Number.isInteger(n) ? String(n) : n.toFixed(1);
+    var suffix = it.suffix || "";
+    var unit = GLOBAL_UNITS[it.name];
+    if (!suffix.trim() && unit) suffix = " " + unit;
+    return display + suffix;
+  }
+
+  function fetchMonth(y, m) {
+    var mk = monthKeyOf(y, m);
+    if (monthCache[mk]) return Promise.resolve(monthCache[mk]);
+    return fetch(SEND_ENDPOINT + "/archive/month", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ login: siteAuth.login, pass: siteAuth.pass, year: y, month: m + 1 }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        var days = data && data.ok ? data.days || {} : {};
+        monthCache[mk] = days;
+        return days;
+      })
+      .catch(function () { return {}; });
+  }
+
+  function quickDayList() {
+    // Tez tugmalar: Bugun, Kecha -- kalendar orqali istalgan boshqa kunni
+    // topish mumkin.
+    var out = [];
+    var d0 = new Date();
+    for (var i = 0; i < 2; i++) {
+      var d = new Date(d0.getFullYear(), d0.getMonth(), d0.getDate() - i);
+      out.push({ key: archiveDateKey(d.getFullYear(), d.getMonth(), d.getDate()), label: i === 0 ? "Bugun" : "Kecha" });
+    }
+    return out;
+  }
+
+  function renderArchiveTabs() {
+    dayTabsEl.innerHTML = "";
+    quickDayList().forEach(function (d) {
+      var btn = document.createElement("button");
+      btn.className = "day-tab" + (d.key === activeArchiveDay ? " active" : "");
+      btn.type = "button";
+      btn.textContent = d.label;
+      btn.addEventListener("click", function () { showDay(d.key); });
+      dayTabsEl.appendChild(btn);
+    });
+  }
+
+  function renderCalendar(days) {
+    calMonthLabel.textContent = MONTH_NAMES[calViewMonth] + " " + calViewYear;
+    var today = new Date();
+    var isCurrentMonth = calViewYear === today.getFullYear() && calViewMonth === today.getMonth();
+    calNextBtn.disabled = isCurrentMonth;
+
+    calGridEl.innerHTML = "";
+    DOW_NAMES.forEach(function (d) {
+      var el = document.createElement("div");
+      el.className = "cal-dow";
+      el.textContent = d;
+      calGridEl.appendChild(el);
+    });
+
+    var firstOfMonth = new Date(calViewYear, calViewMonth, 1);
+    var leadingBlanks = (firstOfMonth.getDay() + 6) % 7; // Dushanba = 0
+    var daysInMonth = new Date(calViewYear, calViewMonth + 1, 0).getDate();
+    var daysInPrevMonth = new Date(calViewYear, calViewMonth, 0).getDate();
+
+    var cells = [];
+    for (var i = leadingBlanks; i > 0; i--) cells.push({ day: daysInPrevMonth - i + 1, otherMonth: true });
+    for (var d1 = 1; d1 <= daysInMonth; d1++) cells.push({ day: d1, otherMonth: false });
+    while (cells.length % 7 !== 0) cells.push({ day: cells.length - leadingBlanks - daysInMonth + 1, otherMonth: true });
+
+    cells.forEach(function (cell) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "cal-day";
+      btn.textContent = cell.day;
+      if (cell.otherMonth) {
+        btn.classList.add("other-month");
+      } else {
+        var cellDate = new Date(calViewYear, calViewMonth, cell.day);
+        var key = archiveDateKey(calViewYear, calViewMonth, cell.day);
+        if (archiveIsSameDay(cellDate, today)) btn.classList.add("today");
+        if (key === activeArchiveDay) btn.classList.add("selected");
+        if (cellDate > today) {
+          btn.classList.add("future");
+        } else {
+          btn.addEventListener("click", function () { showDay(key); });
+          if (days[key] && days[key].items && days[key].items.length > 0) {
+            var dot = document.createElement("span");
+            dot.className = "cal-dot";
+            btn.appendChild(dot);
+          }
+        }
+      }
+      calGridEl.appendChild(btn);
+    });
+  }
+
+  function labelForArchiveKey(key) {
+    var now = new Date();
+    var todayKey = archiveDateKey(now.getFullYear(), now.getMonth(), now.getDate());
+    var y0 = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+    var yestKey = archiveDateKey(y0.getFullYear(), y0.getMonth(), y0.getDate());
+    if (key === todayKey) return "Bugun";
+    if (key === yestKey) return "Kecha";
+    var parts = key.split("-");
+    return parts[2] + "." + parts[1];
+  }
+
+  function renderDayBody(days) {
+    var dayData = days[activeArchiveDay];
+    var label = labelForArchiveKey(activeArchiveDay);
+    if (!dayData || !dayData.items || dayData.items.length === 0) {
+      archiveBodyEl.innerHTML = '<div class="archive-empty">' + label + " kuni hech qanday zayavka yuborilmagan.</div>";
+      archiveSummaryEl.textContent = "";
+      return;
+    }
+    archiveBodyEl.innerHTML = "";
+    var group = document.createElement("div");
+    group.className = "dest-group";
+    if (dayData.dests && dayData.dests.length) {
+      var destName = document.createElement("div");
+      destName.className = "dest-name";
+      destName.textContent = dayData.dests.map(function (d) { return d.replace(/^[^:]*:\s*/, ""); }).join(", ");
+      group.appendChild(destName);
+    }
+    var ul = document.createElement("ul");
+    ul.className = "arch-list";
+    dayData.items.forEach(function (it) {
+      var li = document.createElement("li");
+      li.className = "arch-item";
+      li.innerHTML = "<span>" + escapeHtml(it.name) + '</span><span class="qty">' + formatArchiveQty(it) + "</span>";
+      ul.appendChild(li);
+    });
+    group.appendChild(ul);
+    archiveBodyEl.appendChild(group);
+    archiveSummaryEl.innerHTML = "<span><b>" + dayData.items.length + "</b> band</span><span>" + label + "</span>";
+  }
+
+  function showMonth(y, m) {
+    calViewYear = y;
+    calViewMonth = m;
+    fetchMonth(y, m).then(function (days) { renderCalendar(days); });
+  }
+
+  function showDay(key) {
+    activeArchiveDay = key;
+    renderArchiveTabs();
+    var parts = key.split("-").map(Number);
+    var y = parts[0], m = parts[1] - 1;
+    fetchMonth(y, m).then(function (days) {
+      renderDayBody(days);
+      if (calViewYear === y && calViewMonth === m) renderCalendar(days);
+    });
+  }
+
+  function openArchive() {
+    archiveWho.textContent = (siteAuth.login || "") + " · faqat o'zingiz yuborgan zayavkalar";
+    archiveOverlay.classList.add("open");
+    archiveBodyEl.innerHTML = '<div class="archive-loading">Yuklanmoqda...</div>';
+    var today = new Date();
+    showMonth(today.getFullYear(), today.getMonth());
+    showDay(archiveDateKey(today.getFullYear(), today.getMonth(), today.getDate()));
+  }
+  function closeArchive() { archiveOverlay.classList.remove("open"); }
+
+  archiveBtn.addEventListener("click", openArchive);
+  archiveCloseBtn.addEventListener("click", closeArchive);
+  archiveOverlay.addEventListener("click", function (e) { if (e.target === archiveOverlay) closeArchive(); });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && archiveOverlay.classList.contains("open")) closeArchive();
+  });
+
+  calToggleBtn.addEventListener("click", function () {
+    var open = calendarEl.classList.toggle("open");
+    calToggleBtn.classList.toggle("active", open);
+  });
+  calPrevBtn.addEventListener("click", function () {
+    calViewMonth--;
+    if (calViewMonth < 0) { calViewMonth = 11; calViewYear--; }
+    showMonth(calViewYear, calViewMonth);
+  });
+  calNextBtn.addEventListener("click", function () {
+    if (calNextBtn.disabled) return;
+    calViewMonth++;
+    if (calViewMonth > 11) { calViewMonth = 0; calViewYear++; }
+    showMonth(calViewYear, calViewMonth);
+  });
+
+  // 2026-09-22: foydalanuvchi so'rovi bilan -- Горячий склад (Sawa/Suxrob)
+  // loginlari uchun "Inventarizatsiya" bo'limi. Hozircha faqat: (1) shu
+  // loginlarga ko'rinadi, (2) mahsulot ro'yxati (Горячийning o'zi kabi 70
+  // ta) + haqiqiy miqdor kiritish, (3) yuborilgan ma'lumot serverda
+  // saqlanadi. Qayerga xabar borishi (guruh, накладnoy va h.k.) keyinroq
+  // hal qilinadi -- shuning uchun bu yerda Telegram'ga hech narsa
+  // yuborilmaydi, faqat KV'ga yoziladi.
+  var modeTabs = document.getElementById("modeTabs");
+  var tabZayavkaBtn = document.getElementById("tabZayavkaBtn");
+  var tabInventoryBtn = document.getElementById("tabInventoryBtn");
+  var inventoryList = document.getElementById("inventoryList");
+  var inventorySendBtn = document.getElementById("inventorySendBtn");
+  var inventoryResult = document.getElementById("inventoryResult");
+  var invDateToggle = document.getElementById("invDateToggle");
+  var selectedInvDayOffset = 0; // 0 = Bugun, 1 = Ertaga
+
+  // 2026-09-22: foydalanuvchi so'rovi bilan -- saytda qaysi sana (Bugun/
+  // Ertaga) tanlangan bo'lsa, iikodagi Инвентаризация hujjati ham aynan
+  // shu sana bilan yaratilishi kerak.
+  invDateToggle.addEventListener("click", function (e) {
+    var btn = e.target.closest(".date-toggle-btn");
+    if (!btn) return;
+    selectedInvDayOffset = parseInt(btn.getAttribute("data-day"), 10);
+    Array.prototype.forEach.call(invDateToggle.querySelectorAll(".date-toggle-btn"), function (b) {
+      b.classList.toggle("active", b === btn);
+    });
+  });
+
+  function selectedInvDateDisplay() {
+    var d = new Date(Date.now() + selectedInvDayOffset * 24 * 60 * 60 * 1000);
+    var p = tashkentParts(d);
+    return p.day + "." + p.month + "." + p.year;
+  }
+
+  function hasInventoryAccess() {
+    var role = ROLES[siteAuth.login];
+    return !!(role && role.dest === GORACHIY_DEST);
+  }
+
+  // 2026-09-27: chap panelli joylashuvda tepa qator sarlavhasi ham rejimga
+  // qarab o'zgaradi (avval har bo'limning o'z sarlavhasi bor edi -- endi
+  // bitta joyda, haqiqiy dasturlardagi kabi).
+  var MODE_TITLES = {
+    zayavka: ["Zagotovka · Ombor katalogi", "Mahsulot nomini toping"],
+    inventory: ["Zagotovka · Inventarizatsiya", "Haqiqiy qoldiqni kiriting"],
+    adminlist: ["Admin · Zayavka ro'yxati", "Ro'yxatga mahsulot qo'shish"],
+  };
+
+  function setMode(mode) {
+    document.body.classList.toggle("mode-inventory", mode === "inventory");
+    document.body.classList.toggle("mode-adminlist", mode === "adminlist");
+    tabZayavkaBtn.classList.toggle("active", mode === "zayavka");
+    tabInventoryBtn.classList.toggle("active", mode === "inventory");
+    var alBtn = document.getElementById("tabAdminListBtn");
+    if (alBtn) alBtn.classList.toggle("active", mode === "adminlist");
+
+    var t = MODE_TITLES[mode] || MODE_TITLES.zayavka;
+    var eyebrowEl = document.getElementById("pageEyebrow");
+    var titleEl = document.getElementById("pageTitle");
+    if (eyebrowEl) eyebrowEl.textContent = t[0];
+    if (titleEl) titleEl.textContent = t[1];
+    // Qabul qiluvchi/sana tanlovi FAQAT zayavka rejimida kerak --
+    // inventarizatsiya va ro'yxat bo'limlarining o'z tanlovlari bor.
+    var ctls = document.getElementById("topbarControls");
+    if (ctls) ctls.style.display = mode === "zayavka" ? "" : "none";
+  }
+
+  var inventoryLoaded = false;
+
+  function buildInventoryRows(items) {
+    inventoryList.innerHTML = "";
+    items.forEach(function (it) {
+      var li = document.createElement("li");
+      li.className = "inv-item";
+
+      var nameSpan = document.createElement("span");
+      nameSpan.className = "inv-item-name";
+      nameSpan.textContent = it.name;
+
+      var qtyInput = document.createElement("input");
+      qtyInput.className = "inv-qty";
+      qtyInput.type = "text";
+      qtyInput.inputMode = "decimal";
+      qtyInput.placeholder = "soni";
+      qtyInput.dataset.name = it.name;
+
+      li.appendChild(nameSpan);
+      li.appendChild(qtyInput);
+      if (it.unit) {
+        var unitSpan = document.createElement("span");
+        unitSpan.className = "inv-unit";
+        unitSpan.textContent = it.unit;
+        li.appendChild(unitSpan);
+      }
+      inventoryList.appendChild(li);
+    });
+  }
+
+  // 2026-09-22: foydalanuvchi so'rovi bilan -- ro'yxat endi zagotovka
+  // tarixidan emas, Garden Горячийning HAQIQIY joriy qoldig'idan (o'zining
+  // iikosidan, jonli) olinadi -- shu omborda haqiqatda bor BARCHA tovar
+  // qatnashsin deb. Bo'lim ochilganda bir marta yuklanadi (keyin qayta
+  // ochilsa qayta so'rov yubormaydi -- server tomonida ham 1 soatlik keshi bor).
+  function renderInventoryList() {
+    if (inventoryLoaded) return;
+    inventoryList.innerHTML = "";
+    var loadingLi = document.createElement("li");
+    loadingLi.className = "inv-item";
+    loadingLi.textContent = "Yuklanmoqda...";
+    inventoryList.appendChild(loadingLi);
+
+    fetch(SEND_ENDPOINT + "/inventory/items", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ login: siteAuth.login, pass: siteAuth.pass }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.ok) {
+          inventoryLoaded = true;
+          buildInventoryRows(data.items);
+        } else {
+          inventoryList.innerHTML = "";
+          inventoryResult.textContent = "Xato: " + (data.error || "noma'lum");
+        }
+      })
+      .catch(function () {
+        inventoryList.innerHTML = "";
+        inventoryResult.textContent = "Internet aloqasi bilan muammo. Qayta urinib ko'ring.";
+      });
+  }
+
+  tabZayavkaBtn.addEventListener("click", function () { setMode("zayavka"); });
+  tabInventoryBtn.addEventListener("click", function () {
+    setMode("inventory");
+    inventoryResult.textContent = "";
+    renderInventoryList();
+  });
+
+  inventorySendBtn.addEventListener("click", function () {
+    var items = [];
+    Array.prototype.forEach.call(inventoryList.querySelectorAll(".inv-qty"), function (input) {
+      var v = input.value.trim();
+      if (v) items.push({ name: input.dataset.name, qty: v });
+    });
+    if (items.length === 0) {
+      inventoryResult.textContent = "Hech qanday son kiritilmagan.";
+      return;
+    }
+    inventorySendBtn.disabled = true;
+    inventoryResult.textContent = "Yuborilmoqda...";
+    fetch(SEND_ENDPOINT + "/inventory/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        login: siteAuth.login,
+        pass: siteAuth.pass,
+        dest: GORACHIY_DEST,
+        when: selectedInvDateDisplay(),
+        items: items,
+      }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        inventorySendBtn.disabled = false;
+        if (data.ok) {
+          var msg = "✅ Iikoga yozildi — Инвентаризация №" + data.documentNumber + " (" + selectedInvDateDisplay() + ", " + items.length + " band).";
+          if (data.missing && data.missing.length) {
+            msg += " ⚠️ Topilmadi: " + data.missing.join(", ");
+          }
+          inventoryResult.textContent = msg;
+        } else {
+          inventoryResult.textContent = "Xato: " + (data.error || "noma'lum");
+        }
+      })
+      .catch(function () {
+        inventorySendBtn.disabled = false;
+        inventoryResult.textContent = "Internet aloqasi bilan muammo. Qayta urinib ko'ring.";
+      });
+  });
+
+  // ---- 2026-09-27: Admin "⚙️ Ro'yxat" bo'limi (FAQAT admin login uchun) ----
+  // Zayavka ro'yxatlariga iikodagi mahsulotni qo'shish / olib tashlash /
+  // ombor (manba) belgilash. Xodimlar loginlarida bu bo'lim UMUMAN ko'rinmaydi.
+  var tabAdminListBtn = document.getElementById("tabAdminListBtn");
+  var alDestSelect = document.getElementById("alDestSelect");
+  var alCurrentList = document.getElementById("alCurrentList");
+  var alCurrentTitle = document.getElementById("alCurrentTitle");
+  var alSearchInput = document.getElementById("alSearchInput");
+  var alSearchResults = document.getElementById("alSearchResults");
+  var alSaveBtn = document.getElementById("alSaveBtn");
+  var alStatus = document.getElementById("alStatus");
+
+  var adminCatalog = null;      // {names, index, tokenIndex} -- iikoning jonli katalogi
+  var adminUnitByName = {};     // nom -> o'lchov birligi (iikodan)
+  var adminSourceMap = {};      // nom -> manba ombor (serverdagi joriy holat)
+  var adminSources = [];        // 7 ta zagotovka manbasi
+  var adminCatalogLoaded = false;
+  var alWorkingList = [];       // shu dest uchun tahrirlanayotgan ro'yxat [{name, unit}]
+  var alNewSources = {};        // shu seansda belgilangan yangi manbalar {nom: manba}
+  var alDirty = false;
+
+  function hasAdminAccess() {
+    var role = ROLES[siteAuth.login];
+    return !!(role && role.admin === true);
+  }
+
+  function allDestsList() {
+    var all = {};
+    Object.keys(ROUTES).forEach(function (src) {
+      ROUTES[src].forEach(function (d) { all[d] = true; });
+    });
+    return Object.keys(all).sort();
+  }
+
+  function alSetStatus(msg, isErr) {
+    alStatus.textContent = msg || "";
+    alStatus.classList.toggle("al-err", !!isErr);
+  }
+
+  function alMarkDirty(dirty) {
+    alDirty = dirty;
+    alSaveBtn.disabled = !dirty;
+    alSaveBtn.textContent = dirty ? "💾 Saqlash (o'zgarish bor)" : "💾 Saqlash";
+  }
+
+  function alSourceOf(name) {
+    return alNewSources[name] || adminSourceMap[name] || "";
+  }
+
+  function alInList(name) {
+    for (var i = 0; i < alWorkingList.length; i++) {
+      if (alWorkingList[i].name === name) return true;
+    }
+    return false;
+  }
+
+  // 2026-09-27 tuzatish: xabar sahifaning pastida (Saqlash tugmasidan keyin)
+  // chiqardi -- qidiruv natijasi bilan ishlayotganda umuman ko'rinmasdi
+  // ("nega qo'shib bo'lmayapti?" holati). Endi muhim xabarlar toast bo'lib
+  // ham chiqadi -- ekranning qayeridaligidan qat'i nazar ko'rinadi.
+  function alNotify(msg, isErr) {
+    alSetStatus(msg, isErr);
+    showToast(msg);
+  }
+
+  function alRenderCurrent() {
+    var dest = alDestSelect.value;
+    alCurrentTitle.innerHTML = "Joriy ro'yxat — <b>" + alWorkingList.length + " ta</b>" +
+      (dest === GORACHIY_DEST ? " <span class=\"al-src al-missing\">(Горячий: bu ro'yxat qidiruv doirasi ham)</span>" : "");
+    alCurrentList.innerHTML = "";
+    if (alWorkingList.length === 0) {
+      var empty = document.createElement("li");
+      empty.className = "al-item";
+      empty.innerHTML = "<span class=\"al-name\" style=\"color:var(--text-muted)\">Ro'yxat bo'sh</span>";
+      alCurrentList.appendChild(empty);
+      return;
+    }
+    alWorkingList.forEach(function (it, idx) {
+      var li = document.createElement("li");
+      li.className = "al-item";
+
+      var nameSpan = document.createElement("span");
+      nameSpan.className = "al-name";
+      nameSpan.textContent = (idx + 1) + ". " + it.name;
+
+      var unitSpan = document.createElement("span");
+      unitSpan.className = "al-unit";
+      unitSpan.textContent = it.unit || "";
+
+      var srcSpan = document.createElement("span");
+      var src = alSourceOf(it.name);
+      srcSpan.className = "al-src" + (src ? "" : " al-missing");
+      srcSpan.textContent = src ? src.replace(" ЗАГАТОВКА", "").replace(" ЗАГАТОВОКА", "") : "❓ ombor yo'q";
+
+      var delBtn = document.createElement("button");
+      delBtn.className = "al-btn al-del";
+      delBtn.type = "button";
+      delBtn.title = "Ro'yxatdan olib tashlash";
+      delBtn.textContent = "×";
+      delBtn.addEventListener("click", function () {
+        var removed = alWorkingList[idx].name;
+        alWorkingList.splice(idx, 1);
+        alMarkDirty(true);
+        alRenderCurrent();
+        alRenderSearch(alSearchInput.value); // olib tashlangani qidiruvda yana "+ Qo'shish" bo'lsin
+        alNotify("🗑 \"" + removed + "\" olib tashlandi — saqlashni unutmang");
+      });
+
+      li.appendChild(nameSpan);
+      li.appendChild(unitSpan);
+      li.appendChild(srcSpan);
+      li.appendChild(delBtn);
+      alCurrentList.appendChild(li);
+    });
+  }
+
+  function alAddProduct(name, unit, source) {
+    if (alInList(name)) {
+      alNotify("\"" + name + "\" bu ro'yxatda (" + alDestSelect.value + ") allaqachon bor", true);
+      return;
+    }
+    if (source) alNewSources[name] = source;
+    alWorkingList.push({ name: name, unit: unit || "" });
+    alMarkDirty(true);
+    alRenderCurrent();
+    // Qidiruv matni SAQLANADI -- ketma-ket bir nechta o'xshash mahsulot
+    // qo'shish qulay bo'lsin deb; qo'shilgani natijada "✓ Ro'yxatda" bo'lib turadi.
+    alRenderSearch(alSearchInput.value);
+    alNotify("✅ \"" + name + "\" qo'shildi — saqlashni unutmang");
+  }
+
+  function alShowSourcePicker(li, name, unit) {
+    if (li.querySelector(".al-srcpick")) return;
+    var pick = document.createElement("div");
+    pick.className = "al-srcpick";
+    pick.style.flexBasis = "100%";
+    var hint = document.createElement("div");
+    hint.style.cssText = "flex-basis:100%;font-size:11.5px;color:var(--accent);font-weight:700;margin-bottom:2px";
+    hint.textContent = "Bu mahsulot qaysi zagotovka omboridan keladi?";
+    pick.appendChild(hint);
+    adminSources.forEach(function (src) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.textContent = src.replace(" ЗАГАТОВКА", "").replace(" ЗАГАТОВОКА", "");
+      b.addEventListener("click", function () { alAddProduct(name, unit, src); });
+      pick.appendChild(b);
+    });
+    li.style.flexWrap = "wrap";
+    li.appendChild(pick);
+  }
+
+  function alRenderSearch(q) {
+    alSearchResults.innerHTML = "";
+    if (!adminCatalog) return;
+    var trimmed = (q || "").trim();
+    if (trimmed.length < 2) return;
+    var matches = search(trimmed, 25, adminCatalog);
+    if (matches.length === 0) {
+      var none = document.createElement("li");
+      none.className = "al-item";
+      none.innerHTML = "<span class=\"al-name\" style=\"color:var(--text-muted)\">Hech narsa topilmadi</span>";
+      alSearchResults.appendChild(none);
+      return;
+    }
+    matches.forEach(function (name) {
+      var li = document.createElement("li");
+      li.className = "al-item al-new";
+
+      var nameSpan = document.createElement("span");
+      nameSpan.className = "al-name";
+      nameSpan.textContent = name;
+
+      var unit = adminUnitByName[name] || "";
+      var unitSpan = document.createElement("span");
+      unitSpan.className = "al-unit";
+      unitSpan.textContent = unit;
+
+      var src = alSourceOf(name);
+      var srcSpan = document.createElement("span");
+      srcSpan.className = "al-src" + (src ? "" : " al-missing");
+      srcSpan.textContent = src ? src.replace(" ЗАГАТОВКА", "").replace(" ЗАГАТОВОКА", "") : "ombor belgilanmagan";
+
+      var addBtn = document.createElement("button");
+      addBtn.className = "al-btn al-add";
+      addBtn.type = "button";
+      if (alInList(name)) {
+        // 2026-09-27 tuzatish: allaqachon ro'yxatda bo'lgan mahsulot endi
+        // DARHOL ko'rinadi -- avval tugma oddiy "+ Qo'shish" bo'lib turardi
+        // va bosilganda hech narsa bo'lmayotgandek tuyulardi.
+        li.classList.remove("al-new");
+        addBtn.disabled = true;
+        addBtn.style.cssText = "background:var(--surface);color:var(--text-muted);border:1.5px solid var(--border);cursor:default";
+        addBtn.textContent = "✓ Ro'yxatda";
+      } else {
+        addBtn.textContent = "+ Qo'shish";
+        addBtn.addEventListener("click", function () {
+          if (alSourceOf(name)) {
+            alAddProduct(name, unit, null);
+          } else {
+            // Ombor (manba) belgilanmagan bo'lsa -- накладnoy yaratilmaydi,
+            // shuning uchun darhol shu yerda so'raymiz.
+            alShowSourcePicker(li, name, unit);
+          }
+        });
+      }
+
+      li.appendChild(nameSpan);
+      li.appendChild(unitSpan);
+      li.appendChild(srcSpan);
+      li.appendChild(addBtn);
+      alSearchResults.appendChild(li);
+    });
+  }
+
+  function alLoadDest(dest) {
+    var base = DEST_CHECKLISTS[dest] || [];
+    alWorkingList = base.map(function (it) { return { name: it.name, unit: it.unit || GLOBAL_UNITS[it.name] || "" }; });
+    alNewSources = {};
+    alMarkDirty(false);
+    alSetStatus("");
+    alSearchInput.value = "";
+    alRenderSearch("");
+    alRenderCurrent();
+  }
+
+  function loadAdminCatalog() {
+    if (adminCatalogLoaded) return;
+    alSetStatus("iiko katalogi yuklanmoqda...");
+    fetch(SEND_ENDPOINT + "/admin/catalog-full", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ login: siteAuth.login, pass: siteAuth.pass }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (!data.ok) {
+          alSetStatus("Xato: " + (data.error || "noma'lum"), true);
+          return;
+        }
+        adminCatalogLoaded = true;
+        adminSources = data.sources || [];
+        adminSourceMap = data.sourceMap || {};
+        var names = [];
+        (data.products || []).forEach(function (p) {
+          names.push(p.name);
+          adminUnitByName[p.name] = p.unit || "";
+        });
+        var idx = buildIndex(names);
+        adminCatalog = { names: names, index: idx, tokenIndex: buildTokenIndex(idx) };
+        alSetStatus("iikodan " + names.length + " ta mahsulot yuklandi — qidirib qo'shishingiz mumkin");
+      })
+      .catch(function () {
+        alSetStatus("Internet aloqasi bilan muammo. Qayta urinib ko'ring.", true);
+      });
+  }
+
+  function alSave() {
+    var dest = alDestSelect.value;
+    if (!dest) return;
+    var sources = {};
+    Object.keys(alNewSources).forEach(function (n) {
+      // faqat hozir ro'yxatda qolgan bandlar uchun yuboriladi
+      for (var i = 0; i < alWorkingList.length; i++) {
+        if (alWorkingList[i].name === n) { sources[n] = alNewSources[n]; return; }
+      }
+    });
+    alSaveBtn.disabled = true;
+    alSetStatus("Saqlanmoqda...");
+    fetch(SEND_ENDPOINT + "/admin/checklist-save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        login: siteAuth.login,
+        pass: siteAuth.pass,
+        dest: dest,
+        items: alWorkingList,
+        sources: sources,
+      }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (!data.ok) {
+          alSaveBtn.disabled = false;
+          alSetStatus("Xato: " + (data.error || "noma'lum"), true);
+          return;
+        }
+        // Mahalliy holatni ham darhol yangilaymiz (qayta yuklamasdan ko'rinsin)
+        DEST_CHECKLISTS[dest] = alWorkingList.map(function (it) { return { name: it.name, unit: it.unit }; });
+        alWorkingList.forEach(function (it) { if (it.unit) GLOBAL_UNITS[it.name] = it.unit; });
+        Object.keys(sources).forEach(function (n) { adminSourceMap[n] = sources[n]; productSourceMap[n] = sources[n]; });
+        var known = {};
+        RAW_NAMES.forEach(function (n) { known[n] = true; });
+        alWorkingList.forEach(function (it) { if (!known[it.name]) RAW_NAMES.push(it.name); });
+        rebuildCatalogIndexes();
+        updateCountLabel();
+        alNewSources = {};
+        alMarkDirty(false);
+        alRenderCurrent();
+        alNotify("✅ Saqlandi — " + data.count + " ta mahsulot" + (data.tagged ? ", " + data.tagged + " ta ombor belgilandi" : "") + ". Xodimlar saytni qayta ochganda ko'radi.");
+      })
+      .catch(function () {
+        alSaveBtn.disabled = false;
+        alSetStatus("Internet aloqasi bilan muammo. Qayta urinib ko'ring.", true);
+      });
+  }
+
+  alDestSelect.addEventListener("change", function () {
+    if (alDirty && !confirm("Saqlanmagan o'zgarish bor. Boshqa qabul qiluvchiga o'tsangiz yo'qoladi. Davom etasizmi?")) {
+      return;
+    }
+    alLoadDest(alDestSelect.value);
+  });
+  alSearchInput.addEventListener("input", function () { alRenderSearch(alSearchInput.value); });
+  alSaveBtn.addEventListener("click", alSave);
+
+  tabAdminListBtn.addEventListener("click", function () {
+    setMode("adminlist");
+    if (!alDestSelect.options.length) {
+      allDestsList().forEach(function (d) {
+        var opt = document.createElement("option");
+        opt.value = d;
+        opt.textContent = d;
+        alDestSelect.appendChild(opt);
+      });
+      alLoadDest(alDestSelect.value);
+    }
+    loadAdminCatalog();
+  });
+
+  render("");
+})();
+</script>
+
+</body>
+</html>

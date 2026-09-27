@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yig'ish Ro'yxati</title>
+<style>
+  :root {
+    --bg: #eef1ee;
+    --surface: #ffffff;
+    --surface-2: #e3e7e0;
+    --text: #1c2420;
+    --text-muted: #5b6960;
+    --accent: #c1440e;
+    --accent-ink: #ffffff;
+    --accent-2: #2f6b4f;
+    --border: #d5dad1;
+    --shadow: 0 1px 2px rgba(28, 36, 32, 0.06), 0 4px 14px rgba(28, 36, 32, 0.05);
+    --radius: 14px;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12100b; --surface: #1c1912; --surface-2: #262219;
+      --text: #f1ece1; --text-muted: #a89d89; --accent: #ff7a3d; --accent-ink: #1c1912;
+      --accent-2: #6ec096; --border: #37311f;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12100b; --surface: #1c1912; --surface-2: #262219;
+    --text: #f1ece1; --text-muted: #a89d89; --accent: #ff7a3d; --accent-ink: #1c1912;
+    --accent-2: #6ec096; --border: #37311f;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+  body { min-height: 100vh; }
+
+  .lock-screen {
+    position: fixed; inset: 0; z-index: 1000;
+    background: var(--bg); display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .lock-card {
+    background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 26px 22px; width: 100%; max-width: 360px;
+  }
+  .lock-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--accent); margin: 0 0 4px; }
+  .lock-title { margin: 0 0 18px; font-size: 20px; font-weight: 800; }
+  .lock-field { margin-bottom: 14px; }
+  .lock-field label { display: block; font-size: 12.5px; color: var(--text-muted); margin-bottom: 6px; }
+  .lock-field input {
+    width: 100%; font-size: 16px; font-family: inherit; padding: 12px 14px;
+    border-radius: 10px; border: 1.5px solid var(--border); background: var(--surface-2); color: var(--text); outline: none;
+  }
+  .lock-field input:focus { border-color: var(--accent); }
+  .lock-btn {
+    width: 100%; background: var(--accent); color: var(--accent-ink); border: none; border-radius: 10px;
+    padding: 13px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 4px;
+  }
+  .lock-error { color: var(--accent); font-size: 13px; margin: 10px 0 0; min-height: 16px; }
+
+  header {
+    position: sticky; top: 0; z-index: 10; background: var(--bg);
+    padding: 18px 16px 12px; border-bottom: 1px solid var(--border);
+  }
+  .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--accent); margin: 0 0 4px; }
+  h1 { margin: 0 0 14px; font-size: 21px; font-weight: 800; letter-spacing: -0.01em; }
+
+  .day-tabs { display: flex; gap: 6px; align-items: center; }
+  .day-tabs-scroll { display: flex; gap: 6px; overflow-x: auto; flex: 1; min-width: 0; }
+  .day-tab {
+    flex-shrink: 0; border: 1.5px solid var(--border); background: var(--surface-2); color: var(--text-muted);
+    border-radius: 999px; padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap;
+  }
+  .day-tab.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .cal-toggle {
+    flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid var(--border);
+    background: var(--surface-2); color: var(--text); font-size: 15px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .cal-toggle.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
+  .calendar { display: none; margin-top: 10px; padding: 10px 4px 0; border-top: 1px solid var(--border); }
+  .calendar.open { display: block; }
+  .cal-head { display: flex; align-items: center; justify-content: space-between; padding: 2px 6px 8px; }
+  .cal-head .cal-month { font-size: 13.5px; font-weight: 800; }
+  .cal-nav {
+    border: none; background: var(--surface-2); color: var(--text); width: 28px; height: 28px; border-radius: 50%;
+    font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+  .cal-nav:disabled { opacity: 0.3; cursor: not-allowed; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .cal-dow { text-align: center; font-size: 10.5px; font-weight: 700; color: var(--text-muted); padding: 4px 0 6px; text-transform: uppercase; }
+  .cal-day {
+    position: relative; aspect-ratio: 1; border: none; background: none; color: var(--text);
+    font-size: 13px; font-variant-numeric: tabular-nums; cursor: pointer; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .cal-day:hover { background: var(--surface-2); }
+  .cal-day.other-month { color: var(--text-muted); opacity: 0.35; pointer-events: none; }
+  .cal-day.today { box-shadow: inset 0 0 0 1.5px var(--accent-2); }
+  .cal-day.selected { background: var(--accent); color: var(--accent-ink); }
+  .cal-day.future { color: var(--text-muted); opacity: 0.35; pointer-events: none; }
+
+  main { max-width: 640px; width: 100%; margin: 0 auto; padding: 16px 16px 40px; }
+
+  .summary-bar {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 12.5px; color: var(--text-muted); margin-bottom: 14px;
+  }
+  .summary-bar b { color: var(--text); font-variant-numeric: tabular-nums; }
+
+  .empty-state { padding: 40px 10px; text-align: center; color: var(--text-muted); font-size: 14px; line-height: 1.6; }
+
+  .source-group { margin-bottom: 18px; }
+  .source-head {
+    display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px;
+  }
+  .source-head .name { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em; color: var(--accent-2); }
+  .source-head .count { font-size: 11.5px; color: var(--text-muted); }
+
+  .pickup-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .pickup-item {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 9px 9px 9px 14px;
+  }
+  .pickup-item .item-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .pickup-item .item-name { font-size: 14px; }
+  .pickup-item .item-qty { font-size: 12.5px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--accent); }
+  .pickup-item .take-btn {
+    flex-shrink: 0; border: 1.5px solid var(--border); background: var(--surface-2); color: var(--text);
+    border-radius: 9px; padding: 9px 12px; font-size: 12.5px; font-weight: 700; cursor: pointer; white-space: nowrap;
+  }
+  .pickup-item .take-btn:active { transform: translateY(1px); }
+  .pickup-item.taken {
+    background: color-mix(in srgb, var(--accent-2) 10%, var(--surface));
+    border-color: color-mix(in srgb, var(--accent-2) 35%, var(--border));
+  }
+  .pickup-item.taken .item-name { text-decoration: line-through; color: var(--text-muted); }
+  .pickup-item.taken .item-qty { color: var(--text-muted); }
+  .pickup-item.taken .take-btn { background: var(--accent-2); border-color: var(--accent-2); color: var(--accent-ink); }
+
+  .loading { padding: 40px 10px; text-align: center; color: var(--text-muted); font-size: 13.5px; }
+</style>
+</head>
+<body>
+
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-card">
+    <p class="lock-eyebrow">Zagotovka</p>
+    <h2 class="lock-title">Yig'ish ro'yxati</h2>
+    <form id="lockForm">
+      <div class="lock-field">
+        <label for="lockPass">Parol</label>
+        <input type="password" id="lockPass" autocomplete="current-password" inputmode="numeric" />
+      </div>
+      <button type="submit" class="lock-btn">Kirish</button>
+      <p class="lock-error" id="lockError"></p>
+    </form>
+  </div>
+</div>
+
+<header>
+  <p class="eyebrow">Zagotovka → Garden</p>
+  <h1>Yig'ish ro'yxati</h1>
+  <div class="day-tabs">
+    <div class="day-tabs-scroll" id="dayTabs"></div>
+    <button class="cal-toggle" id="calToggleBtn" type="button" aria-label="Kalendardan sana tanlash">📅</button>
+  </div>
+  <div class="calendar" id="calendar">
+    <div class="cal-head">
+      <button class="cal-nav" id="calPrevBtn" type="button" aria-label="Oldingi oy">‹</button>
+      <span class="cal-month" id="calMonthLabel"></span>
+      <button class="cal-nav" id="calNextBtn" type="button" aria-label="Keyingi oy">›</button>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+</header>
+
+<main>
+  <div class="summary-bar" id="summaryBar" style="display:none;">
+    <span id="summaryDate"></span>
+    <span><b id="summaryCount">0</b> band</span>
+  </div>
+  <div id="body">
+    <div class="loading">Kirish uchun parolni kiriting.</div>
+  </div>
+</main>
+
+<script>
+(function () {
+  var SEND_ENDPOINT = "https://zagotovka-zayavka-send.olimpzagotovka.workers.dev";
+
+  var lockScreen = document.getElementById("lockScreen");
+  var lockForm = document.getElementById("lockForm");
+  var lockError = document.getElementById("lockError");
+  var pass = "";
+
+  var dayTabsEl = document.getElementById("dayTabs");
+  var bodyEl = document.getElementById("body");
+  var summaryBar = document.getElementById("summaryBar");
+  var summaryDate = document.getElementById("summaryDate");
+  var summaryCount = document.getElementById("summaryCount");
+  var calToggleBtn = document.getElementById("calToggleBtn");
+  var calendarEl = document.getElementById("calendar");
+  var calGridEl = document.getElementById("calGrid");
+  var calMonthLabel = document.getElementById("calMonthLabel");
+  var calPrevBtn = document.getElementById("calPrevBtn");
+  var calNextBtn = document.getElementById("calNextBtn");
+
+  var MONTH_NAMES = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentyabr", "Oktyabr", "Noyabr", "Dekabr"];
+  var DOW_NAMES = ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"];
+
+  var activeDay = null;
+  var calViewYear, calViewMonth;
+
+  function pad2(n) { return n < 10 ? "0" + n : String(n); }
+  function dateKey(y, m, d) { return y + "-" + pad2(m + 1) + "-" + pad2(d); }
+  function isSameDay(a, b) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
+
+  function quickDayList() {
+    var out = [];
+    var d0 = new Date();
+    for (var i = 0; i < 2; i++) {
+      var d = new Date(d0.getFullYear(), d0.getMonth(), d0.getDate() - i);
+      out.push({ key: dateKey(d.getFullYear(), d.getMonth(), d.getDate()), label: i === 0 ? "Bugun" : "Kecha" });
+    }
+    return out;
+  }
+
+  function labelForKey(key) {
+    var quick = quickDayList();
+    for (var i = 0; i < quick.length; i++) if (quick[i].key === key) return quick[i].label;
+    var parts = key.split("-");
+    return parts[2] + "." + parts[1];
+  }
+
+  function renderTabs() {
+    dayTabsEl.innerHTML = "";
+    quickDayList().forEach(function (d) {
+      var btn = document.createElement("button");
+      btn.className = "day-tab" + (d.key === activeDay ? " active" : "");
+      btn.type = "button";
+      btn.textContent = d.label;
+      btn.addEventListener("click", function () { showDay(d.key); });
+      dayTabsEl.appendChild(btn);
+    });
+  }
+
+  function renderCalendar() {
+    calMonthLabel.textContent = MONTH_NAMES[calViewMonth] + " " + calViewYear;
+    var today = new Date();
+    var isCurrentMonth = calViewYear === today.getFullYear() && calViewMonth === today.getMonth();
+    calNextBtn.disabled = isCurrentMonth;
+
+    calGridEl.innerHTML = "";
+    DOW_NAMES.forEach(function (d) {
+      var el = document.createElement("div");
+      el.className = "cal-dow";
+      el.textContent = d;
+      calGridEl.appendChild(el);
+    });
+
+    var firstOfMonth = new Date(calViewYear, calViewMonth, 1);
+    var leadingBlanks = (firstOfMonth.getDay() + 6) % 7;
+    var daysInMonth = new Date(calViewYear, calViewMonth + 1, 0).getDate();
+    var daysInPrevMonth = new Date(calViewYear, calViewMonth, 0).getDate();
+
+    var cells = [];
+    for (var i = leadingBlanks; i > 0; i--) cells.push({ day: daysInPrevMonth - i + 1, otherMonth: true });
+    for (var d1 = 1; d1 <= daysInMonth; d1++) cells.push({ day: d1, otherMonth: false });
+    while (cells.length % 7 !== 0) cells.push({ day: cells.length - leadingBlanks - daysInMonth + 1, otherMonth: true });
+
+    cells.forEach(function (cell) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "cal-day";
+      btn.textContent = cell.day;
+      if (cell.otherMonth) {
+        btn.classList.add("other-month");
+      } else {
+        var cellDate = new Date(calViewYear, calViewMonth, cell.day);
+        var key = dateKey(calViewYear, calViewMonth, cell.day);
+        if (isSameDay(cellDate, today)) btn.classList.add("today");
+        if (key === activeDay) btn.classList.add("selected");
+        if (cellDate > today) {
+          btn.classList.add("future");
+        } else {
+          btn.addEventListener("click", function () { showDay(key); });
+        }
+      }
+      calGridEl.appendChild(btn);
+    });
+  }
+
+  function fmtNum(n) {
+    return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+  }
+
+  function markTaken(source, name, wantTaken) {
+    fetch(SEND_ENDPOINT + "/pickup/mark", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: pass, date: activeDay, source: source, name: name, taken: wantTaken }),
+    }).catch(function () {}); // ulanish uzilsa ham -- UI allaqachon yangilangan, keyingi ochishda qayta urinsa bo'ladi
+  }
+
+  function updateTakenSummary() {
+    var total = bodyEl.querySelectorAll(".pickup-item").length;
+    var takenCount = bodyEl.querySelectorAll(".pickup-item.taken").length;
+    summaryCount.textContent = takenCount + "/" + total;
+  }
+
+  function renderBody(data) {
+    var sources = (data && data.sources) || {};
+    var sourceNames = Object.keys(sources).sort();
+    var totalItems = 0;
+    sourceNames.forEach(function (s) { totalItems += sources[s].length; });
+
+    summaryBar.style.display = "flex";
+    summaryDate.textContent = labelForKey(activeDay);
+    summaryCount.textContent = "0/" + totalItems;
+
+    if (sourceNames.length === 0) {
+      bodyEl.innerHTML = '<div class="empty-state">Bu kuni Gardenga tegishli zayavka topilmadi.</div>';
+      return;
+    }
+
+    bodyEl.innerHTML = "";
+    sourceNames.forEach(function (source) {
+      var group = document.createElement("div");
+      group.className = "source-group";
+
+      var head = document.createElement("div");
+      head.className = "source-head";
+      head.innerHTML = '<span class="name">🏭 ' + escapeHtml(source) + '</span><span class="count">' + sources[source].length + " ta</span>";
+      group.appendChild(head);
+
+      var ul = document.createElement("ul");
+      ul.className = "pickup-list";
+      sources[source].forEach(function (it) {
+        var li = document.createElement("li");
+        li.className = "pickup-item" + (it.taken ? " taken" : "");
+
+        var main = document.createElement("div");
+        main.className = "item-main";
+        var nameSpan = document.createElement("span");
+        nameSpan.className = "item-name";
+        nameSpan.textContent = it.name;
+        var qtySpan = document.createElement("span");
+        qtySpan.className = "item-qty";
+        qtySpan.textContent = fmtNum(it.num) + (it.unit ? " " + it.unit : "");
+        main.appendChild(nameSpan);
+        main.appendChild(qtySpan);
+
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "take-btn";
+        btn.textContent = it.taken ? "✓ Olindi" : "Oldim";
+        btn.addEventListener("click", function () {
+          var nowTaken = !li.classList.contains("taken");
+          li.classList.toggle("taken", nowTaken);
+          btn.textContent = nowTaken ? "✓ Olindi" : "Oldim";
+          updateTakenSummary();
+          markTaken(source, it.name, nowTaken);
+        });
+
+        li.appendChild(main);
+        li.appendChild(btn);
+        ul.appendChild(li);
+      });
+      group.appendChild(ul);
+      bodyEl.appendChild(group);
+    });
+
+    updateTakenSummary();
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function showDay(key) {
+    activeDay = key;
+    var parts = key.split("-").map(Number);
+    calViewYear = parts[0];
+    calViewMonth = parts[1] - 1;
+    renderTabs();
+    renderCalendar();
+    bodyEl.innerHTML = '<div class="loading">Yuklanmoqda...</div>';
+    fetch(SEND_ENDPOINT + "/pickup/day", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: pass, date: key }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (!data.ok) {
+          bodyEl.innerHTML = '<div class="empty-state">Xato: ' + escapeHtml(data.error || "noma'lum") + "</div>";
+          return;
+        }
+        renderBody(data);
+      })
+      .catch(function () {
+        bodyEl.innerHTML = '<div class="empty-state">Internet aloqasi bilan muammo. Qayta urinib ko\'ring.</div>';
+      });
+  }
+
+  calToggleBtn.addEventListener("click", function () {
+    var open = calendarEl.classList.toggle("open");
+    calToggleBtn.classList.toggle("active", open);
+  });
+  calPrevBtn.addEventListener("click", function () {
+    calViewMonth--;
+    if (calViewMonth < 0) { calViewMonth = 11; calViewYear--; }
+    renderCalendar();
+  });
+  calNextBtn.addEventListener("click", function () {
+    if (calNextBtn.disabled) return;
+    calViewMonth++;
+    if (calViewMonth > 11) { calViewMonth = 0; calViewYear++; }
+    renderCalendar();
+  });
+
+  lockForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var typed = document.getElementById("lockPass").value.trim();
+    if (!typed) return;
+    pass = typed;
+    var today = new Date();
+    var todayKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+    lockScreen.style.display = "none";
+    lockError.textContent = "";
+    showDay(todayKey);
+  });
+})();
+</script>
+</body>
+</html>
