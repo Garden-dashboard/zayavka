@@ -2093,6 +2093,23 @@
     return display + suffix;
   }
 
+  // 2026-09-27: admin login bo'lsa server BARCHA loginlarning arxivini
+  // qaytaradi va `all: true` deydi. Unda kun ichidagi ma'lumot shakli
+  // boshqacha: { "<login>": {dests, items} } (xodimda esa {dests, items}).
+  var archiveAllMode = false;
+
+  // Kun ichidagi bandlar soni -- ikkala shaklda ham to'g'ri ishlaydi.
+  function archiveDayCount(dayData) {
+    if (!dayData) return 0;
+    if (!archiveAllMode) return dayData.items ? dayData.items.length : 0;
+    var n = 0;
+    Object.keys(dayData).forEach(function (who) {
+      var e = dayData[who];
+      if (e && e.items) n += e.items.length;
+    });
+    return n;
+  }
+
   function fetchMonth(y, m) {
     var mk = monthKeyOf(y, m);
     if (monthCache[mk]) return Promise.resolve(monthCache[mk]);
@@ -2104,6 +2121,7 @@
       .then(function (r) { return r.json(); })
       .then(function (data) {
         var days = data && data.ok ? data.days || {} : {};
+        if (data && data.ok) archiveAllMode = data.all === true;
         monthCache[mk] = days;
         return days;
       })
@@ -2174,7 +2192,7 @@
           btn.classList.add("future");
         } else {
           btn.addEventListener("click", function () { showDay(key); });
-          if (days[key] && days[key].items && days[key].items.length > 0) {
+          if (archiveDayCount(days[key]) > 0) {
             var dot = document.createElement("span");
             dot.className = "cal-dot";
             btn.appendChild(dot);
@@ -2196,34 +2214,55 @@
     return parts[2] + "." + parts[1];
   }
 
-  function renderDayBody(days) {
-    var dayData = days[activeArchiveDay];
-    var label = labelForArchiveKey(activeArchiveDay);
-    if (!dayData || !dayData.items || dayData.items.length === 0) {
-      archiveBodyEl.innerHTML = '<div class="archive-empty">' + label + " kuni hech qanday zayavka yuborilmagan.</div>";
-      archiveSummaryEl.textContent = "";
-      return;
-    }
-    archiveBodyEl.innerHTML = "";
+  // Bitta bo'lim: sarlavha (kim/qayerga) + bandlar ro'yxati
+  function buildArchiveGroup(entry, whoLabel) {
     var group = document.createElement("div");
     group.className = "dest-group";
-    if (dayData.dests && dayData.dests.length) {
-      var destName = document.createElement("div");
-      destName.className = "dest-name";
-      destName.textContent = dayData.dests.map(function (d) { return d.replace(/^[^:]*:\s*/, ""); }).join(", ");
-      group.appendChild(destName);
+    var destText = (entry.dests || []).map(function (d) { return d.replace(/^[^:]*:\s*/, ""); }).join(", ");
+    if (whoLabel || destText) {
+      var head = document.createElement("div");
+      head.className = "dest-name";
+      head.textContent = whoLabel ? (whoLabel + (destText ? " · " + destText : "")) : destText;
+      group.appendChild(head);
     }
     var ul = document.createElement("ul");
     ul.className = "arch-list";
-    dayData.items.forEach(function (it) {
+    (entry.items || []).forEach(function (it) {
       var li = document.createElement("li");
       li.className = "arch-item";
       li.innerHTML = "<span>" + escapeHtml(it.name) + '</span><span class="qty">' + formatArchiveQty(it) + "</span>";
       ul.appendChild(li);
     });
     group.appendChild(ul);
-    archiveBodyEl.appendChild(group);
-    archiveSummaryEl.innerHTML = "<span><b>" + dayData.items.length + "</b> band</span><span>" + label + "</span>";
+    return group;
+  }
+
+  function renderDayBody(days) {
+    var dayData = days[activeArchiveDay];
+    var label = labelForArchiveKey(activeArchiveDay);
+    var total = archiveDayCount(dayData);
+    if (total === 0) {
+      archiveBodyEl.innerHTML = '<div class="archive-empty">' + label + " kuni hech qanday zayavka yuborilmagan.</div>";
+      archiveSummaryEl.textContent = "";
+      return;
+    }
+    archiveBodyEl.innerHTML = "";
+
+    if (archiveAllMode) {
+      // Admin: har login alohida bo'lim bo'lib, ko'p yozganidan boshlab
+      var logins = Object.keys(dayData).sort(function (a, b) {
+        return (dayData[b].items || []).length - (dayData[a].items || []).length;
+      });
+      logins.forEach(function (who) {
+        archiveBodyEl.appendChild(buildArchiveGroup(dayData[who], "👤 " + who));
+      });
+      archiveSummaryEl.innerHTML =
+        "<span><b>" + logins.length + "</b> login · <b>" + total + "</b> band</span><span>" + label + "</span>";
+      return;
+    }
+
+    archiveBodyEl.appendChild(buildArchiveGroup(dayData, ""));
+    archiveSummaryEl.innerHTML = "<span><b>" + total + "</b> band</span><span>" + label + "</span>";
   }
 
   function showMonth(y, m) {
@@ -2244,7 +2283,10 @@
   }
 
   function openArchive() {
-    archiveWho.textContent = (siteAuth.login || "") + " · faqat o'zingiz yuborgan zayavkalar";
+    // Admin barcha loginlarni ko'radi; xodim faqat o'zinikini.
+    archiveWho.textContent = hasAdminAccess()
+      ? "Barcha loginlar — kim nima yuborgani"
+      : (siteAuth.login || "") + " · faqat o'zingiz yuborgan zayavkalar";
     archiveOverlay.classList.add("open");
     archiveBodyEl.innerHTML = '<div class="archive-loading">Yuklanmoqda...</div>';
     var today = new Date();
