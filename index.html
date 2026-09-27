@@ -317,6 +317,35 @@
   }
   .cal-day.selected .cal-dot { background: var(--accent-ink); }
 
+  /* 2026-09-27: arxivda login bo'yicha filtr -- FAQAT admin loginda
+     ko'rinadi (xodimda arxiv baribir faqat o'ziniki). */
+  .arch-filter {
+    display: none;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 18px 4px;
+  }
+  .arch-filter.show { display: flex; }
+  .arch-filter-label {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .arch-filter-select {
+    flex: 1;
+    min-width: 0;
+    min-height: 42px;
+    padding: 0 10px;
+    font-size: 16px;
+    font-family: inherit;
+    border-radius: 9px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+  }
+  .arch-filter-select:focus { outline: none; border-color: var(--accent); }
+
   .archive-body {
     flex: 1;
     overflow-y: auto;
@@ -1258,6 +1287,10 @@
       </div>
       <div class="cal-grid" id="calGrid"></div>
     </div>
+    <div class="arch-filter" id="archFilterRow">
+      <label class="arch-filter-label" for="archLoginFilter">👤 Login</label>
+      <select class="arch-filter-select" id="archLoginFilter"></select>
+    </div>
     <div class="archive-body" id="archiveBody"></div>
     <div class="archive-summary" id="archiveSummary"></div>
   </div>
@@ -2066,6 +2099,8 @@
   var dayTabsEl = document.getElementById("dayTabs");
   var archiveBodyEl = document.getElementById("archiveBody");
   var archiveSummaryEl = document.getElementById("archiveSummary");
+  var archFilterRow = document.getElementById("archFilterRow");
+  var archLoginFilter = document.getElementById("archLoginFilter");
   var calToggleBtn = document.getElementById("calToggleBtn");
   var calendarEl = document.getElementById("calendar");
   var calGridEl = document.getElementById("calGrid");
@@ -2097,17 +2132,62 @@
   // qaytaradi va `all: true` deydi. Unda kun ichidagi ma'lumot shakli
   // boshqacha: { "<login>": {dests, items} } (xodimda esa {dests, items}).
   var archiveAllMode = false;
+  // "" = hamma login; aks holda faqat shu login ko'rsatiladi (admin filtri).
+  var archiveLoginFilter = "";
 
-  // Kun ichidagi bandlar soni -- ikkala shaklda ham to'g'ri ishlaydi.
+  // Shu kunda ko'rsatilishi kerak bo'lgan loginlar (filtr hisobga olingan).
+  function archiveLoginsOf(dayData) {
+    if (!dayData || !archiveAllMode) return [];
+    var all = Object.keys(dayData).filter(function (who) {
+      var e = dayData[who];
+      return e && e.items && e.items.length > 0;
+    });
+    if (!archiveLoginFilter) return all;
+    return all.indexOf(archiveLoginFilter) !== -1 ? [archiveLoginFilter] : [];
+  }
+
+  // Kun ichidagi bandlar soni -- ikkala shaklda ham, filtrga ham bo'ysunadi.
   function archiveDayCount(dayData) {
     if (!dayData) return 0;
     if (!archiveAllMode) return dayData.items ? dayData.items.length : 0;
     var n = 0;
-    Object.keys(dayData).forEach(function (who) {
-      var e = dayData[who];
-      if (e && e.items) n += e.items.length;
+    archiveLoginsOf(dayData).forEach(function (who) {
+      n += (dayData[who].items || []).length;
     });
     return n;
+  }
+
+  // Filtr ro'yxati -- shu oyda haqiqatan faoliyat ko'rsatgan loginlardan
+  // tuziladi (bo'sh loginlar ro'yxatni chalkashtirmasin).
+  function refreshArchiveFilter(days) {
+    if (!archiveAllMode) {
+      archFilterRow.classList.remove("show");
+      return;
+    }
+    archFilterRow.classList.add("show");
+    var set = {};
+    Object.keys(days || {}).forEach(function (k) {
+      Object.keys(days[k] || {}).forEach(function (who) {
+        var e = days[k][who];
+        if (e && e.items && e.items.length > 0) set[who] = (set[who] || 0) + e.items.length;
+      });
+    });
+    var logins = Object.keys(set).sort();
+    // Tanlangan login bu oyda umuman bo'lmasa -- "hammasi"ga qaytamiz
+    if (archiveLoginFilter && logins.indexOf(archiveLoginFilter) === -1) archiveLoginFilter = "";
+
+    archLoginFilter.innerHTML = "";
+    var optAll = document.createElement("option");
+    optAll.value = "";
+    optAll.textContent = "Hammasi (" + logins.length + " login)";
+    archLoginFilter.appendChild(optAll);
+    logins.forEach(function (who) {
+      var o = document.createElement("option");
+      o.value = who;
+      o.textContent = who + " — " + set[who] + " band";
+      archLoginFilter.appendChild(o);
+    });
+    archLoginFilter.value = archiveLoginFilter;
   }
 
   function fetchMonth(y, m) {
@@ -2250,14 +2330,15 @@
 
     if (archiveAllMode) {
       // Admin: har login alohida bo'lim bo'lib, ko'p yozganidan boshlab
-      var logins = Object.keys(dayData).sort(function (a, b) {
+      var logins = archiveLoginsOf(dayData).sort(function (a, b) {
         return (dayData[b].items || []).length - (dayData[a].items || []).length;
       });
       logins.forEach(function (who) {
         archiveBodyEl.appendChild(buildArchiveGroup(dayData[who], "👤 " + who));
       });
-      archiveSummaryEl.innerHTML =
-        "<span><b>" + logins.length + "</b> login · <b>" + total + "</b> band</span><span>" + label + "</span>";
+      archiveSummaryEl.innerHTML = archiveLoginFilter
+        ? "<span>👤 <b>" + escapeHtml(archiveLoginFilter) + "</b> · <b>" + total + "</b> band</span><span>" + label + "</span>"
+        : "<span><b>" + logins.length + "</b> login · <b>" + total + "</b> band</span><span>" + label + "</span>";
       return;
     }
 
@@ -2268,7 +2349,10 @@
   function showMonth(y, m) {
     calViewYear = y;
     calViewMonth = m;
-    fetchMonth(y, m).then(function (days) { renderCalendar(days); });
+    fetchMonth(y, m).then(function (days) {
+      refreshArchiveFilter(days);
+      renderCalendar(days);
+    });
   }
 
   function showDay(key) {
@@ -2277,10 +2361,22 @@
     var parts = key.split("-").map(Number);
     var y = parts[0], m = parts[1] - 1;
     fetchMonth(y, m).then(function (days) {
+      refreshArchiveFilter(days);
       renderDayBody(days);
       if (calViewYear === y && calViewMonth === m) renderCalendar(days);
     });
   }
+
+  // Filtr o'zgarganda: kun ro'yxati ham, kalendar nuqtalari ham qayta chiziladi
+  // (ya'ni "Suxrob" tanlansa, kalendarda faqat u yozgan kunlar belgilanadi).
+  archLoginFilter.addEventListener("change", function () {
+    archiveLoginFilter = archLoginFilter.value;
+    var parts = activeArchiveDay.split("-").map(Number);
+    fetchMonth(parts[0], parts[1] - 1).then(function (days) {
+      renderDayBody(days);
+      if (calViewYear === parts[0] && calViewMonth === parts[1] - 1) renderCalendar(days);
+    });
+  });
 
   function openArchive() {
     // Admin barcha loginlarni ko'radi; xodim faqat o'zinikini.
