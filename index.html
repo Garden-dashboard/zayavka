@@ -858,12 +858,19 @@
   .app-body { flex-grow: 1; min-height: 0; display: flex; gap: 18px; padding: 18px 20px 28px; }
   .col-left { flex-grow: 1; min-width: 0; display: flex; flex-direction: column; }
 
+  /* Zayavkadan boshqa har qanday rejimda qidiruv ustuni va savat yashiriladi;
+     faqat o'sha rejimning bo'limi ko'rinadi. */
   body.mode-inventory .col-left,
   body.mode-inventory .cart,
   body.mode-adminlist .col-left,
-  body.mode-adminlist .cart { display: none !important; }
-  #inventorySection { display: none; flex-grow: 1; min-width: 0; }
+  body.mode-adminlist .cart,
+  body.mode-logins .col-left,
+  body.mode-logins .cart { display: none !important; }
+  #inventorySection,
+  #adminListSection,
+  #loginsSection { display: none; flex-grow: 1; min-width: 0; }
   body.mode-inventory #inventorySection { display: block; }
+  body.mode-logins #loginsSection { display: block; }
 
   .inv-sub { margin: 0 0 16px; font-size: 13px; color: var(--text-muted); line-height: 1.5; }
   ul#inventoryList { list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
@@ -885,8 +892,6 @@
   /* 2026-09-27: FAQAT admin login uchun -- "Ro'yxat" bo'limi. Zayavka
      ro'yxatlariga iikodagi mahsulotni qo'shish/olib tashlash, ombor
      (manba) belgilash. Zayavka/Inventarizatsiya oqimlariga tegmaydi. */
-  body.mode-adminlist #inventorySection { display: none !important; }
-  #adminListSection { display: none; flex-grow: 1; min-width: 0; }
   body.mode-adminlist #adminListSection { display: block; }
   .al-cols { display: flex; gap: 16px; align-items: flex-start; }
   .al-col { flex: 1 1 0; min-width: 0; }
@@ -982,6 +987,62 @@
   }
   .al-save:disabled { opacity: 0.55; cursor: default; }
   .al-dirty { color: var(--accent); font-weight: 700; }
+
+  /* 2026-09-27: "Loginlar" bo'limi -- xodim loginlarini sayt ichidan
+     qo'shish / o'chirish / parol va omborini o'zgartirish (faqat admin). */
+  .lg-hint { margin: 0 0 14px; font-size: 13px; color: var(--text-muted); line-height: 1.55; }
+  .lg-table { display: flex; flex-direction: column; gap: 7px; }
+  .lg-head, .lg-row {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .lg-head {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--text-muted);
+    padding: 0 8px 2px;
+  }
+  .lg-row {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 8px;
+  }
+  .lg-row.lg-new { border-color: var(--accent-2); }
+  .lg-row.lg-self { border-color: var(--accent); }
+  .lg-f-login { flex: 1 1 130px; min-width: 0; }
+  .lg-f-pass  { flex: 0 0 100px; }
+  .lg-f-org   { flex: 0 0 150px; }
+  .lg-f-dest  { flex: 1 1 200px; min-width: 0; }
+  .lg-input, .lg-select {
+    width: 100%; box-sizing: border-box;
+    min-height: 42px; padding: 0 9px;
+    font-size: 16px; font-family: inherit;
+    border-radius: 8px; border: 1.5px solid var(--border);
+    background: var(--surface); color: var(--text);
+  }
+  .lg-input:focus, .lg-select:focus { outline: none; border-color: var(--accent); }
+  .lg-del {
+    flex: 0 0 auto; width: 40px; height: 40px;
+    border: none; border-radius: 8px; background: none;
+    color: var(--text-muted); font-size: 21px; line-height: 1;
+    font-family: inherit; cursor: pointer;
+  }
+  .lg-del:hover { color: var(--accent); }
+  .lg-badge {
+    flex: 0 0 auto; font-size: 10.5px; font-weight: 700;
+    padding: 4px 8px; border-radius: 6px;
+    background: var(--accent); color: var(--accent-ink);
+  }
+  .lg-addbtn {
+    margin-top: 12px; min-height: 46px; padding: 0 18px;
+    border: 1.5px dashed var(--border); border-radius: 10px;
+    background: none; color: var(--text);
+    font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer;
+  }
+  .lg-addbtn:hover { border-color: var(--accent-2); color: var(--accent-2); }
+
+  @media (max-width: 760px) {
+    .lg-head { display: none; }
+    .lg-row { flex-wrap: wrap; }
+    .lg-f-login, .lg-f-pass, .lg-f-org, .lg-f-dest { flex: 1 1 100%; }
+  }
 </style>
 </head>
 <body>
@@ -1030,6 +1091,10 @@
       <button class="sb-item" id="tabAdminListBtn" type="button" style="display:none">
         <svg class="sb-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M4 12h16M4 18h7"></path><circle cx="18" cy="6" r="2"></circle><circle cx="15" cy="18" r="2"></circle></svg>
         <span>Ro'yxat</span>
+      </button>
+      <button class="sb-item" id="tabLoginsBtn" type="button" style="display:none">
+        <svg class="sb-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"></circle><path d="M3 20v-1a5 5 0 015-5h2a5 5 0 015 5v1"></path><path d="M17 11h4M19 9v4"></path></svg>
+        <span>Loginlar</span>
       </button>
       <button class="sb-item" id="archiveBtn" type="button">
         <svg class="sb-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="4" rx="1"></rect><path d="M5 8v11a1 1 0 001 1h12a1 1 0 001-1V8"></path><path d="M10 12h4"></path></svg>
@@ -1146,6 +1211,26 @@
 
         <button class="al-save" id="alSaveBtn" type="button" disabled>💾 Saqlash</button>
         <p class="al-status" id="alStatus"></p>
+      </section>
+
+      <section id="loginsSection">
+        <p class="lg-hint">Xodim loginlarini shu yerdan boshqarasiz: yangi qo'shish, parolini yoki omborini o'zgartirish, keraksizini <b>×</b> bilan o'chirish. Oxirida <b>Saqlash</b>ni bosing. <b>Garden</b> va <b>Olimp</b> loginlari tizimga o'rnatilgan — ular bu ro'yxatda ko'rinmaydi va o'zgartirilmaydi.</p>
+
+        <div class="lg-table">
+          <div class="lg-head">
+            <span class="lg-f-login">Login</span>
+            <span class="lg-f-pass">Parol</span>
+            <span class="lg-f-org">Tashkilot</span>
+            <span class="lg-f-dest">Qabul qiluvchi (bo'sh = o'zi tanlaydi)</span>
+            <span style="flex:0 0 40px"></span>
+          </div>
+          <div id="lgRows"></div>
+        </div>
+
+        <button class="lg-addbtn" id="lgAddBtn" type="button">+ Yangi login qo'shish</button>
+
+        <button class="al-save" id="lgSaveBtn" type="button" disabled>💾 Saqlash</button>
+        <p class="al-status" id="lgStatus"></p>
       </section>
 
     </div>
@@ -1352,6 +1437,7 @@
       // Инвентаризация -- Горячий склад loginlari, "Ro'yxat" -- admin.
       document.getElementById("tabInventoryBtn").style.display = hasInventoryAccess() ? "" : "none";
       document.getElementById("tabAdminListBtn").style.display = hasAdminAccess() ? "" : "none";
+      document.getElementById("tabLoginsBtn").style.display = hasAdminAccess() ? "" : "none";
       fillSidebarUser(login, role);
       fetch(SEND_ENDPOINT + "/admin/map")
         .then(function (r) { return r.json(); })
@@ -2236,15 +2322,19 @@
     zayavka: ["Zagotovka · Ombor katalogi", "Mahsulot nomini toping"],
     inventory: ["Zagotovka · Inventarizatsiya", "Haqiqiy qoldiqni kiriting"],
     adminlist: ["Admin · Zayavka ro'yxati", "Ro'yxatga mahsulot qo'shish"],
+    logins: ["Admin · Loginlar", "Xodim loginlarini boshqarish"],
   };
 
   function setMode(mode) {
     document.body.classList.toggle("mode-inventory", mode === "inventory");
     document.body.classList.toggle("mode-adminlist", mode === "adminlist");
+    document.body.classList.toggle("mode-logins", mode === "logins");
     tabZayavkaBtn.classList.toggle("active", mode === "zayavka");
     tabInventoryBtn.classList.toggle("active", mode === "inventory");
     var alBtn = document.getElementById("tabAdminListBtn");
     if (alBtn) alBtn.classList.toggle("active", mode === "adminlist");
+    var lgBtn = document.getElementById("tabLoginsBtn");
+    if (lgBtn) lgBtn.classList.toggle("active", mode === "logins");
 
     var t = MODE_TITLES[mode] || MODE_TITLES.zayavka;
     var eyebrowEl = document.getElementById("pageEyebrow");
@@ -2698,6 +2788,237 @@
       alLoadDest(alDestSelect.value);
     }
     loadAdminCatalog();
+  });
+
+  // ---- 2026-09-27: "Loginlar" bo'limi (FAQAT admin login uchun) ----
+  // Xodim loginlarini qo'shish / o'chirish / nomini, parolini yoki omborini
+  // o'zgartirish. Jadval to'liq tahrirlanadi, "Saqlash" bosilganda butun
+  // ro'yxat serverga yuboriladi (POST /admin/roles -- eski admin.html bilan
+  // bir xil endpoint, shuning uchun ikkalasi mos ishlaydi).
+  var tabLoginsBtn = document.getElementById("tabLoginsBtn");
+  var lgRows = document.getElementById("lgRows");
+  var lgAddBtn = document.getElementById("lgAddBtn");
+  var lgSaveBtn = document.getElementById("lgSaveBtn");
+  var lgStatus = document.getElementById("lgStatus");
+
+  var lgLoaded = false;
+  var lgList = [];     // [{ origKey, login, pass, org, dest, extra }]
+  var lgBaseLogins = []; // tizimga o'rnatilgan (Garden/Olimp) -- to'qnashmasin
+  var lgDirty = false;
+
+  function lgSetStatus(msg, isErr) {
+    lgStatus.textContent = msg || "";
+    lgStatus.classList.toggle("al-err", !!isErr);
+  }
+  function lgNotify(msg, isErr) { lgSetStatus(msg, isErr); showToast(msg); }
+
+  function lgMarkDirty(dirty) {
+    lgDirty = dirty;
+    lgSaveBtn.disabled = !dirty;
+    lgSaveBtn.textContent = dirty ? "💾 Saqlash (o'zgarish bor)" : "💾 Saqlash";
+  }
+
+  function lgOrgs() {
+    var set = {};
+    Object.keys(ROUTES).forEach(function (src) {
+      ROUTES[src].forEach(function (d) { set[d.split(": ")[0]] = true; });
+    });
+    return Object.keys(set).sort();
+  }
+
+  function lgDestsFor(org) {
+    var set = {};
+    Object.keys(ROUTES).forEach(function (src) {
+      ROUTES[src].forEach(function (d) { if (d.indexOf(org + ":") === 0) set[d] = true; });
+    });
+    return Object.keys(set).sort();
+  }
+
+  function lgRenderDestOptions(sel, org, current) {
+    sel.innerHTML = "";
+    var none = document.createElement("option");
+    none.value = "";
+    none.textContent = "— o'zi tanlaydi —";
+    sel.appendChild(none);
+    lgDestsFor(org).forEach(function (d) {
+      var o = document.createElement("option");
+      o.value = d;
+      o.textContent = d.replace(org + ": ", "");
+      sel.appendChild(o);
+    });
+    sel.value = current && lgDestsFor(org).indexOf(current) !== -1 ? current : "";
+  }
+
+  function lgRender() {
+    lgRows.innerHTML = "";
+    lgList.forEach(function (row, idx) {
+      var div = document.createElement("div");
+      div.className = "lg-row" + (row.origKey ? "" : " lg-new") + (row.origKey && row.origKey === siteAuth.login ? " lg-self" : "");
+
+      var loginWrap = document.createElement("span");
+      loginWrap.className = "lg-f-login";
+      var loginInput = document.createElement("input");
+      loginInput.className = "lg-input";
+      loginInput.type = "text";
+      loginInput.value = row.login;
+      loginInput.placeholder = "Login";
+      loginInput.autocapitalize = "off";
+      loginInput.spellcheck = false;
+      loginInput.addEventListener("input", function () { row.login = loginInput.value; lgMarkDirty(true); });
+      loginWrap.appendChild(loginInput);
+
+      var passWrap = document.createElement("span");
+      passWrap.className = "lg-f-pass";
+      var passInput = document.createElement("input");
+      passInput.className = "lg-input";
+      passInput.type = "text";
+      passInput.value = row.pass;
+      passInput.placeholder = "Parol";
+      passInput.inputMode = "numeric";
+      passInput.addEventListener("input", function () { row.pass = passInput.value; lgMarkDirty(true); });
+      passWrap.appendChild(passInput);
+
+      var orgWrap = document.createElement("span");
+      orgWrap.className = "lg-f-org";
+      var orgSel = document.createElement("select");
+      orgSel.className = "lg-select";
+      lgOrgs().forEach(function (o) {
+        var opt = document.createElement("option");
+        opt.value = o; opt.textContent = o;
+        orgSel.appendChild(opt);
+      });
+      orgSel.value = row.org || lgOrgs()[0];
+      orgWrap.appendChild(orgSel);
+
+      var destWrap = document.createElement("span");
+      destWrap.className = "lg-f-dest";
+      var destSel = document.createElement("select");
+      destSel.className = "lg-select";
+      lgRenderDestOptions(destSel, orgSel.value, row.dest);
+      destSel.addEventListener("change", function () { row.dest = destSel.value; lgMarkDirty(true); });
+      destWrap.appendChild(destSel);
+
+      orgSel.addEventListener("change", function () {
+        row.org = orgSel.value;
+        row.dest = ""; // tashkilot o'zgarsa, eski ombor endi to'g'ri kelmaydi
+        lgRenderDestOptions(destSel, row.org, "");
+        lgMarkDirty(true);
+      });
+
+      div.appendChild(loginWrap);
+      div.appendChild(passWrap);
+      div.appendChild(orgWrap);
+      div.appendChild(destWrap);
+
+      if (row.extra && row.extra.admin) {
+        var badge = document.createElement("span");
+        badge.className = "lg-badge";
+        badge.textContent = "ADMIN";
+        div.appendChild(badge);
+      }
+
+      var del = document.createElement("button");
+      del.className = "lg-del";
+      del.type = "button";
+      del.setAttribute("aria-label", "O'chirish");
+      del.textContent = "×";
+      del.addEventListener("click", function () {
+        // O'zini o'chirib, admin bo'limlaridan chiqib qolmasin.
+        if (row.origKey && row.origKey === siteAuth.login) {
+          if (!confirm("Bu SIZNING loginingiz. O'chirsangiz, saqlagandan keyin admin bo'limlariga kira olmaysiz. Davom etasizmi?")) return;
+        }
+        lgList.splice(idx, 1);
+        lgMarkDirty(true);
+        lgRender();
+        lgNotify("\"" + (row.login || "login") + "\" o'chirildi — saqlashni unutmang");
+      });
+      div.appendChild(del);
+
+      lgRows.appendChild(div);
+    });
+  }
+
+  function lgLoad() {
+    if (lgLoaded) return;
+    lgSetStatus("Yuklanmoqda...");
+    fetch(SEND_ENDPOINT + "/admin/roles")
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (!data.ok) { lgSetStatus("Xato: " + (data.error || "noma'lum"), true); return; }
+        lgLoaded = true;
+        lgBaseLogins = data.baseLogins || [];
+        var roles = data.roles || {};
+        lgList = Object.keys(roles).sort().map(function (k) {
+          var r = roles[k] || {};
+          // `admin` kabi qo'shimcha maydonlar SAQLANADI -- aks holda saqlaganda
+          // admin huquqi yo'qolib, bo'limlar yo'qolib qolardi.
+          var extra = {};
+          Object.keys(r).forEach(function (f) {
+            if (f !== "pass" && f !== "org" && f !== "dest") extra[f] = r[f];
+          });
+          return { origKey: k, login: k, pass: r.pass || "", org: r.org || "", dest: r.dest || "", extra: extra };
+        });
+        lgMarkDirty(false);
+        lgRender();
+        lgSetStatus(lgList.length + " ta login yuklandi");
+      })
+      .catch(function () { lgSetStatus("Internet aloqasi bilan muammo. Qayta urinib ko'ring.", true); });
+  }
+
+  lgAddBtn.addEventListener("click", function () {
+    lgList.push({ origKey: null, login: "", pass: "", org: lgOrgs()[0], dest: "", extra: {} });
+    lgMarkDirty(true);
+    lgRender();
+    var inputs = lgRows.querySelectorAll(".lg-f-login .lg-input");
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  });
+
+  lgSaveBtn.addEventListener("click", function () {
+    var roles = {};
+    var seen = {};
+    for (var i = 0; i < lgList.length; i++) {
+      var r = lgList[i];
+      var login = (r.login || "").trim();
+      var pass = (r.pass || "").trim();
+      if (!login || !pass) { lgNotify("Har qatorda login va parol to'ldirilishi kerak (" + (i + 1) + "-qator)", true); return; }
+      if (seen[login]) { lgNotify("\"" + login + "\" ikki marta yozilgan", true); return; }
+      if (lgBaseLogins.indexOf(login) !== -1) { lgNotify("\"" + login + "\" tizimga o'rnatilgan login bilan to'qnashadi", true); return; }
+      seen[login] = true;
+      var entry = { pass: pass, org: r.org || lgOrgs()[0] };
+      if (r.dest) entry.dest = r.dest;
+      Object.keys(r.extra || {}).forEach(function (f) { entry[f] = r.extra[f]; });
+      roles[login] = entry;
+    }
+
+    lgSaveBtn.disabled = true;
+    lgSetStatus("Saqlanmoqda...");
+    fetch(SEND_ENDPOINT + "/admin/roles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ login: siteAuth.login, pass: siteAuth.pass, roles: roles }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (!data.ok) { lgSaveBtn.disabled = false; lgSetStatus("Xato: " + (data.error || "noma'lum"), true); return; }
+        // Mahalliy ROLES ham darhol yangilanadi (qayta yuklamasdan ishlasin)
+        Object.keys(ROLES).forEach(function (k) {
+          if (lgBaseLogins.indexOf(k) === -1) delete ROLES[k];
+        });
+        Object.keys(roles).forEach(function (k) { ROLES[k] = roles[k]; });
+        lgList.forEach(function (r) { r.origKey = (r.login || "").trim(); });
+        lgMarkDirty(false);
+        lgRender();
+        lgNotify("✅ Saqlandi — " + data.count + " ta login");
+      })
+      .catch(function () {
+        lgSaveBtn.disabled = false;
+        lgSetStatus("Internet aloqasi bilan muammo. Qayta urinib ko'ring.", true);
+      });
+  });
+
+  tabLoginsBtn.addEventListener("click", function () {
+    setMode("logins");
+    lgLoad();
   });
 
   render("");
