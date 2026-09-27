@@ -894,12 +894,20 @@
   body.mode-adminlist .col-left,
   body.mode-adminlist .cart,
   body.mode-logins .col-left,
-  body.mode-logins .cart { display: none !important; }
+  body.mode-logins .cart,
+  body.mode-feedback .col-left,
+  body.mode-feedback .cart,
+  body.mode-inbox .col-left,
+  body.mode-inbox .cart { display: none !important; }
   #inventorySection,
   #adminListSection,
-  #loginsSection { display: none; flex-grow: 1; min-width: 0; }
+  #loginsSection,
+  #feedbackSection,
+  #inboxSection { display: none; flex-grow: 1; min-width: 0; }
   body.mode-inventory #inventorySection { display: block; }
   body.mode-logins #loginsSection { display: block; }
+  body.mode-feedback #feedbackSection { display: block; }
+  body.mode-inbox #inboxSection { display: block; }
 
   .inv-sub { margin: 0 0 16px; font-size: 13px; color: var(--text-muted); line-height: 1.5; }
   ul#inventoryList { list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
@@ -1072,6 +1080,107 @@
     .lg-row { flex-wrap: wrap; }
     .lg-f-login, .lg-f-pass, .lg-f-org, .lg-f-dest { flex: 1 1 100%; }
   }
+
+  /* ---- 2026-09-27: E'lon (5 soniyalik) + taklif/shikoyat qutisi ---- */
+  .ann-overlay {
+    position: fixed; inset: 0; z-index: 300;
+    background: var(--overlay);
+    display: none; align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .ann-overlay.open { display: flex; }
+  .ann-card {
+    width: 100%; max-width: 440px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 18px; box-shadow: var(--shadow);
+    padding: 26px 22px 20px; text-align: center;
+  }
+  .ann-eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.09em;
+    text-transform: uppercase; color: var(--accent); margin: 0 0 10px;
+  }
+  .ann-text {
+    margin: 0 0 20px; font-size: 16.5px; line-height: 1.55;
+    white-space: pre-line; word-break: break-word;
+  }
+  .ann-actions { display: flex; flex-direction: column; gap: 9px; }
+  .ann-primary {
+    min-height: 50px; border: none; border-radius: 12px;
+    background: var(--accent-2); color: #ffffff;
+    font-size: 15px; font-weight: 800; font-family: inherit; cursor: pointer;
+  }
+  .ann-close {
+    min-height: 46px; border: 1.5px solid var(--border); border-radius: 11px;
+    background: var(--surface); color: var(--text);
+    font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer;
+  }
+  .ann-close:disabled { opacity: 0.55; cursor: default; }
+
+  /* Bo'limlar tepasidagi doimiy tasma */
+  .ann-banner {
+    display: none;
+    align-items: center; gap: 12px; flex-wrap: wrap;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    border-radius: 12px; padding: 11px 14px; margin-bottom: 14px;
+  }
+  .ann-banner.show { display: flex; }
+  /* Tepa qatordan keyin, ustunlar USTIDA to'liq kenglikda turadi */
+  .app-main > .ann-banner { margin: 16px 20px -4px; }
+  .ann-banner-text {
+    flex: 1 1 220px; min-width: 0;
+    font-size: 13.5px; line-height: 1.5; white-space: pre-line; word-break: break-word;
+  }
+  .ann-banner-btn {
+    flex-shrink: 0; min-height: 40px; padding: 0 14px;
+    border: none; border-radius: 9px;
+    background: var(--accent-2); color: #ffffff;
+    font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer;
+  }
+
+  /* Taklif yozish bo'limi (barcha loginlar uchun) */
+  .fb-sub { margin: 0 0 14px; font-size: 13px; color: var(--text-muted); line-height: 1.55; }
+  .fb-input {
+    width: 100%; box-sizing: border-box; min-height: 190px; resize: vertical;
+    padding: 13px 14px; font-size: 16px; font-family: inherit; line-height: 1.55;
+    border-radius: 12px; border: 1.5px solid var(--border);
+    background: var(--surface); color: var(--text);
+  }
+  .fb-input:focus { outline: none; border-color: var(--accent); }
+  .fb-meta { display: flex; justify-content: space-between; align-items: baseline; margin-top: 7px; font-size: 12px; color: var(--text-muted); }
+
+  /* Admin: kelgan takliflar */
+  .fb-item {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 14px; margin-bottom: 8px;
+  }
+  .fb-item.unread { border-left: 4px solid var(--accent); background: var(--surface); }
+  .fb-item-head {
+    display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap;
+    margin-bottom: 7px;
+  }
+  .fb-who { font-size: 13.5px; font-weight: 700; }
+  .fb-when { font-size: 11.5px; color: var(--text-muted); }
+  .fb-new {
+    font-size: 10px; font-weight: 700; padding: 3px 7px; border-radius: 5px;
+    background: var(--accent); color: var(--accent-ink);
+  }
+  .fb-body { font-size: 14px; line-height: 1.55; white-space: pre-line; word-break: break-word; }
+  .fb-item-actions { display: flex; gap: 8px; margin-top: 9px; }
+  .fb-act {
+    min-height: 36px; padding: 0 11px; border-radius: 8px;
+    border: 1.5px solid var(--border); background: var(--surface); color: var(--text-muted);
+    font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer;
+  }
+  .fb-act:hover { border-color: var(--accent); color: var(--text); }
+  .sb-dot {
+    margin-left: auto; flex-shrink: 0;
+    min-width: 19px; height: 19px; padding: 0 5px; border-radius: 10px;
+    background: var(--accent); color: var(--accent-ink);
+    font-size: 11px; font-weight: 800;
+    display: none; align-items: center; justify-content: center;
+  }
+  .sb-dot.show { display: flex; }
 </style>
 </head>
 <body>
@@ -1121,6 +1230,15 @@
         <svg class="sb-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M4 12h16M4 18h7"></path><circle cx="18" cy="6" r="2"></circle><circle cx="15" cy="18" r="2"></circle></svg>
         <span>Ro'yxat</span>
       </button>
+      <button class="sb-item" id="tabFeedbackBtn" type="button">
+        <svg class="sb-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 01-8 8H7l-4 3V12a8 8 0 018-8h2a8 8 0 018 8z"></path><path d="M9 11h6M9 15h3"></path></svg>
+        <span>Taklif</span>
+      </button>
+      <button class="sb-item" id="tabInboxBtn" type="button" style="display:none">
+        <svg class="sb-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2 3h6l2-3h4"></path><path d="M5 5h14a1 1 0 011 1v12a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z"></path></svg>
+        <span>Takliflar</span>
+        <span class="sb-dot" id="sbInboxDot">0</span>
+      </button>
       <button class="sb-item" id="tabLoginsBtn" type="button" style="display:none">
         <svg class="sb-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"></circle><path d="M3 20v-1a5 5 0 015-5h2a5 5 0 015 5v1"></path><path d="M17 11h4M19 9v4"></path></svg>
         <span>Loginlar</span>
@@ -1161,6 +1279,11 @@
         </div>
       </div>
     </header>
+
+    <div class="ann-banner" id="annBanner">
+      <span class="ann-banner-text" id="annBannerText"></span>
+      <button class="ann-banner-btn" id="annBannerBtn" type="button">✍️ Taklif yozish</button>
+    </div>
 
     <div class="app-body">
 
@@ -1262,6 +1385,34 @@
         <p class="al-status" id="lgStatus"></p>
       </section>
 
+      <section id="feedbackSection">
+        <p class="fb-sub">Ishda nima noqulay bo'lsa, nimani yaxshilash mumkin deb o'ylasangiz — shu yerga bemalol yozing. Xabaringiz to'g'ridan-to'g'ri rahbariyatga boradi, boshqa xodimlar ko'rmaydi.</p>
+        <textarea class="fb-input" id="fbInput" placeholder="Taklifingiz yoki shikoyatingizni yozing..." maxlength="2000"></textarea>
+        <div class="fb-meta">
+          <span id="fbWho"></span>
+          <span id="fbCount">0 / 2000</span>
+        </div>
+        <button class="al-save" id="fbSendBtn" type="button">Yuborish</button>
+        <p class="al-status" id="fbStatus"></p>
+      </section>
+
+      <section id="inboxSection">
+        <p class="al-section-title">E'lon matni — xodimlar kirganda ko'rinadi</p>
+        <textarea class="fb-input" id="annInput" style="min-height:110px" placeholder="Masalan: Ertaga soat 9 da yig'ilish bo'ladi." maxlength="1000"></textarea>
+        <div class="fb-meta">
+          <span id="annUpdated"></span>
+          <span id="annCount">0 / 1000</span>
+        </div>
+        <button class="al-save" id="annSaveBtn" type="button" style="margin-top:10px">💾 E'lonni saqlash</button>
+        <p class="al-status" id="annStatus"></p>
+
+        <p class="al-section-title" style="margin-top:26px">
+          Kelgan takliflar <span id="fbUnreadLabel"></span>
+        </p>
+        <div id="inboxList"></div>
+        <button class="fb-act" id="fbMarkAllBtn" type="button" style="display:none">Hammasini o'qilgan deb belgilash</button>
+      </section>
+
     </div>
   </div>
 </div>
@@ -1293,6 +1444,17 @@
     </div>
     <div class="archive-body" id="archiveBody"></div>
     <div class="archive-summary" id="archiveSummary"></div>
+  </div>
+</div>
+
+<div class="ann-overlay" id="annOverlay">
+  <div class="ann-card" role="dialog" aria-modal="true" aria-labelledby="annCardText">
+    <p class="ann-eyebrow">E'lon</p>
+    <p class="ann-text" id="annCardText"></p>
+    <div class="ann-actions">
+      <button class="ann-primary" id="annWriteBtn" type="button">✍️ Taklif yoki shikoyat yozish</button>
+      <button class="ann-close" id="annCloseBtn" type="button" disabled>Yopish (5)</button>
+    </div>
   </div>
 </div>
 
@@ -1471,7 +1633,10 @@
       document.getElementById("tabInventoryBtn").style.display = hasInventoryAccess() ? "" : "none";
       document.getElementById("tabAdminListBtn").style.display = hasAdminAccess() ? "" : "none";
       document.getElementById("tabLoginsBtn").style.display = hasAdminAccess() ? "" : "none";
+      document.getElementById("tabInboxBtn").style.display = hasAdminAccess() ? "" : "none";
       fillSidebarUser(login, role);
+      startAnnouncement();
+      if (hasAdminAccess()) refreshUnreadBadge();
       fetch(SEND_ENDPOINT + "/admin/map")
         .then(function (r) { return r.json(); })
         .then(function (data) { if (data.ok) productSourceMap = data.map || {}; })
@@ -2461,6 +2626,8 @@
     inventory: ["Zagotovka · Inventarizatsiya", "Haqiqiy qoldiqni kiriting"],
     adminlist: ["Admin · Zayavka ro'yxati", "Ro'yxatga mahsulot qo'shish"],
     logins: ["Admin · Loginlar", "Xodim loginlarini boshqarish"],
+    feedback: ["Zagotovka · Taklif va shikoyat", "Fikringizni yozing"],
+    inbox: ["Admin · E'lon va takliflar", "E'lon matni va kelgan xabarlar"],
   };
 
   function setMode(mode) {
@@ -2473,6 +2640,10 @@
     if (alBtn) alBtn.classList.toggle("active", mode === "adminlist");
     var lgBtn = document.getElementById("tabLoginsBtn");
     if (lgBtn) lgBtn.classList.toggle("active", mode === "logins");
+    var fbBtn = document.getElementById("tabFeedbackBtn");
+    if (fbBtn) fbBtn.classList.toggle("active", mode === "feedback");
+    var ibBtn = document.getElementById("tabInboxBtn");
+    if (ibBtn) ibBtn.classList.toggle("active", mode === "inbox");
 
     var t = MODE_TITLES[mode] || MODE_TITLES.zayavka;
     var eyebrowEl = document.getElementById("pageEyebrow");
@@ -3157,6 +3328,307 @@
   tabLoginsBtn.addEventListener("click", function () {
     setMode("logins");
     lgLoad();
+  });
+
+  // ---- 2026-09-27: E'lon (5 soniyalik) + taklif/shikoyat qutisi ----
+  // E'lon matnini admin yozadi; login qilinganda bir marta 5 soniyalik oyna
+  // chiqadi, keyin bo'limlar tepasida tasma bo'lib turaveradi. Ikkalasida ham
+  // "Taklif yozish" tugmasi bor. Xodim yozgani FAQAT admin loginiga boradi.
+  var annOverlay = document.getElementById("annOverlay");
+  var annCardText = document.getElementById("annCardText");
+  var annCloseBtn = document.getElementById("annCloseBtn");
+  var annWriteBtn = document.getElementById("annWriteBtn");
+  var annBanner = document.getElementById("annBanner");
+  var annBannerText = document.getElementById("annBannerText");
+  var annBannerBtn = document.getElementById("annBannerBtn");
+
+  var tabFeedbackBtn = document.getElementById("tabFeedbackBtn");
+  var tabInboxBtn = document.getElementById("tabInboxBtn");
+  var fbInput = document.getElementById("fbInput");
+  var fbWho = document.getElementById("fbWho");
+  var fbCount = document.getElementById("fbCount");
+  var fbSendBtn = document.getElementById("fbSendBtn");
+  var fbStatus = document.getElementById("fbStatus");
+
+  var annInput = document.getElementById("annInput");
+  var annUpdated = document.getElementById("annUpdated");
+  var annCount = document.getElementById("annCount");
+  var annSaveBtn = document.getElementById("annSaveBtn");
+  var annStatus = document.getElementById("annStatus");
+  var inboxList = document.getElementById("inboxList");
+  var fbUnreadLabel = document.getElementById("fbUnreadLabel");
+  var fbMarkAllBtn = document.getElementById("fbMarkAllBtn");
+  var sbInboxDot = document.getElementById("sbInboxDot");
+
+  var annCountdown = null;
+
+  function annSeenKey(login) { return "ann_seen_" + login; }
+
+  // Bir xil e'lonni har safar ko'rsatavermaslik uchun -- oxirgi ko'rilgan
+  // e'lon vaqti brauzerda saqlanadi. Admin e'lonni O'ZGARTIRSA (updatedAt
+  // yangilanadi), oyna yana bir marta chiqadi. localStorage bloklangan
+  // bo'lsa ham ishlashi kerak -- shuning uchun try/catch.
+  function annAlreadySeen(login, updatedAt) {
+    try {
+      return localStorage.getItem(annSeenKey(login)) === String(updatedAt);
+    } catch (e) { return false; }
+  }
+  function annMarkSeen(login, updatedAt) {
+    try { localStorage.setItem(annSeenKey(login), String(updatedAt)); } catch (e) {}
+  }
+
+  function closeAnnouncement() {
+    if (annCountdown) { clearInterval(annCountdown); annCountdown = null; }
+    annOverlay.classList.remove("open");
+  }
+
+  function openAnnouncement(text) {
+    annCardText.textContent = text;
+    annOverlay.classList.add("open");
+    var left = 5;
+    annCloseBtn.disabled = true;
+    annCloseBtn.textContent = "Yopish (" + left + ")";
+    if (annCountdown) clearInterval(annCountdown);
+    annCountdown = setInterval(function () {
+      left--;
+      if (left > 0) {
+        annCloseBtn.textContent = "Yopish (" + left + ")";
+        return;
+      }
+      clearInterval(annCountdown);
+      annCountdown = null;
+      annCloseBtn.disabled = false;
+      annCloseBtn.textContent = "Yopish";
+    }, 1000);
+  }
+
+  function startAnnouncement() {
+    fetch(SEND_ENDPOINT + "/announcement")
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        var text = (data && data.ok ? data.text : "") || "";
+        if (!text.trim()) {
+          annBanner.classList.remove("show");
+          return;
+        }
+        annBannerText.textContent = text;
+        annBanner.classList.add("show");
+        if (!annAlreadySeen(siteAuth.login, data.updatedAt)) {
+          openAnnouncement(text);
+          annMarkSeen(siteAuth.login, data.updatedAt);
+        }
+      })
+      .catch(function () {});
+  }
+
+  annCloseBtn.addEventListener("click", closeAnnouncement);
+  annWriteBtn.addEventListener("click", function () { closeAnnouncement(); openFeedback(); });
+  annBannerBtn.addEventListener("click", function () { openFeedback(); });
+
+  function openFeedback() {
+    setMode("feedback");
+    fbWho.textContent = "👤 " + (siteAuth.login || "") + " nomidan yuboriladi";
+    fbStatus.textContent = "";
+    fbInput.focus();
+  }
+
+  fbInput.addEventListener("input", function () {
+    fbCount.textContent = fbInput.value.length + " / 2000";
+  });
+
+  fbSendBtn.addEventListener("click", function () {
+    var text = fbInput.value.trim();
+    if (text.length < 3) {
+      fbStatus.textContent = "Iltimos, fikringizni yozing.";
+      fbStatus.classList.add("al-err");
+      return;
+    }
+    fbSendBtn.disabled = true;
+    fbStatus.classList.remove("al-err");
+    fbStatus.textContent = "Yuborilmoqda...";
+    fetch(SEND_ENDPOINT + "/feedback/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ login: siteAuth.login, pass: siteAuth.pass, text: text }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        fbSendBtn.disabled = false;
+        if (!data.ok) {
+          fbStatus.textContent = "Xato: " + (data.error || "noma'lum");
+          fbStatus.classList.add("al-err");
+          return;
+        }
+        fbInput.value = "";
+        fbCount.textContent = "0 / 2000";
+        fbStatus.textContent = "✅ Rahmat, xabaringiz yuborildi.";
+        showToast("✅ Xabaringiz yuborildi");
+      })
+      .catch(function () {
+        fbSendBtn.disabled = false;
+        fbStatus.textContent = "Internet aloqasi bilan muammo. Qayta urinib ko'ring.";
+        fbStatus.classList.add("al-err");
+      });
+  });
+
+  tabFeedbackBtn.addEventListener("click", openFeedback);
+
+  // ---- Admin tomoni: e'lon matni + kelgan takliflar ----
+  function fbTimeLabel(ms) {
+    var p = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Tashkent", day: "2-digit", month: "2-digit",
+      hour: "2-digit", minute: "2-digit", hour12: false,
+    }).formatToParts(new Date(ms)).reduce(function (a, x) { a[x.type] = x.value; return a; }, {});
+    return p.day + "." + p.month + " " + p.hour + ":" + p.minute;
+  }
+
+  function setUnreadBadge(n) {
+    sbInboxDot.textContent = n > 99 ? "99+" : String(n);
+    sbInboxDot.classList.toggle("show", n > 0);
+  }
+
+  function refreshUnreadBadge() {
+    fetch(SEND_ENDPOINT + "/admin/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ login: siteAuth.login, pass: siteAuth.pass }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) { if (data.ok) setUnreadBadge(data.unread || 0); })
+      .catch(function () {});
+  }
+
+  function inboxCall(extra) {
+    var payload = { login: siteAuth.login, pass: siteAuth.pass };
+    Object.keys(extra || {}).forEach(function (k) { payload[k] = extra[k]; });
+    return fetch(SEND_ENDPOINT + "/admin/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }).then(function (r) { return r.json(); });
+  }
+
+  function renderInbox(data) {
+    var items = data.items || [];
+    setUnreadBadge(data.unread || 0);
+    fbUnreadLabel.textContent = data.unread ? "— " + data.unread + " ta yangi" : "";
+    fbMarkAllBtn.style.display = data.unread ? "" : "none";
+    inboxList.innerHTML = "";
+    if (items.length === 0) {
+      inboxList.innerHTML = '<div class="archive-empty">Hozircha hech kim yozmagan.</div>';
+      return;
+    }
+    items.forEach(function (f) {
+      var div = document.createElement("div");
+      div.className = "fb-item" + (f.read ? "" : " unread");
+
+      var head = document.createElement("div");
+      head.className = "fb-item-head";
+      var who = document.createElement("span");
+      who.className = "fb-who";
+      who.textContent = "👤 " + f.login + (f.dest ? " · " + f.dest.replace(/^[^:]*:\s*/, "") : "");
+      head.appendChild(who);
+      var when = document.createElement("span");
+      when.className = "fb-when";
+      when.textContent = fbTimeLabel(f.createdAt);
+      head.appendChild(when);
+      if (!f.read) {
+        var badge = document.createElement("span");
+        badge.className = "fb-new";
+        badge.textContent = "YANGI";
+        head.appendChild(badge);
+      }
+
+      var bodyEl = document.createElement("div");
+      bodyEl.className = "fb-body";
+      bodyEl.textContent = f.text;
+
+      var acts = document.createElement("div");
+      acts.className = "fb-item-actions";
+      if (!f.read) {
+        var readBtn = document.createElement("button");
+        readBtn.className = "fb-act";
+        readBtn.type = "button";
+        readBtn.textContent = "O'qildi";
+        readBtn.addEventListener("click", function () {
+          inboxCall({ markRead: f.id }).then(renderInbox).catch(function () {});
+        });
+        acts.appendChild(readBtn);
+      }
+      var delBtn = document.createElement("button");
+      delBtn.className = "fb-act";
+      delBtn.type = "button";
+      delBtn.textContent = "O'chirish";
+      delBtn.addEventListener("click", function () {
+        if (!confirm("Bu xabar butunlay o'chiriladi. Davom etasizmi?")) return;
+        inboxCall({ remove: f.id }).then(renderInbox).catch(function () {});
+      });
+      acts.appendChild(delBtn);
+
+      div.appendChild(head);
+      div.appendChild(bodyEl);
+      div.appendChild(acts);
+      inboxList.appendChild(div);
+    });
+  }
+
+  fbMarkAllBtn.addEventListener("click", function () {
+    inboxCall({ markRead: "all" }).then(renderInbox).catch(function () {});
+  });
+
+  annInput.addEventListener("input", function () {
+    annCount.textContent = annInput.value.length + " / 1000";
+  });
+
+  annSaveBtn.addEventListener("click", function () {
+    annSaveBtn.disabled = true;
+    annStatus.classList.remove("al-err");
+    annStatus.textContent = "Saqlanmoqda...";
+    fetch(SEND_ENDPOINT + "/admin/announcement", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ login: siteAuth.login, pass: siteAuth.pass, text: annInput.value }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        annSaveBtn.disabled = false;
+        if (!data.ok) {
+          annStatus.textContent = "Xato: " + (data.error || "noma'lum");
+          annStatus.classList.add("al-err");
+          return;
+        }
+        annUpdated.textContent = "Oxirgi o'zgartirish: " + fbTimeLabel(data.updatedAt);
+        var t = annInput.value.trim();
+        annBannerText.textContent = t;
+        annBanner.classList.toggle("show", !!t);
+        // O'zimga qayta ko'rsatilmasin -- lekin xodimlar bir marta ko'radi
+        annMarkSeen(siteAuth.login, data.updatedAt);
+        annStatus.textContent = t ? "✅ Saqlandi — xodimlar kirganda ko'radi." : "✅ E'lon olib tashlandi.";
+        showToast("✅ E'lon saqlandi");
+      })
+      .catch(function () {
+        annSaveBtn.disabled = false;
+        annStatus.textContent = "Internet aloqasi bilan muammo. Qayta urinib ko'ring.";
+        annStatus.classList.add("al-err");
+      });
+  });
+
+  tabInboxBtn.addEventListener("click", function () {
+    setMode("inbox");
+    annStatus.textContent = "";
+    fetch(SEND_ENDPOINT + "/announcement")
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (!data.ok) return;
+        annInput.value = data.text || "";
+        annCount.textContent = (data.text || "").length + " / 1000";
+        annUpdated.textContent = data.updatedAt ? "Oxirgi o'zgartirish: " + fbTimeLabel(data.updatedAt) : "Hali e'lon yozilmagan";
+      })
+      .catch(function () {});
+    inboxList.innerHTML = '<div class="archive-loading">Yuklanmoqda...</div>';
+    inboxCall({}).then(renderInbox).catch(function () {
+      inboxList.innerHTML = '<div class="archive-empty">Yuklab bo\'lmadi.</div>';
+    });
   });
 
   render("");
