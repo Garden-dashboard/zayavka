@@ -1071,6 +1071,11 @@
     padding: 4px 8px; border-radius: 6px;
     background: var(--accent); color: var(--accent-ink);
   }
+  .lg-onlybozor {
+    flex: 0 0 auto; display: flex; align-items: center; gap: 5px;
+    font-size: 11.5px; color: var(--text-muted); white-space: nowrap; cursor: pointer;
+  }
+  .lg-onlybozor input { width: 17px; height: 17px; accent-color: var(--accent); cursor: pointer; }
   .lg-addbtn {
     margin-top: 12px; min-height: 46px; padding: 0 18px;
     border: 1.5px dashed var(--border); border-radius: 10px;
@@ -1813,19 +1818,30 @@
       applyDefaultDayOffset();
       populateDestOptions();
       prefillChecklist(cartDestSelect.value);
-      setMode("zayavka");
       // Chap paneldagi bo'limlar faqat huquqi bor loginlarda ko'rinadi:
-      // Инвентаризация -- Горячий склад loginlari, "Ro'yxat" -- admin.
-      document.getElementById("tabInventoryBtn").style.display = hasInventoryAccess() ? "" : "none";
+      // Инвентаризация -- Горячий склад loginlari, "Ro'yxat"/"Loginlar"/
+      // "Xabarlar" -- admin, "Bozor" -- Garden loginlari.
+      var faqatBozor = isBozorOnly();
+      document.getElementById("tabZayavkaBtn").style.display = faqatBozor ? "none" : "";
+      document.getElementById("tabInventoryBtn").style.display = (!faqatBozor && hasInventoryAccess()) ? "" : "none";
       document.getElementById("tabAdminListBtn").style.display = hasAdminAccess() ? "" : "none";
       document.getElementById("tabLoginsBtn").style.display = hasAdminAccess() ? "" : "none";
       document.getElementById("tabInboxBtn").style.display = hasAdminAccess() ? "" : "none";
       // 2026-09-28: adminda "Taklif" (yozish) KERAK EMAS -- u xabarlarni
       // qabul qiluvchi tomon. Ikkita o'xshash nom chalkashtirardi.
-      document.getElementById("tabFeedbackBtn").style.display = hasAdminAccess() ? "none" : "";
-      // Bozor -- faqat Garden loginlari (va admin). Serverda ham tekshiriladi.
+      document.getElementById("tabFeedbackBtn").style.display = (hasAdminAccess() || faqatBozor) ? "none" : "";
       document.getElementById("tabBozorBtn").style.display = hasBozorAccess() ? "" : "none";
+      document.getElementById("archiveBtn").style.display = faqatBozor ? "none" : "";
       fillSidebarUser(login, role);
+      // Bozorchi logini to'g'ridan-to'g'ri Bozor bo'limida ochiladi.
+      if (faqatBozor) {
+        setMode("bozor");
+        bzSearch.value = "";
+        bzHideResults();
+        bzLoad();
+      } else {
+        setMode("zayavka");
+      }
       startAnnouncement();
       if (hasAdminAccess()) refreshUnreadBadge();
       fetch(SEND_ENDPOINT + "/admin/map")
@@ -3003,6 +3019,13 @@
     return role.admin === true || role.org === "OLIMP GARDEN";
   }
 
+  // Bozorchi logini (masalan Shaxzod) -- unda FAQAT "Bozor" bo'limi ko'rinadi,
+  // zayavka/arxiv/taklif umuman ochilmaydi. Serverda ham tekshiriladi.
+  function isBozorOnly() {
+    var role = ROLES[siteAuth.login];
+    return !!(role && role.bozorOnly === true);
+  }
+
   function allDestsList() {
     var all = {};
     Object.keys(ROUTES).forEach(function (src) {
@@ -3431,6 +3454,25 @@
         badge.className = "lg-badge";
         badge.textContent = "ADMIN";
         div.appendChild(badge);
+      } else {
+        // 2026-09-28: bozorchi logini -- unda FAQAT "Bozor" bo'limi ko'rinadi.
+        var bzLabel = document.createElement("label");
+        bzLabel.className = "lg-onlybozor";
+        bzLabel.title = "Bu login faqat Bozor bo'limini ko'radi (bozorchi uchun)";
+        var bzChk = document.createElement("input");
+        bzChk.type = "checkbox";
+        bzChk.checked = !!(row.extra && row.extra.bozorOnly);
+        bzChk.addEventListener("change", function () {
+          if (!row.extra) row.extra = {};
+          if (bzChk.checked) row.extra.bozorOnly = true;
+          else delete row.extra.bozorOnly;
+          lgMarkDirty(true);
+        });
+        bzLabel.appendChild(bzChk);
+        var bzTxt = document.createElement("span");
+        bzTxt.textContent = "faqat Bozor";
+        bzLabel.appendChild(bzTxt);
+        div.appendChild(bzLabel);
       }
 
       var del = document.createElement("button");
