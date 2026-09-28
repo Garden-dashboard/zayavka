@@ -925,14 +925,48 @@
   body.mode-inbox .col-left,
   body.mode-inbox .cart,
   body.mode-bozor .col-left,
-  body.mode-bozor .cart { display: none !important; }
+  body.mode-bozor .cart,
+  body.mode-spis .col-left,
+  body.mode-spis .cart { display: none !important; }
   #inventorySection,
   #adminListSection,
   #loginsSection,
   #feedbackSection,
   #inboxSection,
-  #bozorSection { display: none; flex-grow: 1; min-width: 0; }
+  #bozorSection,
+  #spisSection { display: none; flex-grow: 1; min-width: 0; }
   body.mode-bozor #bozorSection { display: block; }
+  body.mode-spis #spisSection { display: block; }
+
+  /* ---- 2026-09-28: Spisaniya ---- */
+  .sp-title { font-size: 11.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin: 18px 0 8px; }
+  .sp-title:first-child { margin-top: 0; }
+  .sp-reasons { display: flex; flex-wrap: wrap; gap: 8px; }
+  .sp-reason {
+    min-height: 46px; padding: 0 16px; border-radius: 11px;
+    border: 1.5px solid var(--border); background: var(--surface); color: var(--text);
+    font-size: 14px; font-family: inherit; cursor: pointer;
+  }
+  .sp-reason.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+  .sp-photo-box {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 14px; border: 1.5px dashed var(--border); border-radius: 12px;
+    background: var(--surface);
+  }
+  .sp-photo-btn {
+    min-height: 48px; padding: 0 18px; border: none; border-radius: 11px;
+    background: var(--accent-2); color: #fff; font-size: 14px; font-weight: 700;
+    font-family: inherit; cursor: pointer;
+  }
+  .sp-photo-prev { max-width: 160px; max-height: 120px; border-radius: 10px; display: none; }
+  .sp-photo-prev.show { display: block; }
+  .sp-photo-note { font-size: 12.5px; color: var(--text-muted); flex: 1 1 160px; }
+  .sp-send {
+    width: 100%; margin-top: 18px; padding: 15px; border: none; border-radius: 13px;
+    background: var(--accent); color: var(--accent-ink);
+    font-size: 15.5px; font-weight: 800; font-family: inherit; cursor: pointer;
+  }
+  .sp-send:disabled { opacity: 0.5; cursor: default; }
   body.mode-inventory #inventorySection { display: block; }
   body.mode-logins #loginsSection { display: block; }
   body.mode-feedback #feedbackSection { display: block; }
@@ -1490,6 +1524,10 @@
         <svg class="sb-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6h15l-1.5 9h-12z"></path><path d="M6 6L5 3H2"></path><circle cx="9" cy="20" r="1.4"></circle><circle cx="18" cy="20" r="1.4"></circle></svg>
         <span>Bozor</span>
       </button>
+      <button class="sb-item" id="tabSpisBtn" type="button" style="display:none">
+        <svg class="sb-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"></path><path d="M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2"></path><path d="M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"></path><path d="M10 11v6M14 11v6"></path></svg>
+        <span>Spisaniya</span>
+      </button>
       <button class="sb-item" id="tabInventoryBtn" type="button">
         <svg class="sb-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="6" rx="1"></rect><path d="M5 10v9a1 1 0 001 1h12a1 1 0 001-1v-9"></path><path d="M10 14h4"></path></svg>
         <span>Inventarizatsiya</span>
@@ -1678,6 +1716,34 @@
 
         <div id="bzBody"></div>
         <p class="al-status" id="bzStatus"></p>
+      </section>
+
+      <section id="spisSection">
+        <p class="bz-sub">Buzilgan yoki yaroqsiz mahsulotni suratga oling, sababini tanlab izoh yozing. iikoda spisaniya hujjati yaratiladi va surat sabab bilan Telegram guruhga boradi. <b id="spDest"></b></p>
+
+        <p class="sp-title">1. Sabab</p>
+        <div class="sp-reasons" id="spReasons"></div>
+
+        <p class="sp-title">2. Mahsulot</p>
+        <div class="bz-search-wrap">
+          <input class="bz-search" id="spSearch" type="text" placeholder="Mahsulot nomini yozing..." autocomplete="off" autocapitalize="off" spellcheck="false" />
+          <ul class="bz-results" id="spResults"></ul>
+        </div>
+        <ul class="bz-list" id="spList" style="margin-top:10px"></ul>
+
+        <p class="sp-title">3. Surat</p>
+        <div class="sp-photo-box">
+          <button class="sp-photo-btn" id="spPhotoBtn" type="button">📷 Surat olish</button>
+          <input id="spPhotoInput" type="file" accept="image/*" capture="environment" style="display:none" />
+          <img class="sp-photo-prev" id="spPhotoPrev" alt="Olingan surat" />
+          <span class="sp-photo-note" id="spPhotoNote">Surat majburiy emas, lekin bo'lgani yaxshi</span>
+        </div>
+
+        <p class="sp-title">4. Izoh — nega spisaniya bo'ldi?</p>
+        <textarea class="fb-input" id="spComment" style="min-height:90px" placeholder="Masalan: muzlatkich buzilib qolgani uchun aynidi" maxlength="500"></textarea>
+
+        <button class="sp-send" id="spSendBtn" type="button">Spisaniya qilish</button>
+        <p class="al-status" id="spStatus"></p>
       </section>
 
       <section id="feedbackSection">
@@ -1957,6 +2023,8 @@
       // qabul qiluvchi tomon. Ikkita o'xshash nom chalkashtirardi.
       document.getElementById("tabFeedbackBtn").style.display = (hasAdminAccess() || faqatBozor) ? "none" : "";
       document.getElementById("tabBozorBtn").style.display = hasBozorAccess() ? "" : "none";
+      // Spisaniya -- Garden loginlari (bozorchidan tashqari: u faqat Bozor ko'radi)
+      document.getElementById("tabSpisBtn").style.display = (hasBozorAccess() && !faqatBozor) ? "" : "none";
       document.getElementById("archiveBtn").style.display = faqatBozor ? "none" : "";
       fillSidebarUser(login, role);
       // Bozorchi logini to'g'ridan-to'g'ri Bozor bo'limida ochiladi.
@@ -3006,6 +3074,7 @@
     adminlist: ["Admin · Zayavka ro'yxati", "Ro'yxatga mahsulot qo'shish"],
     logins: ["Admin · Loginlar", "Xodim loginlarini boshqarish"],
     bozor: ["Garden · Bozor", "Bozordan olinadigan mahsulotlar"],
+    spis: ["Garden · Spisaniya", "Mahsulotni spisaniya qilish"],
     feedback: ["Zagotovka · Taklif va shikoyat", "Fikringizni yozing"],
     inbox: ["Admin · E'lon va xabarlar", "E'lon matni va xodimlar bilan yozishma"],
   };
@@ -3020,9 +3089,12 @@
     document.body.classList.toggle("mode-feedback", mode === "feedback");
     document.body.classList.toggle("mode-inbox", mode === "inbox");
     document.body.classList.toggle("mode-bozor", mode === "bozor");
+    document.body.classList.toggle("mode-spis", mode === "spis");
     tabZayavkaBtn.classList.toggle("active", mode === "zayavka");
     var bzBtn = document.getElementById("tabBozorBtn");
     if (bzBtn) bzBtn.classList.toggle("active", mode === "bozor");
+    var spBtn = document.getElementById("tabSpisBtn");
+    if (spBtn) spBtn.classList.toggle("active", mode === "spis");
     tabInventoryBtn.classList.toggle("active", mode === "inventory");
     var alBtn = document.getElementById("tabAdminListBtn");
     if (alBtn) alBtn.classList.toggle("active", mode === "adminlist");
@@ -4631,6 +4703,209 @@
     bzSearch.value = "";
     bzHideResults();
     bzLoad();
+  });
+
+  // ---- 2026-09-28: Spisaniya bo'limi ----
+  var tabSpisBtn = document.getElementById("tabSpisBtn");
+  var spSearch = document.getElementById("spSearch");
+  var spResults = document.getElementById("spResults");
+  var spList = document.getElementById("spList");
+  var spReasons = document.getElementById("spReasons");
+  var spComment = document.getElementById("spComment");
+  var spSendBtn = document.getElementById("spSendBtn");
+  var spStatus = document.getElementById("spStatus");
+  var spPhotoBtn = document.getElementById("spPhotoBtn");
+  var spPhotoInput = document.getElementById("spPhotoInput");
+  var spPhotoPrev = document.getElementById("spPhotoPrev");
+  var spPhotoNote = document.getElementById("spPhotoNote");
+  var spDest = document.getElementById("spDest");
+
+  var spItems = [];        // [{name, qty}]
+  var spAccountId = "";
+  var spPhotoData = "";    // kichraytirilgan base64
+  var spLoaded = false;
+
+  function spSetStatus(m, err) {
+    spStatus.textContent = m || "";
+    spStatus.classList.toggle("al-err", !!err);
+  }
+
+  function spRenderList() {
+    spList.innerHTML = "";
+    spItems.forEach(function (it, idx) {
+      var li = document.createElement("li");
+      li.className = "bz-item";
+      var mid = document.createElement("div");
+      mid.className = "bz-mid";
+      mid.style.cursor = "default";
+      var nm = document.createElement("div");
+      nm.className = "bz-name";
+      nm.textContent = it.name;
+      mid.appendChild(nm);
+      var qin = document.createElement("input");
+      qin.className = "bz-qty-input";
+      qin.type = "text";
+      qin.inputMode = "decimal";
+      qin.value = it.qty;
+      qin.addEventListener("input", function () { it.qty = qin.value; });
+      var un = document.createElement("span");
+      un.className = "bz-unit";
+      un.textContent = GLOBAL_UNITS[it.name] || "";
+      var del = document.createElement("button");
+      del.className = "bz-del";
+      del.type = "button";
+      del.textContent = "×";
+      del.setAttribute("aria-label", "O'chirish");
+      del.addEventListener("click", function () { spItems.splice(idx, 1); spRenderList(); });
+      li.appendChild(mid); li.appendChild(qin); li.appendChild(un); li.appendChild(del);
+      spList.appendChild(li);
+    });
+  }
+
+  function spHideResults() { spResults.classList.remove("show"); spResults.innerHTML = ""; }
+
+  spSearch.addEventListener("input", function () {
+    var q = spSearch.value.trim();
+    spResults.innerHTML = "";
+    if (q.length < 2) { spHideResults(); return; }
+    var matches = search(q, 20);
+    if (!matches.length) { spHideResults(); return; }
+    matches.forEach(function (name) {
+      var li = document.createElement("li");
+      li.className = "bz-res";
+      var nm = document.createElement("span");
+      nm.className = "bz-res-name";
+      nm.textContent = name;
+      var un = document.createElement("span");
+      un.className = "bz-res-unit";
+      un.textContent = GLOBAL_UNITS[name] || "";
+      li.appendChild(nm); li.appendChild(un);
+      li.addEventListener("click", function () {
+        var bor = spItems.filter(function (x) { return x.name === name; })[0];
+        if (!bor) spItems.push({ name: name, qty: "" });
+        spSearch.value = "";
+        spHideResults();
+        spRenderList();
+        spSearch.focus();
+      });
+      spResults.appendChild(li);
+    });
+    spResults.classList.add("show");
+  });
+
+  // Suratni yuborishdan oldin kichraytiramiz -- telefon surati 3-5 MB bo'lib,
+  // to'g'ridan-to'g'ri yuborilsa sekin va ishonchsiz bo'lardi.
+  spPhotoBtn.addEventListener("click", function () { spPhotoInput.click(); });
+  spPhotoInput.addEventListener("change", function () {
+    var f = spPhotoInput.files && spPhotoInput.files[0];
+    if (!f) return;
+    spPhotoNote.textContent = "Surat tayyorlanmoqda...";
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      var img = new Image();
+      img.onload = function () {
+        var max = 1280;
+        var w = img.width, h = img.height;
+        if (w > max || h > max) {
+          if (w > h) { h = Math.round(h * max / w); w = max; }
+          else { w = Math.round(w * max / h); h = max; }
+        }
+        var cv = document.createElement("canvas");
+        cv.width = w; cv.height = h;
+        cv.getContext("2d").drawImage(img, 0, 0, w, h);
+        spPhotoData = cv.toDataURL("image/jpeg", 0.7);
+        spPhotoPrev.src = spPhotoData;
+        spPhotoPrev.classList.add("show");
+        spPhotoNote.textContent = "Surat tayyor (" + Math.round(spPhotoData.length / 1400) + " KB)";
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(f);
+  });
+
+  function spLoad() {
+    if (spLoaded) return;
+    fetch(SEND_ENDPOINT + "/writeoff/accounts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ login: siteAuth.login, pass: siteAuth.pass }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (!data.ok) { spSetStatus("Xato: " + (data.error || ""), true); return; }
+        spLoaded = true;
+        spDest.textContent = data.dest ? "Ombor: " + data.dest.replace("OLIMP GARDEN: ", "") : "";
+        if (!data.storeKnown) {
+          spSetStatus("Bu login uchun ombor aniqlanmadi — administratorga ayting.", true);
+          spSendBtn.disabled = true;
+        }
+        spReasons.innerHTML = "";
+        data.accounts.forEach(function (a) {
+          var b = document.createElement("button");
+          b.className = "sp-reason";
+          b.type = "button";
+          b.textContent = a.name;
+          b.addEventListener("click", function () {
+            spAccountId = a.id;
+            Array.prototype.forEach.call(spReasons.querySelectorAll(".sp-reason"), function (x) {
+              x.classList.toggle("on", x === b);
+            });
+          });
+          spReasons.appendChild(b);
+        });
+      })
+      .catch(function () { spSetStatus("Internet aloqasi bilan muammo.", true); });
+  }
+
+  spSendBtn.addEventListener("click", function () {
+    var tayyor = spItems.filter(function (i) { return String(i.qty).trim() && parseFloat(String(i.qty).replace(",", ".")) > 0; });
+    if (!spAccountId) { spSetStatus("Sababni tanlang.", true); return; }
+    if (!tayyor.length) { spSetStatus("Mahsulot tanlab, sonini yozing.", true); return; }
+    if (spComment.value.trim().length < 3) { spSetStatus("Izoh yozing — nega spisaniya bo'ldi?", true); return; }
+    var nomi = spReasons.querySelector(".sp-reason.on");
+    if (!confirm(
+      "iikoda SPISANIYA hujjati yaratiladi:\n\n  " + tayyor.length + " ta mahsulot\n  Sabab: " +
+      (nomi ? nomi.textContent : "") + "\n\nHujjat darhol kuchga kiradi va ombor qoldig'i kamayadi.\nDavom etasizmi?"
+    )) return;
+
+    spSendBtn.disabled = true;
+    spSetStatus("Yuborilmoqda...");
+    fetch(SEND_ENDPOINT + "/writeoff/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        login: siteAuth.login, pass: siteAuth.pass,
+        accountId: spAccountId, comment: spComment.value.trim(),
+        items: tayyor, photo: spPhotoData || "",
+      }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        spSendBtn.disabled = false;
+        if (!data.ok) {
+          spSetStatus("Xato: " + (data.error || "noma'lum") + (data.missing && data.missing.length ? " · Topilmadi: " + data.missing.join(", ") : ""), true);
+          return;
+        }
+        spItems = []; spPhotoData = ""; spComment.value = "";
+        spPhotoPrev.classList.remove("show");
+        spPhotoNote.textContent = "Surat majburiy emas, lekin bo'lgani yaxshi";
+        spRenderList();
+        var msg = "✅ Spisaniya №" + data.documentNumber + " yaratildi";
+        if (!data.chatSet) msg += " (Telegram guruh hali sozlanmagan)";
+        else if (!data.telegram) msg += " (Telegramga yuborilmadi)";
+        spSetStatus(msg);
+        showToast("✅ Spisaniya №" + data.documentNumber);
+      })
+      .catch(function () {
+        spSendBtn.disabled = false;
+        spSetStatus("Internet aloqasi bilan muammo.", true);
+      });
+  });
+
+  tabSpisBtn.addEventListener("click", function () {
+    setMode("spis");
+    spSetStatus("");
+    spLoad();
   });
 
   tabInboxBtn.addEventListener("click", function () {
