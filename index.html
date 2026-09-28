@@ -642,6 +642,31 @@
   li.result:active { transform: scale(0.98); }
   li.result:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
+  /* 2026-09-28: natija ustiga bosilganda SHU YERNING O'ZIDA miqdor so'raladi
+     (Bozor bo'limidagi kabi) -- pastga tushib savatda yozish shart emas. */
+  li.result.picking {
+    flex-wrap: wrap;
+    background: var(--surface-2);
+    cursor: default;
+    transform: none;
+    border-color: var(--accent);
+  }
+  li.result.picking:active { transform: none; }
+  .res-qty { flex-basis: 100%; display: flex; align-items: center; gap: 8px; margin-top: 11px; }
+  .res-qty-input {
+    flex: 1; min-width: 0; box-sizing: border-box; height: 48px;
+    border: 1.5px solid var(--accent); border-radius: 11px;
+    background: var(--surface); color: var(--text);
+    padding: 0 12px; text-align: center;
+    font-size: 16px; font-family: inherit; font-variant-numeric: tabular-nums;
+  }
+  .res-qty-input:focus { outline: none; }
+  .res-qty-add {
+    flex-shrink: 0; height: 48px; padding: 0 20px; border: none; border-radius: 11px;
+    background: var(--accent-2); color: #ffffff;
+    font-size: 14.5px; font-weight: 800; font-family: inherit; cursor: pointer;
+  }
+
   .result-name {
     font-size: 15px;
     line-height: 1.4;
@@ -2537,19 +2562,65 @@
       li.innerHTML =
         '<span class="result-name">' + highlight(name, trimmed) + "</span>" +
         '<span class="copy-affordance">' + (already ? "✓ Tanlandi" : "+ Qo'shish") + "</span>";
-      li.addEventListener("click", function () { selectResult(name); });
+      li.addEventListener("click", function () { selectResult(li, name); });
       li.addEventListener("keydown", function (e) {
-        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectResult(name); }
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectResult(li, name); }
       });
       resultsEl.appendChild(li);
     });
   }
 
-  function selectResult(name) {
-    addToCart(name);
-    qInput.value = "";
-    render("");
-    qInput.focus();
+  // 2026-09-28 (foydalanuvchi so'rovi): Bozor bo'limidagi kabi -- qidiruv
+  // natijasiga bosilganda SHU YERNING O'ZIDA "qancha kerak?" so'raladi,
+  // qo'shilgach qidiruv tozalanib fokusda qoladi. Avval savatga bo'sh son
+  // bilan tushib, xodim pastga tushib sonini yozishi kerak edi.
+  function selectResult(li, name) {
+    if (li.classList.contains("picking")) return;
+    Array.prototype.forEach.call(resultsEl.querySelectorAll(".result.picking"), function (o) {
+      o.classList.remove("picking");
+      var q = o.querySelector(".res-qty");
+      if (q) o.removeChild(q);
+    });
+    li.classList.add("picking");
+
+    var unit = GLOBAL_UNITS[name] || "";
+    var wrap = document.createElement("div");
+    wrap.className = "res-qty";
+    var inp = document.createElement("input");
+    inp.className = "res-qty-input";
+    inp.type = "text";
+    inp.inputMode = "decimal";
+    inp.placeholder = "Qancha " + (unit || "kerak") + "?";
+    var btn = document.createElement("button");
+    btn.className = "res-qty-add";
+    btn.type = "button";
+    btn.textContent = "Qo'shish";
+
+    function qosh() {
+      var q = String(inp.value).trim();
+      if (!q) { inp.focus(); return; }
+      var idx = findCartIndex(name);
+      if (idx === -1) cart.push({ name: name, qty: q });
+      else cart[idx].qty = q;   // checklistdan tushgan band bo'lsa -- soni yoziladi
+      // DIQQAT: `renderCart(name)` savatdagi son maydoniga fokus beradi --
+      // bu yerda kerak emas, aks holda telefonda savatga sakrab tushib,
+      // qidiruv davom ettirib bo'lmasdi. Shuning uchun parametrsiz.
+      renderCart();
+      showToast("✅ " + name + " — " + q + (unit ? " " + unit : ""));
+      qInput.value = "";
+      render("");
+      qInput.focus();
+    }
+
+    btn.addEventListener("click", qosh);
+    inp.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); qosh(); }
+    });
+
+    wrap.appendChild(inp);
+    wrap.appendChild(btn);
+    li.appendChild(wrap);
+    inp.focus();
   }
 
   qInput.addEventListener("input", function () { render(qInput.value); });
