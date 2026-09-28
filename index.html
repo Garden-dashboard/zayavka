@@ -1282,30 +1282,63 @@
   .bz-res-name { flex: 1; min-width: 0; font-size: 14px; }
   .bz-res-unit { font-size: 11.5px; color: var(--text-muted); flex-shrink: 0; }
 
-  ul.bz-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+  /* Tez qo'shish tugmalari -- eng ko'p olinadigan mahsulotlar */
+  .bz-quick { margin-bottom: 18px; }
+  .bz-quick-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .bz-chip {
+    min-height: 40px; padding: 0 14px; border-radius: 20px;
+    border: 1.5px solid var(--border); background: var(--surface); color: var(--text);
+    font-size: 13.5px; font-family: inherit; cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .bz-chip:hover { border-color: var(--accent-2); color: var(--accent-2); }
+  .bz-chip.in-list {
+    background: var(--accent-2); border-color: var(--accent-2); color: #ffffff;
+  }
+  .bz-chip-plus { font-size: 16px; font-weight: 700; opacity: 0.7; }
+
+  ul.bz-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
   li.bz-item {
-    display: flex; align-items: center; gap: 10px;
+    display: flex; align-items: center; gap: 12px;
     background: var(--surface); border: 1px solid var(--border);
-    border-radius: 12px; padding: 10px 12px;
+    border-radius: 12px; padding: 12px 12px 12px 14px;
   }
   li.bz-item.done { background: var(--surface-2); border-style: dashed; }
   .bz-check {
-    flex-shrink: 0; width: 26px; height: 26px; border-radius: 7px;
+    flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%;
     border: 2px solid var(--border); background: var(--surface);
     cursor: pointer; display: flex; align-items: center; justify-content: center;
-    font-size: 15px; line-height: 1; color: transparent; padding: 0;
+    font-size: 16px; line-height: 1; color: transparent; padding: 0;
   }
   li.bz-item.done .bz-check {
     background: var(--accent-2); border-color: var(--accent-2); color: #ffffff;
   }
-  .bz-name { flex: 1; min-width: 0; font-size: 14.5px; line-height: 1.35; }
+  .bz-mid { flex: 1; min-width: 0; cursor: pointer; }
+  .bz-name { font-size: 15px; line-height: 1.3; }
   li.bz-item.done .bz-name { text-decoration: line-through; color: var(--text-muted); }
-  .bz-qty {
-    flex-shrink: 0; font-size: 14px; font-weight: 700; color: var(--accent);
-    white-space: nowrap;
+  .bz-who { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  /* Miqdor: − [son] +  (Listonic kabi, brauzer oynasisiz) */
+  .bz-qty-box {
+    flex-shrink: 0; display: flex; align-items: center; gap: 2px;
+    background: var(--surface-2); border-radius: 10px; padding: 3px;
   }
-  li.bz-item.done .bz-qty { color: var(--text-muted); }
-  .bz-who { flex-shrink: 0; font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+  li.bz-item.done .bz-qty-box { opacity: 0.55; }
+  .bz-step {
+    width: 32px; height: 32px; flex-shrink: 0;
+    border: none; border-radius: 8px; background: none;
+    color: var(--text); font-size: 18px; line-height: 1;
+    font-family: inherit; cursor: pointer;
+  }
+  .bz-step:hover { background: var(--surface); }
+  .bz-qty-input {
+    width: 52px; height: 32px; flex-shrink: 0; box-sizing: border-box;
+    border: none; border-radius: 8px; background: var(--surface);
+    color: var(--text); text-align: center;
+    font-size: 15px; font-weight: 700; font-family: inherit;
+  }
+  .bz-qty-input:focus { outline: 1.5px solid var(--accent); }
+  .bz-unit { font-size: 11.5px; color: var(--text-muted); padding: 0 5px 0 2px; min-width: 24px; }
   .bz-del {
     flex-shrink: 0; width: 34px; height: 34px; border: none; background: none;
     color: var(--text-muted); font-size: 20px; line-height: 1; cursor: pointer;
@@ -1316,7 +1349,7 @@
     text-transform: uppercase; color: var(--text-muted);
     margin: 18px 0 8px;
   }
-  .bz-empty { padding: 26px 4px; text-align: center; color: var(--text-muted); font-size: 13.5px; line-height: 1.6; }
+  .bz-empty { padding: 20px 4px 4px; text-align: center; color: var(--text-muted); font-size: 13.5px; line-height: 1.6; }
   .sb-dot {
     margin-left: auto; flex-shrink: 0;
     min-width: 19px; height: 19px; padding: 0 5px; border-radius: 10px;
@@ -1548,6 +1581,11 @@
               <button type="button" class="date-toggle-btn" data-day="1">Ertaga</button>
             </div>
           </div>
+        </div>
+
+        <div class="bz-quick" id="bzQuick">
+          <p class="bz-group-title" style="margin-top:0">Tez-tez olinadigan — bosib qo'shing</p>
+          <div class="bz-quick-chips" id="bzChips"></div>
         </div>
 
         <div id="bzBody"></div>
@@ -3967,7 +4005,8 @@
   var bzStatus = document.getElementById("bzStatus");
   var bzDateToggle = document.getElementById("bzDateToggle");
 
-  var bzCatalog = null;   // {names, index, tokenIndex} -- qidiruv uchun
+  var bzCatalog = null;      // {names, index, tokenIndex} -- qidiruv uchun
+  var bzCatalogRaw = null;   // serverdan kelgan ro'yxat (tez-tez olinishi bo'yicha tartibda)
   var bzUnitByName = {};
   var bzItems = [];
   var bzDayOffset = 0;
@@ -3983,13 +4022,53 @@
     bzStatus.classList.toggle("al-err", !!isErr);
   }
 
+  // Miqdorni serverga darhol emas, yozib bo'lgandan keyin yuboramiz --
+  // har harfda so'rov ketmasin (Listonic kabi silliq ishlashi uchun).
+  var bzQtyTimer = null;
+  function bzQueueQty(id, name, unit, qty) {
+    if (bzQtyTimer) clearTimeout(bzQtyTimer);
+    bzQtyTimer = setTimeout(function () {
+      bzAction({ add: { name: name, unit: unit, qty: qty } }, true);
+    }, 600);
+  }
+
+  function bzRenderChips() {
+    if (!bzCatalogRaw || bzCatalogRaw.length === 0) {
+      document.getElementById("bzQuick").style.display = "none";
+      return;
+    }
+    document.getElementById("bzQuick").style.display = "";
+    var borNomlar = {};
+    bzItems.forEach(function (i) { if (!i.bought) borNomlar[i.name] = true; });
+    var chips = document.getElementById("bzChips");
+    chips.innerHTML = "";
+    bzCatalogRaw.slice(0, 18).forEach(function (p) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "bz-chip" + (borNomlar[p.name] ? " in-list" : "");
+      var plus = document.createElement("span");
+      plus.className = "bz-chip-plus";
+      plus.textContent = borNomlar[p.name] ? "✓" : "+";
+      var t = document.createElement("span");
+      t.textContent = p.name;
+      b.appendChild(plus);
+      b.appendChild(t);
+      b.addEventListener("click", function () {
+        if (borNomlar[p.name]) return; // allaqachon ro'yxatda
+        bzAction({ add: { name: p.name, unit: p.unit, qty: "1" } });
+      });
+      chips.appendChild(b);
+    });
+  }
+
   function bzRender() {
+    bzRenderChips();
     bzBody.innerHTML = "";
     var kerak = bzItems.filter(function (i) { return !i.bought; });
     var olindi = bzItems.filter(function (i) { return i.bought; });
 
     if (bzItems.length === 0) {
-      bzBody.innerHTML = '<div class="bz-empty">Ro\'yxat bo\'sh.<br>Tepadan mahsulot qidirib qo\'shing.</div>';
+      bzBody.innerHTML = '<div class="bz-empty">Ro\'yxat hozircha bo\'sh —<br>tepadagi tugmalardan yoki qidiruv orqali qo\'shing.</div>';
       return;
     }
 
@@ -4010,37 +4089,76 @@
         chk.type = "button";
         chk.setAttribute("aria-label", it.bought ? "Olinmagan deb belgilash" : "Olindi deb belgilash");
         chk.textContent = "✓";
-        chk.addEventListener("click", function () {
-          bzAction({ mark: { id: it.id, bought: !it.bought } });
-        });
 
-        var nm = document.createElement("span");
+        var mid = document.createElement("div");
+        mid.className = "bz-mid";
+        var nm = document.createElement("div");
         nm.className = "bz-name";
         nm.textContent = it.name;
-
-        var qty = document.createElement("span");
-        qty.className = "bz-qty";
-        qty.textContent = (it.qty || "") + (it.unit ? " " + it.unit : "");
-
-        var who = document.createElement("span");
+        var who = document.createElement("div");
         who.className = "bz-who";
         who.textContent = it.bought
-          ? "✓ " + (it.boughtBy || "")
-          : "👤 " + (it.addedBy || "");
+          ? "✓ " + (it.boughtBy || "") + " oldi"
+          : (it.addedBy || "") + " so'radi";
+        mid.appendChild(nm);
+        mid.appendChild(who);
+
+        // Nomga yoki belgiga bosilsa -- "olindi" holati almashadi (Listonic kabi)
+        function toggle() { bzAction({ mark: { id: it.id, bought: !it.bought } }); }
+        chk.addEventListener("click", toggle);
+        mid.addEventListener("click", toggle);
+
+        // Miqdor: − [son] +  -- brauzer oynasi YO'Q
+        var qbox = document.createElement("div");
+        qbox.className = "bz-qty-box";
+        var minus = document.createElement("button");
+        minus.className = "bz-step";
+        minus.type = "button";
+        minus.setAttribute("aria-label", "Kamaytirish");
+        minus.textContent = "−";
+        var qin = document.createElement("input");
+        qin.className = "bz-qty-input";
+        qin.type = "text";
+        qin.inputMode = "decimal";
+        qin.value = it.qty || "";
+        var plus = document.createElement("button");
+        plus.className = "bz-step";
+        plus.type = "button";
+        plus.setAttribute("aria-label", "Ko'paytirish");
+        plus.textContent = "+";
+        var un = document.createElement("span");
+        un.className = "bz-unit";
+        un.textContent = it.unit || "";
+
+        function step(delta) {
+          var n = parseFloat(String(qin.value).replace(",", ".")) || 0;
+          n = Math.max(0, Math.round((n + delta) * 100) / 100);
+          qin.value = String(n);
+          it.qty = qin.value;
+          bzQueueQty(it.id, it.name, it.unit, qin.value);
+        }
+        minus.addEventListener("click", function () { step(-1); });
+        plus.addEventListener("click", function () { step(1); });
+        qin.addEventListener("input", function () {
+          it.qty = qin.value;
+          bzQueueQty(it.id, it.name, it.unit, qin.value);
+        });
+
+        qbox.appendChild(minus);
+        qbox.appendChild(qin);
+        qbox.appendChild(plus);
 
         var del = document.createElement("button");
         del.className = "bz-del";
         del.type = "button";
         del.setAttribute("aria-label", "O'chirish");
         del.textContent = "×";
-        del.addEventListener("click", function () {
-          bzAction({ remove: it.id });
-        });
+        del.addEventListener("click", function () { bzAction({ remove: it.id }); });
 
         li.appendChild(chk);
-        li.appendChild(nm);
-        li.appendChild(qty);
-        li.appendChild(who);
+        li.appendChild(mid);
+        li.appendChild(qbox);
+        li.appendChild(un);
         li.appendChild(del);
         ul.appendChild(li);
       });
@@ -4051,7 +4169,8 @@
     group("Olindi", olindi);
   }
 
-  function bzAction(extra) {
+  // `jim` -- miqdor yozilayotganda qayta chizmaymiz (kursor sakrab ketmasin)
+  function bzAction(extra, jim) {
     var payload = { login: siteAuth.login, pass: siteAuth.pass, sana: bzSana() };
     Object.keys(extra || {}).forEach(function (k) { payload[k] = extra[k]; });
     return fetch(SEND_ENDPOINT + "/bozor/action", {
@@ -4064,7 +4183,7 @@
         if (!data.ok) { bzSetStatus("Xato: " + (data.error || "noma'lum"), true); return; }
         bzItems = data.items || [];
         bzSetStatus("");
-        bzRender();
+        if (!jim) bzRender();
       })
       .catch(function () { bzSetStatus("Internet aloqasi bilan muammo.", true); });
   }
@@ -4081,6 +4200,7 @@
         if (!data.ok) { bzSetStatus("Xato: " + (data.error || "noma'lum"), true); bzBody.innerHTML = ""; return; }
         bzItems = data.items || [];
         if (data.catalog && data.catalog.length) {
+          bzCatalogRaw = data.catalog;
           var names = [];
           data.catalog.forEach(function (p) { names.push(p.name); bzUnitByName[p.name] = p.unit || ""; });
           var idx = buildIndex(names);
@@ -4120,16 +4240,14 @@
     bzResults.classList.add("show");
   }
 
+  // Listonic kabi: bosilgan zahoti ro'yxatga tushadi (miqdor 1),
+  // keyin ro'yxat ichida − / + bilan o'zgartiriladi. Brauzer oynasi YO'Q.
   function bzPick(name) {
     var unit = bzUnitByName[name] || "";
-    var qty = prompt("\"" + name + "\" — qancha kerak?" + (unit ? " (" + unit + ")" : ""), "");
-    if (qty === null) return;
-    qty = String(qty).trim();
-    if (!qty) return;
     bzSearch.value = "";
     bzHideResults();
-    bzAction({ add: { name: name, unit: unit, qty: qty } }).then(function () {
-      showToast("✅ \"" + name + "\" qo'shildi");
+    bzAction({ add: { name: name, unit: unit, qty: "1" } }).then(function () {
+      showToast("✅ " + name);
     });
   }
 
