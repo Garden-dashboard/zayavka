@@ -1673,6 +1673,7 @@
         <div class="bz-quick" id="bzQuick">
           <p class="bz-group-title" style="margin-top:0">Tez-tez olinadigan — bosib qo'shing</p>
           <div class="bz-quick-chips" id="bzChips"></div>
+          <div id="bzChipQty" style="display:none;margin-top:11px"></div>
         </div>
 
         <div id="bzBody"></div>
@@ -4187,12 +4188,68 @@
       t.textContent = p.name;
       b.appendChild(plus);
       b.appendChild(t);
+      // 2026-09-28: tugma ham qidiruv natijasi kabi -- avval "qancha?" so'raydi.
+      // Avval jimgina "1" qo'shib yuborardi, bu qidiruv bilan mos emas edi.
       b.addEventListener("click", function () {
         if (borNomlar[p.name]) return; // allaqachon ro'yxatda
-        bzAction({ add: { name: p.name, unit: p.unit, qty: "1" } });
+        bzChipQty(p.name, p.unit);
       });
       chips.appendChild(b);
     });
+  }
+
+  // Tugma bosilganda chiplar ostida miqdor so'raladi (qidiruvdagi kabi).
+  function bzChipQty(name, unit) {
+    var holder = document.getElementById("bzChipQty");
+    holder.innerHTML = "";
+    holder.style.display = "";
+
+    var row = document.createElement("div");
+    row.className = "bz-res-qty";
+    row.style.marginTop = "0";
+    var lbl = document.createElement("span");
+    lbl.className = "bz-price-label";
+    lbl.style.cssText = "font-size:14px;color:var(--text);font-weight:600;white-space:nowrap";
+    lbl.textContent = name;
+    var inp = document.createElement("input");
+    inp.className = "bz-res-input";
+    inp.type = "text";
+    inp.inputMode = "decimal";
+    inp.placeholder = "Qancha " + (unit || "kerak") + "?";
+    var btn = document.createElement("button");
+    btn.className = "bz-res-add";
+    btn.type = "button";
+    btn.textContent = "Qo'shish";
+    var bekor = document.createElement("button");
+    bekor.className = "bz-del";
+    bekor.type = "button";
+    bekor.setAttribute("aria-label", "Bekor qilish");
+    bekor.textContent = "×";
+
+    function qosh() {
+      var q = String(inp.value).trim().replace(",", ".");
+      if (!q || !(parseFloat(q) > 0)) { inp.focus(); return; }
+      holder.style.display = "none";
+      holder.innerHTML = "";
+      bzAction({ add: { name: name, unit: unit, qty: q } }).then(function () {
+        showToast("✅ " + name + " — " + q + " " + (unit || ""));
+      });
+    }
+    function yop() { holder.style.display = "none"; holder.innerHTML = ""; }
+
+    btn.addEventListener("click", qosh);
+    bekor.addEventListener("click", yop);
+    inp.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); qosh(); }
+      if (e.key === "Escape") { yop(); }
+    });
+
+    row.appendChild(lbl);
+    row.appendChild(inp);
+    row.appendChild(btn);
+    row.appendChild(bekor);
+    holder.appendChild(row);
+    inp.focus();
   }
 
   function bzRender() {
