@@ -1275,12 +1275,30 @@
   }
   .bz-results.show { display: block; }
   .bz-res {
-    display: flex; align-items: center; gap: 9px;
-    padding: 10px 11px; border-radius: 9px; cursor: pointer;
+    display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+    padding: 11px 11px; border-radius: 9px; cursor: pointer;
   }
   .bz-res:hover { background: var(--surface-2); }
-  .bz-res-name { flex: 1; min-width: 0; font-size: 14px; }
+  .bz-res.picking { background: var(--surface-2); cursor: default; }
+  .bz-res-name { flex: 1; min-width: 0; font-size: 14.5px; }
   .bz-res-unit { font-size: 11.5px; color: var(--text-muted); flex-shrink: 0; }
+  /* Natija ustiga bosilganda SHU YERNING O'ZIDA miqdor so'raladi */
+  .bz-res-qty {
+    flex-basis: 100%; display: flex; align-items: center; gap: 8px; margin-top: 9px;
+  }
+  .bz-res-input {
+    flex: 1; min-width: 0; box-sizing: border-box; height: 46px;
+    border: 1.5px solid var(--accent); border-radius: 10px;
+    background: var(--surface); color: var(--text);
+    padding: 0 12px; font-size: 16px; font-family: inherit; text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .bz-res-input:focus { outline: none; }
+  .bz-res-add {
+    flex-shrink: 0; height: 46px; padding: 0 18px; border: none; border-radius: 10px;
+    background: var(--accent-2); color: #ffffff;
+    font-size: 14px; font-weight: 800; font-family: inherit; cursor: pointer;
+  }
 
   /* Tez qo'shish tugmalari -- eng ko'p olinadigan mahsulotlar */
   .bz-quick { margin-bottom: 18px; }
@@ -4405,25 +4423,70 @@
       un.textContent = bzUnitByName[name] || "";
       li.appendChild(nm);
       li.appendChild(un);
-      li.addEventListener("click", function () { bzPick(name); });
+      li.addEventListener("click", function () { bzOpenQty(li, name); });
       bzResults.appendChild(li);
     });
     bzResults.classList.add("show");
   }
 
-  // Listonic kabi: bosilgan zahoti ro'yxatga tushadi (miqdor 1),
-  // keyin ro'yxat ichida − / + bilan o'zgartiriladi. Brauzer oynasi YO'Q.
-  function bzPick(name) {
-    var unit = bzUnitByName[name] || "";
-    bzSearch.value = "";
-    bzHideResults();
-    bzAction({ add: { name: name, unit: unit, qty: "1" } }).then(function () {
-      showToast("✅ " + name);
+  // 2026-09-28 (foydalanuvchi so'rovi): natija ustiga bosilganda SHU YERNING
+  // O'ZIDA "qancha kerak?" so'raladi, qo'shilgach qidiruv tozalanib yana
+  // fokusda qoladi -- telefonda klaviatura yopilmasdan ketma-ket qo'shiladi.
+  function bzOpenQty(li, name) {
+    if (li.classList.contains("picking")) return;
+    // boshqa ochiq bo'lsa yopamiz
+    Array.prototype.forEach.call(bzResults.querySelectorAll(".bz-res.picking"), function (o) {
+      o.classList.remove("picking");
+      var q = o.querySelector(".bz-res-qty");
+      if (q) o.removeChild(q);
     });
+    li.classList.add("picking");
+
+    var unit = bzUnitByName[name] || "";
+    var wrap = document.createElement("div");
+    wrap.className = "bz-res-qty";
+    var inp = document.createElement("input");
+    inp.className = "bz-res-input";
+    inp.type = "text";
+    inp.inputMode = "decimal";
+    inp.placeholder = "Qancha " + (unit || "kerak") + "?";
+    var btn = document.createElement("button");
+    btn.className = "bz-res-add";
+    btn.type = "button";
+    btn.textContent = "Qo'shish";
+
+    function qosh() {
+      var q = String(inp.value).trim().replace(",", ".");
+      if (!q || !(parseFloat(q) > 0)) { inp.focus(); return; }
+      bzAction({ add: { name: name, unit: unit, qty: q } }).then(function () {
+        showToast("✅ " + name + " — " + q + " " + unit);
+      });
+      // Qidiruv tozalanadi va FOKUSDA qoladi -- keyingisini darhol yozadi
+      bzSearch.value = "";
+      bzHideResults();
+      bzSearch.focus();
+    }
+
+    btn.addEventListener("click", qosh);
+    inp.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); qosh(); }
+    });
+
+    wrap.appendChild(inp);
+    wrap.appendChild(btn);
+    li.appendChild(wrap);
+    inp.focus();
   }
 
   bzSearch.addEventListener("input", function () { bzRenderResults(bzSearch.value); });
-  bzSearch.addEventListener("blur", function () { setTimeout(bzHideResults, 180); });
+  // MUHIM: avval "blur" da yopilardi -- miqdor maydoniga o'tilganda fokus
+  // ko'chib, ro'yxat darhol yopilib qolardi. Endi faqat TASHQARIGA bosilganda
+  // yopiladi (ro'yxat ichidagi harakatlar ta'sir qilmaydi).
+  document.addEventListener("click", function (e) {
+    var wrap = document.querySelector(".bz-search-wrap");
+    if (!wrap || !bzResults.classList.contains("show")) return;
+    if (!wrap.contains(e.target)) bzHideResults();
+  });
 
   bzDateToggle.addEventListener("click", function (e) {
     var btn = e.target.closest(".date-toggle-btn");
