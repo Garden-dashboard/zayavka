@@ -1350,6 +1350,50 @@
     margin: 18px 0 8px;
   }
   .bz-empty { padding: 20px 4px 4px; text-align: center; color: var(--text-muted); font-size: 13.5px; line-height: 1.6; }
+
+  /* Narx qatori -- bozorchi qancha to'laganini yozadi */
+  li.bz-item { flex-wrap: wrap; }
+  .bz-price-row {
+    flex-basis: 100%; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    margin: 9px 0 0 42px; padding-top: 9px; border-top: 1px dashed var(--border);
+  }
+  .bz-price-field { display: flex; align-items: center; gap: 6px; }
+  .bz-price-label { font-size: 11.5px; color: var(--text-muted); white-space: nowrap; }
+  .bz-price-input {
+    width: 104px; height: 36px; box-sizing: border-box;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    background: var(--surface); color: var(--text);
+    text-align: right; padding: 0 9px;
+    font-size: 15px; font-family: inherit; font-variant-numeric: tabular-nums;
+  }
+  .bz-price-input:focus { outline: none; border-color: var(--accent); }
+  .bz-price-sep { font-size: 12px; color: var(--text-muted); }
+
+  /* Kunlik yakun paneli */
+  .bz-finish {
+    margin-top: 20px; padding: 16px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  }
+  .bz-total { flex: 1 1 200px; min-width: 0; }
+  .bz-total-label { font-size: 11.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+  .bz-total-sum { font-size: 21px; font-weight: 800; margin-top: 3px; font-variant-numeric: tabular-nums; }
+  .bz-total-note { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+  .bz-finish-btn {
+    flex-shrink: 0; min-height: 52px; padding: 0 24px; border: none; border-radius: 13px;
+    background: var(--accent); color: var(--accent-ink);
+    font-size: 15px; font-weight: 800; font-family: inherit; cursor: pointer;
+  }
+  .bz-finish-btn:disabled { opacity: 0.5; cursor: default; }
+  .bz-sent {
+    margin-top: 20px; padding: 16px; border-radius: 14px;
+    background: color-mix(in srgb, var(--accent-2) 12%, var(--surface));
+    border: 1.5px solid var(--accent-2);
+    font-size: 14px; line-height: 1.6;
+  }
+  @supports not (background: color-mix(in srgb, red 10%, blue)) {
+    .bz-sent { background: var(--surface-2); }
+  }
   .sb-dot {
     margin-left: auto; flex-shrink: 0;
     min-width: 19px; height: 19px; padding: 0 5px; border-radius: 10px;
@@ -4010,6 +4054,7 @@
   var bzUnitByName = {};
   var bzItems = [];
   var bzDayOffset = 0;
+  var bzSent = null;   // shu kun uchun накладnoy yuborilgan bo'lsa -- ma'lumoti
 
   function bzSana() {
     var d = new Date(Date.now() + bzDayOffset * 24 * 60 * 60 * 1000);
@@ -4160,6 +4205,56 @@
         li.appendChild(qbox);
         li.appendChild(un);
         li.appendChild(del);
+
+        // 2026-09-28: narx qatori -- bozorchi qancha to'laganini yozadi.
+        // Bittasini yozsa ikkinchisi o'zi hisoblanadi (serverda).
+        if (!bzSent) {
+          var pr = document.createElement("div");
+          pr.className = "bz-price-row";
+
+          function priceField(label, val, suffix, onDone) {
+            var f = document.createElement("div");
+            f.className = "bz-price-field";
+            var l = document.createElement("span");
+            l.className = "bz-price-label";
+            l.textContent = label;
+            var inp = document.createElement("input");
+            inp.className = "bz-price-input";
+            inp.type = "text";
+            inp.inputMode = "decimal";
+            inp.placeholder = "0";
+            inp.value = val ? String(val) : "";
+            var s = document.createElement("span");
+            s.className = "bz-price-label";
+            s.textContent = suffix;
+            var tmr = null;
+            inp.addEventListener("input", function () {
+              if (tmr) clearTimeout(tmr);
+              tmr = setTimeout(function () { onDone(inp.value); }, 700);
+            });
+            f.appendChild(l); f.appendChild(inp); f.appendChild(s);
+            return f;
+          }
+
+          pr.appendChild(priceField("Narx", it.price, "so'm/" + (it.unit || "birlik"), function (v) {
+            bzAction({ update: { id: it.id, price: v } });
+          }));
+          var sep = document.createElement("span");
+          sep.className = "bz-price-sep";
+          sep.textContent = "yoki";
+          pr.appendChild(sep);
+          pr.appendChild(priceField("Jami", it.sum, "so'm", function (v) {
+            bzAction({ update: { id: it.id, sum: v } });
+          }));
+          li.appendChild(pr);
+        } else if (it.sum > 0) {
+          var shown = document.createElement("div");
+          shown.className = "bz-price-row";
+          shown.innerHTML = '<span class="bz-price-label">Narx: <b>' + fmtNumUz(it.price) +
+            "</b> so'm/" + (it.unit || "") + ' &nbsp;·&nbsp; Jami: <b>' + fmtNumUz(it.sum) + " so'm</b></span>";
+          li.appendChild(shown);
+        }
+
         ul.appendChild(li);
       });
       bzBody.appendChild(ul);
@@ -4167,6 +4262,81 @@
 
     group("Olish kerak", kerak);
     group("Olindi", olindi);
+
+    // ---- Kunlik yakun: iikoga kirim накладnoy ----
+    if (bzSent) {
+      var sent = document.createElement("div");
+      sent.className = "bz-sent";
+      sent.innerHTML = "✅ <b>Bu kun yakunlangan.</b><br>Garden iikoda kirim накладnoy yaratilgan: <b>№" +
+        escapeHtml(bzSent.documentNumber || "?") + "</b> · " + (bzSent.count || 0) + " band · <b>" +
+        fmtNumUz(bzSent.total || 0) + " so'm</b><br><span style=\"color:var(--text-muted)\">Yuborgan: " +
+        escapeHtml(bzSent.by || "") + "</span>";
+      bzBody.appendChild(sent);
+      return;
+    }
+
+    var tayyor = olindi.filter(function (i) { return Number(i.sum) > 0; });
+    var jami = 0;
+    tayyor.forEach(function (i) { jami += Number(i.sum) || 0; });
+
+    var fin = document.createElement("div");
+    fin.className = "bz-finish";
+    var tot = document.createElement("div");
+    tot.className = "bz-total";
+    tot.innerHTML = '<div class="bz-total-label">Bugungi xarid</div>' +
+      '<div class="bz-total-sum">' + fmtNumUz(jami) + " so'm</div>" +
+      '<div class="bz-total-note">' + tayyor.length + " ta band tayyor" +
+      (olindi.length > tayyor.length ? " · " + (olindi.length - tayyor.length) + " tasiga narx yozilmagan" : "") +
+      (kerak.length ? " · " + kerak.length + " tasi hali olinmagan" : "") + "</div>";
+    var btn = document.createElement("button");
+    btn.className = "bz-finish-btn";
+    btn.type = "button";
+    btn.textContent = "Yakunlash va iikoga yuborish";
+    btn.disabled = tayyor.length === 0;
+    btn.addEventListener("click", function () { bzFinish(tayyor.length, jami); });
+    fin.appendChild(tot);
+    fin.appendChild(btn);
+    bzBody.appendChild(fin);
+  }
+
+  function fmtNumUz(n) {
+    var x = Number(n) || 0;
+    return (Math.round(x * 100) / 100).toLocaleString("ru-RU");
+  }
+
+  // Haqiqiy moliyaviy hujjat yaratiladi -- shuning uchun aniq tasdiqlash so'raladi.
+  function bzFinish(count, jami) {
+    var ok = confirm(
+      "Garden iikoda KIRIM НАКЛАДНОЙ yaratiladi:\n\n" +
+      "  " + count + " ta mahsulot\n" +
+      "  Jami: " + fmtNumUz(jami) + " so'm\n" +
+      "  Ombor: Склад Olimp garden\n" +
+      "  Postavchik: Бозор\n\n" +
+      "Hujjat DARHOL kuchga kiradi (o'tkazilgan holda).\n" +
+      "Narxlar to'g'riligini tekshirdingizmi?"
+    );
+    if (!ok) return;
+    bzSetStatus("iikoga yuborilmoqda...");
+    fetch(SEND_ENDPOINT + "/bozor/finish", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ login: siteAuth.login, pass: siteAuth.pass, sana: bzSana() }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (!data.ok) {
+          bzSetStatus("Xato: " + (data.error || "noma'lum"), true);
+          if (data.missing && data.missing.length) {
+            bzSetStatus("Xato: " + data.error + " · Topilmadi: " + data.missing.join(", "), true);
+          }
+          return;
+        }
+        bzSent = { documentNumber: data.documentNumber, count: data.count, total: data.total, by: siteAuth.login };
+        bzSetStatus("");
+        showToast("✅ Накладnoy №" + data.documentNumber);
+        bzRender();
+      })
+      .catch(function () { bzSetStatus("Internet aloqasi bilan muammo.", true); });
   }
 
   // `jim` -- miqdor yozilayotganda qayta chizmaymiz (kursor sakrab ketmasin)
@@ -4199,6 +4369,7 @@
       .then(function (data) {
         if (!data.ok) { bzSetStatus("Xato: " + (data.error || "noma'lum"), true); bzBody.innerHTML = ""; return; }
         bzItems = data.items || [];
+        bzSent = data.doc || null;
         if (data.catalog && data.catalog.length) {
           bzCatalogRaw = data.catalog;
           var names = [];
