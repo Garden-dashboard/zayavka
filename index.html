@@ -1138,10 +1138,8 @@
     font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer;
   }
 
-  /* Taklif yozish bo'limi (barcha loginlar uchun) */
-  .fb-sub { margin: 0 0 14px; font-size: 13px; color: var(--text-muted); line-height: 1.55; }
   .fb-input {
-    width: 100%; box-sizing: border-box; min-height: 190px; resize: vertical;
+    width: 100%; box-sizing: border-box; min-height: 110px; resize: vertical;
     padding: 13px 14px; font-size: 16px; font-family: inherit; line-height: 1.55;
     border-radius: 12px; border: 1.5px solid var(--border);
     background: var(--surface); color: var(--text);
@@ -1149,30 +1147,102 @@
   .fb-input:focus { outline: none; border-color: var(--accent); }
   .fb-meta { display: flex; justify-content: space-between; align-items: baseline; margin-top: 7px; font-size: 12px; color: var(--text-muted); }
 
-  /* Admin: kelgan takliflar */
-  .fb-item {
-    background: var(--surface-2); border: 1px solid var(--border);
-    border-radius: 12px; padding: 12px 14px; margin-bottom: 8px;
+  /* ---- 2026-09-28: taklif bo'limi endi Telegram chatiga o'xshash ----
+     Xodim o'z yozishmasini ko'radi (o'zi yozgani o'ngda, rahbariyat javobi
+     chapda), admin esa har xodim bilan alohida yozishadi. ---- */
+  .chat-wrap {
+    display: flex; flex-direction: column;
+    height: calc(100vh - 210px); min-height: 380px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
   }
-  .fb-item.unread { border-left: 4px solid var(--accent); background: var(--surface); }
-  .fb-item-head {
-    display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap;
-    margin-bottom: 7px;
+  .chat-head {
+    flex-shrink: 0; padding: 12px 16px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
   }
-  .fb-who { font-size: 13.5px; font-weight: 700; }
-  .fb-when { font-size: 11.5px; color: var(--text-muted); }
-  .fb-new {
-    font-size: 10px; font-weight: 700; padding: 3px 7px; border-radius: 5px;
+  .chat-title { font-size: 14px; font-weight: 700; }
+  .chat-sub { font-size: 11.5px; color: var(--text-muted); }
+  .chat-scroll {
+    flex: 1; min-height: 0; overflow-y: auto;
+    padding: 14px 14px 6px;
+    display: flex; flex-direction: column; gap: 9px;
+    background: var(--bg);
+  }
+  .msg { max-width: 76%; display: flex; flex-direction: column; gap: 3px; }
+  .msg.mine { align-self: flex-end; align-items: flex-end; }
+  .msg.theirs { align-self: flex-start; align-items: flex-start; }
+  .msg-bubble {
+    padding: 9px 13px; border-radius: 15px;
+    font-size: 14.5px; line-height: 1.5;
+    white-space: pre-line; word-break: break-word;
+  }
+  .msg.mine .msg-bubble {
     background: var(--accent); color: var(--accent-ink);
+    border-bottom-right-radius: 5px;
   }
-  .fb-body { font-size: 14px; line-height: 1.55; white-space: pre-line; word-break: break-word; }
-  .fb-item-actions { display: flex; gap: 8px; margin-top: 9px; }
-  .fb-act {
-    min-height: 36px; padding: 0 11px; border-radius: 8px;
-    border: 1.5px solid var(--border); background: var(--surface); color: var(--text-muted);
-    font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer;
+  .msg.theirs .msg-bubble {
+    background: var(--surface); color: var(--text);
+    border: 1px solid var(--border); border-bottom-left-radius: 5px;
   }
-  .fb-act:hover { border-color: var(--accent); color: var(--text); }
+  .msg-time { font-size: 10.5px; color: var(--text-muted); padding: 0 5px; }
+  .chat-empty { margin: auto; text-align: center; color: var(--text-muted); font-size: 13.5px; line-height: 1.6; padding: 20px; }
+  .chat-compose {
+    flex-shrink: 0; display: flex; gap: 9px; align-items: flex-end;
+    padding: 11px 12px; border-top: 1px solid var(--border);
+  }
+  .chat-input {
+    flex: 1; min-width: 0; box-sizing: border-box;
+    min-height: 46px; max-height: 130px; resize: none;
+    padding: 12px 14px; font-size: 16px; font-family: inherit; line-height: 1.45;
+    border-radius: 12px; border: 1.5px solid var(--border);
+    background: var(--surface); color: var(--text);
+  }
+  .chat-input:focus { outline: none; border-color: var(--accent); }
+  .chat-send {
+    flex-shrink: 0; width: 46px; height: 46px; border: none; border-radius: 50%;
+    background: var(--accent); color: var(--accent-ink);
+    font-size: 18px; font-family: inherit; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .chat-send:disabled { opacity: 0.5; cursor: default; }
+
+  /* Admin: chapda yozishmalar ro'yxati, o'ngda tanlangan yozishma */
+  .chat-cols { display: flex; gap: 14px; align-items: stretch; }
+  .chat-list {
+    width: 260px; flex-shrink: 0;
+    height: calc(100vh - 210px); min-height: 380px; overflow-y: auto;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 8px;
+  }
+  .chat-peer {
+    width: 100%; text-align: left; display: block;
+    border: none; background: none; color: var(--text);
+    border-radius: 10px; padding: 10px 11px; margin-bottom: 4px;
+    font-family: inherit; cursor: pointer;
+  }
+  .chat-peer:hover { background: var(--surface-2); }
+  .chat-peer.active { background: var(--accent); color: var(--accent-ink); }
+  .chat-peer-top { display: flex; align-items: baseline; gap: 7px; }
+  .chat-peer-name { font-size: 13.5px; font-weight: 700; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chat-peer-time { font-size: 10.5px; opacity: 0.75; flex-shrink: 0; }
+  .chat-peer-last {
+    font-size: 12px; opacity: 0.8; margin-top: 3px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .chat-peer-badge {
+    display: inline-block; min-width: 18px; padding: 1px 6px; border-radius: 9px;
+    background: var(--accent); color: var(--accent-ink);
+    font-size: 10.5px; font-weight: 800; text-align: center; margin-left: 6px;
+  }
+  .chat-peer.active .chat-peer-badge { background: var(--accent-ink); color: var(--accent); }
+  .chat-wrap.grow { flex: 1; min-width: 0; }
+
+  @media (max-width: 760px) {
+    .chat-cols { flex-direction: column; }
+    .chat-list { width: auto; height: auto; max-height: 220px; }
+    .chat-wrap, .chat-list { height: auto; }
+    .chat-wrap { min-height: 420px; }
+  }
   .sb-dot {
     margin-left: auto; flex-shrink: 0;
     min-width: 19px; height: 19px; padding: 0 5px; border-radius: 10px;
@@ -1386,13 +1456,19 @@
       </section>
 
       <section id="feedbackSection">
-        <p class="fb-sub">Ishda nima noqulay bo'lsa, nimani yaxshilash mumkin deb o'ylasangiz — shu yerga bemalol yozing. Xabaringiz to'g'ridan-to'g'ri rahbariyatga boradi, boshqa xodimlar ko'rmaydi.</p>
-        <textarea class="fb-input" id="fbInput" placeholder="Taklifingiz yoki shikoyatingizni yozing..." maxlength="2000"></textarea>
-        <div class="fb-meta">
-          <span id="fbWho"></span>
-          <span id="fbCount">0 / 2000</span>
+        <div class="chat-wrap">
+          <div class="chat-head">
+            <div>
+              <div class="chat-title">Rahbariyat bilan yozishma</div>
+              <div class="chat-sub">Faqat siz va rahbariyat ko'radi — boshqa xodimlar ko'rmaydi</div>
+            </div>
+          </div>
+          <div class="chat-scroll" id="fbScroll"></div>
+          <div class="chat-compose">
+            <textarea class="chat-input" id="fbInput" rows="1" placeholder="Xabar yozing..." maxlength="2000"></textarea>
+            <button class="chat-send" id="fbSendBtn" type="button" aria-label="Yuborish">➤</button>
+          </div>
         </div>
-        <button class="al-save" id="fbSendBtn" type="button">Yuborish</button>
         <p class="al-status" id="fbStatus"></p>
       </section>
 
@@ -1407,10 +1483,26 @@
         <p class="al-status" id="annStatus"></p>
 
         <p class="al-section-title" style="margin-top:26px">
-          Kelgan takliflar <span id="fbUnreadLabel"></span>
+          Xodimlar bilan yozishma <span id="fbUnreadLabel"></span>
         </p>
-        <div id="inboxList"></div>
-        <button class="fb-act" id="fbMarkAllBtn" type="button" style="display:none">Hammasini o'qilgan deb belgilash</button>
+        <div class="chat-cols">
+          <div class="chat-list" id="chatPeers"></div>
+          <div class="chat-wrap grow">
+            <div class="chat-head">
+              <div style="flex:1;min-width:0">
+                <div class="chat-title" id="chatPeerName">Xodimni tanlang</div>
+                <div class="chat-sub" id="chatPeerSub"></div>
+              </div>
+            </div>
+            <div class="chat-scroll" id="chatScroll">
+              <div class="chat-empty">Chapdan xodimni tanlang —<br>yozishma shu yerda ochiladi.</div>
+            </div>
+            <div class="chat-compose">
+              <textarea class="chat-input" id="chatReplyInput" rows="1" placeholder="Javob yozing..." maxlength="2000" disabled></textarea>
+              <button class="chat-send" id="chatReplyBtn" type="button" aria-label="Yuborish" disabled>➤</button>
+            </div>
+          </div>
+        </div>
       </section>
 
     </div>
@@ -2634,6 +2726,11 @@
     document.body.classList.toggle("mode-inventory", mode === "inventory");
     document.body.classList.toggle("mode-adminlist", mode === "adminlist");
     document.body.classList.toggle("mode-logins", mode === "logins");
+    // 2026-09-28 TUZATISH: bu ikki qator tushib qolgan edi -- natijada
+    // "Taklif"/"Takliflar" bosilganda sarlavha o'zgarardi-yu, ekranda eski
+    // zayavka ko'rinishi qolaverardi (bo'lim sinfi body'ga qo'yilmagani uchun).
+    document.body.classList.toggle("mode-feedback", mode === "feedback");
+    document.body.classList.toggle("mode-inbox", mode === "inbox");
     tabZayavkaBtn.classList.toggle("active", mode === "zayavka");
     tabInventoryBtn.classList.toggle("active", mode === "inventory");
     var alBtn = document.getElementById("tabAdminListBtn");
@@ -3345,19 +3442,24 @@
   var tabFeedbackBtn = document.getElementById("tabFeedbackBtn");
   var tabInboxBtn = document.getElementById("tabInboxBtn");
   var fbInput = document.getElementById("fbInput");
-  var fbWho = document.getElementById("fbWho");
-  var fbCount = document.getElementById("fbCount");
+  var fbScroll = document.getElementById("fbScroll");
   var fbSendBtn = document.getElementById("fbSendBtn");
   var fbStatus = document.getElementById("fbStatus");
+  var chatPeers = document.getElementById("chatPeers");
+  var chatScroll = document.getElementById("chatScroll");
+  var chatPeerName = document.getElementById("chatPeerName");
+  var chatPeerSub = document.getElementById("chatPeerSub");
+  var chatReplyInput = document.getElementById("chatReplyInput");
+  var chatReplyBtn = document.getElementById("chatReplyBtn");
+  var activePeer = "";
+  var lastThreads = [];
 
   var annInput = document.getElementById("annInput");
   var annUpdated = document.getElementById("annUpdated");
   var annCount = document.getElementById("annCount");
   var annSaveBtn = document.getElementById("annSaveBtn");
   var annStatus = document.getElementById("annStatus");
-  var inboxList = document.getElementById("inboxList");
   var fbUnreadLabel = document.getElementById("fbUnreadLabel");
-  var fbMarkAllBtn = document.getElementById("fbMarkAllBtn");
   var sbInboxDot = document.getElementById("sbInboxDot");
 
   var annCountdown = null;
@@ -3425,27 +3527,74 @@
   annWriteBtn.addEventListener("click", function () { closeAnnouncement(); openFeedback(); });
   annBannerBtn.addEventListener("click", function () { openFeedback(); });
 
+  // Matn maydoni yozilgan sari o'sadi (Telegram kabi)
+  function autoGrow(el) {
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 130) + "px";
+  }
+
+  function renderMessages(container, items, mineFrom) {
+    container.innerHTML = "";
+    if (!items || items.length === 0) {
+      var empty = document.createElement("div");
+      empty.className = "chat-empty";
+      empty.innerHTML = mineFrom === "staff"
+        ? "Hali yozishma yo'q.<br>Ishda nima noqulay bo'lsa yoki nimani yaxshilash mumkin deb o'ylasangiz — pastga yozing."
+        : "Bu xodim bilan hali yozishma yo'q.";
+      container.appendChild(empty);
+      return;
+    }
+    items.forEach(function (m) {
+      var wrap = document.createElement("div");
+      var isMine = (m.from || "staff") === mineFrom;
+      wrap.className = "msg " + (isMine ? "mine" : "theirs");
+      var bub = document.createElement("div");
+      bub.className = "msg-bubble";
+      bub.textContent = m.text;
+      var t = document.createElement("div");
+      t.className = "msg-time";
+      t.textContent = ((m.from || "staff") === "admin" ? "Rahbariyat · " : "") + fbTimeLabel(m.createdAt);
+      wrap.appendChild(bub);
+      wrap.appendChild(t);
+      container.appendChild(wrap);
+    });
+    container.scrollTop = container.scrollHeight;
+  }
+
+  function loadMyThread() {
+    fetch(SEND_ENDPOINT + "/feedback/thread", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ login: siteAuth.login, pass: siteAuth.pass }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (!data.ok) return;
+        renderMessages(fbScroll, data.items, "staff");
+      })
+      .catch(function () {});
+  }
+
   function openFeedback() {
     setMode("feedback");
-    fbWho.textContent = "👤 " + (siteAuth.login || "") + " nomidan yuboriladi";
     fbStatus.textContent = "";
+    fbScroll.innerHTML = '<div class="chat-empty">Yuklanmoqda...</div>';
+    loadMyThread();
     fbInput.focus();
   }
 
-  fbInput.addEventListener("input", function () {
-    fbCount.textContent = fbInput.value.length + " / 2000";
-  });
+  fbInput.addEventListener("input", function () { autoGrow(fbInput); });
 
-  fbSendBtn.addEventListener("click", function () {
+  function sendMyMessage() {
     var text = fbInput.value.trim();
     if (text.length < 3) {
-      fbStatus.textContent = "Iltimos, fikringizni yozing.";
+      fbStatus.textContent = "Iltimos, xabaringizni yozing.";
       fbStatus.classList.add("al-err");
       return;
     }
     fbSendBtn.disabled = true;
     fbStatus.classList.remove("al-err");
-    fbStatus.textContent = "Yuborilmoqda...";
+    fbStatus.textContent = "";
     fetch(SEND_ENDPOINT + "/feedback/send", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -3460,15 +3609,24 @@
           return;
         }
         fbInput.value = "";
-        fbCount.textContent = "0 / 2000";
-        fbStatus.textContent = "✅ Rahmat, xabaringiz yuborildi.";
-        showToast("✅ Xabaringiz yuborildi");
+        autoGrow(fbInput);
+        loadMyThread();
       })
       .catch(function () {
         fbSendBtn.disabled = false;
         fbStatus.textContent = "Internet aloqasi bilan muammo. Qayta urinib ko'ring.";
         fbStatus.classList.add("al-err");
       });
+  }
+
+  fbSendBtn.addEventListener("click", sendMyMessage);
+  fbInput.addEventListener("keydown", function (e) {
+    // Enter -- yuborish, Shift+Enter -- yangi qator (Telegram kabi).
+    // Telefonda Enter odatda yangi qator bo'lgani uchun faqat keng ekranda.
+    if (e.key === "Enter" && !e.shiftKey && window.innerWidth > 760) {
+      e.preventDefault();
+      sendMyMessage();
+    }
   });
 
   tabFeedbackBtn.addEventListener("click", openFeedback);
@@ -3508,72 +3666,106 @@
     }).then(function (r) { return r.json(); });
   }
 
-  function renderInbox(data) {
-    var items = data.items || [];
-    setUnreadBadge(data.unread || 0);
-    fbUnreadLabel.textContent = data.unread ? "— " + data.unread + " ta yangi" : "";
-    fbMarkAllBtn.style.display = data.unread ? "" : "none";
-    inboxList.innerHTML = "";
-    if (items.length === 0) {
-      inboxList.innerHTML = '<div class="archive-empty">Hozircha hech kim yozmagan.</div>';
+  function renderPeerList(threads) {
+    chatPeers.innerHTML = "";
+    if (threads.length === 0) {
+      chatPeers.innerHTML = '<div class="chat-empty" style="font-size:12.5px">Hozircha hech kim yozmagan.</div>';
       return;
     }
-    items.forEach(function (f) {
-      var div = document.createElement("div");
-      div.className = "fb-item" + (f.read ? "" : " unread");
+    threads.forEach(function (t) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "chat-peer" + (t.login === activePeer ? " active" : "");
 
-      var head = document.createElement("div");
-      head.className = "fb-item-head";
-      var who = document.createElement("span");
-      who.className = "fb-who";
-      who.textContent = "👤 " + f.login + (f.dest ? " · " + f.dest.replace(/^[^:]*:\s*/, "") : "");
-      head.appendChild(who);
-      var when = document.createElement("span");
-      when.className = "fb-when";
-      when.textContent = fbTimeLabel(f.createdAt);
-      head.appendChild(when);
-      if (!f.read) {
-        var badge = document.createElement("span");
-        badge.className = "fb-new";
-        badge.textContent = "YANGI";
-        head.appendChild(badge);
+      var top = document.createElement("div");
+      top.className = "chat-peer-top";
+      var nm = document.createElement("span");
+      nm.className = "chat-peer-name";
+      nm.textContent = t.login;
+      top.appendChild(nm);
+      if (t.unread > 0) {
+        var b = document.createElement("span");
+        b.className = "chat-peer-badge";
+        b.textContent = t.unread;
+        top.appendChild(b);
       }
+      var tm = document.createElement("span");
+      tm.className = "chat-peer-time";
+      tm.textContent = t.lastAt ? fbTimeLabel(t.lastAt) : "";
+      top.appendChild(tm);
 
-      var bodyEl = document.createElement("div");
-      bodyEl.className = "fb-body";
-      bodyEl.textContent = f.text;
+      var last = document.createElement("div");
+      last.className = "chat-peer-last";
+      last.textContent = t.last ? ((t.last.from === "admin" ? "Siz: " : "") + t.last.text) : "";
 
-      var acts = document.createElement("div");
-      acts.className = "fb-item-actions";
-      if (!f.read) {
-        var readBtn = document.createElement("button");
-        readBtn.className = "fb-act";
-        readBtn.type = "button";
-        readBtn.textContent = "O'qildi";
-        readBtn.addEventListener("click", function () {
-          inboxCall({ markRead: f.id }).then(renderInbox).catch(function () {});
-        });
-        acts.appendChild(readBtn);
-      }
-      var delBtn = document.createElement("button");
-      delBtn.className = "fb-act";
-      delBtn.type = "button";
-      delBtn.textContent = "O'chirish";
-      delBtn.addEventListener("click", function () {
-        if (!confirm("Bu xabar butunlay o'chiriladi. Davom etasizmi?")) return;
-        inboxCall({ remove: f.id }).then(renderInbox).catch(function () {});
-      });
-      acts.appendChild(delBtn);
-
-      div.appendChild(head);
-      div.appendChild(bodyEl);
-      div.appendChild(acts);
-      inboxList.appendChild(div);
+      btn.appendChild(top);
+      btn.appendChild(last);
+      btn.addEventListener("click", function () { openPeer(t.login); });
+      chatPeers.appendChild(btn);
     });
   }
 
-  fbMarkAllBtn.addEventListener("click", function () {
-    inboxCall({ markRead: "all" }).then(renderInbox).catch(function () {});
+  function currentThread() {
+    for (var i = 0; i < lastThreads.length; i++) {
+      if (lastThreads[i].login === activePeer) return lastThreads[i];
+    }
+    return null;
+  }
+
+  function renderInbox(data) {
+    if (!data || !data.ok) return;
+    lastThreads = data.threads || [];
+    setUnreadBadge(data.unread || 0);
+    fbUnreadLabel.textContent = data.unread ? "— " + data.unread + " ta yangi" : "";
+    renderPeerList(lastThreads);
+
+    var t = currentThread();
+    if (!t) {
+      chatPeerName.textContent = "Xodimni tanlang";
+      chatPeerSub.textContent = "";
+      chatScroll.innerHTML = '<div class="chat-empty">Chapdan xodimni tanlang —<br>yozishma shu yerda ochiladi.</div>';
+      chatReplyInput.disabled = true;
+      chatReplyBtn.disabled = true;
+      return;
+    }
+    chatPeerName.textContent = "👤 " + t.login;
+    chatPeerSub.textContent = t.dest ? t.dest : "";
+    chatReplyInput.disabled = false;
+    chatReplyBtn.disabled = false;
+    renderMessages(chatScroll, t.items, "admin");
+  }
+
+  function openPeer(login) {
+    activePeer = login;
+    // Ochilgach shu xodimning xabarlari o'qilgan deb belgilanadi
+    inboxCall({ thread: login }).then(renderInbox).catch(function () {});
+  }
+
+  function sendReply() {
+    var text = chatReplyInput.value.trim();
+    if (!activePeer || text.length < 1) return;
+    chatReplyBtn.disabled = true;
+    inboxCall({ reply: { login: activePeer, text: text } })
+      .then(function (data) {
+        chatReplyBtn.disabled = false;
+        if (!data.ok) { showToast("Xato: " + (data.error || "noma'lum")); return; }
+        chatReplyInput.value = "";
+        autoGrow(chatReplyInput);
+        renderInbox(data);
+      })
+      .catch(function () {
+        chatReplyBtn.disabled = false;
+        showToast("Internet aloqasi bilan muammo");
+      });
+  }
+
+  chatReplyBtn.addEventListener("click", sendReply);
+  chatReplyInput.addEventListener("input", function () { autoGrow(chatReplyInput); });
+  chatReplyInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey && window.innerWidth > 760) {
+      e.preventDefault();
+      sendReply();
+    }
   });
 
   annInput.addEventListener("input", function () {
@@ -3625,9 +3817,9 @@
         annUpdated.textContent = data.updatedAt ? "Oxirgi o'zgartirish: " + fbTimeLabel(data.updatedAt) : "Hali e'lon yozilmagan";
       })
       .catch(function () {});
-    inboxList.innerHTML = '<div class="archive-loading">Yuklanmoqda...</div>';
+    chatPeers.innerHTML = '<div class="chat-empty" style="font-size:12.5px">Yuklanmoqda...</div>';
     inboxCall({}).then(renderInbox).catch(function () {
-      inboxList.innerHTML = '<div class="archive-empty">Yuklab bo\'lmadi.</div>';
+      chatPeers.innerHTML = '<div class="chat-empty" style="font-size:12.5px">Yuklab bo\'lmadi.</div>';
     });
   });
 
