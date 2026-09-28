@@ -898,12 +898,16 @@
   body.mode-feedback .col-left,
   body.mode-feedback .cart,
   body.mode-inbox .col-left,
-  body.mode-inbox .cart { display: none !important; }
+  body.mode-inbox .cart,
+  body.mode-bozor .col-left,
+  body.mode-bozor .cart { display: none !important; }
   #inventorySection,
   #adminListSection,
   #loginsSection,
   #feedbackSection,
-  #inboxSection { display: none; flex-grow: 1; min-width: 0; }
+  #inboxSection,
+  #bozorSection { display: none; flex-grow: 1; min-width: 0; }
+  body.mode-bozor #bozorSection { display: block; }
   body.mode-inventory #inventorySection { display: block; }
   body.mode-logins #loginsSection { display: block; }
   body.mode-feedback #feedbackSection { display: block; }
@@ -1243,6 +1247,71 @@
     .chat-wrap, .chat-list { height: auto; }
     .chat-wrap { min-height: 420px; }
   }
+
+  /* ---- 2026-09-28: "Bozor" -- bozordan olinadigan mahsulotlar ro'yxati
+     (Listonic uslubida). FAQAT Garden loginlari + admin ko'radi. ---- */
+  .bz-sub { margin: 0 0 14px; font-size: 13px; color: var(--text-muted); line-height: 1.55; }
+  .bz-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .bz-search-wrap { position: relative; flex: 1 1 260px; min-width: 0; }
+  .bz-search {
+    width: 100%; box-sizing: border-box; min-height: 50px;
+    padding: 0 14px; font-size: 16px; font-family: inherit;
+    border-radius: 12px; border: 1.5px solid var(--border);
+    background: var(--surface); color: var(--text); box-shadow: var(--shadow);
+  }
+  .bz-search:focus { outline: none; border-color: var(--accent); }
+  .bz-results {
+    position: absolute; left: 0; right: 0; top: 54px; z-index: 40;
+    max-height: 290px; overflow-y: auto;
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 12px; box-shadow: var(--shadow);
+    list-style: none; margin: 0; padding: 5px;
+    display: none;
+  }
+  .bz-results.show { display: block; }
+  .bz-res {
+    display: flex; align-items: center; gap: 9px;
+    padding: 10px 11px; border-radius: 9px; cursor: pointer;
+  }
+  .bz-res:hover { background: var(--surface-2); }
+  .bz-res-name { flex: 1; min-width: 0; font-size: 14px; }
+  .bz-res-unit { font-size: 11.5px; color: var(--text-muted); flex-shrink: 0; }
+
+  ul.bz-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+  li.bz-item {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 10px 12px;
+  }
+  li.bz-item.done { background: var(--surface-2); border-style: dashed; }
+  .bz-check {
+    flex-shrink: 0; width: 26px; height: 26px; border-radius: 7px;
+    border: 2px solid var(--border); background: var(--surface);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 15px; line-height: 1; color: transparent; padding: 0;
+  }
+  li.bz-item.done .bz-check {
+    background: var(--accent-2); border-color: var(--accent-2); color: #ffffff;
+  }
+  .bz-name { flex: 1; min-width: 0; font-size: 14.5px; line-height: 1.35; }
+  li.bz-item.done .bz-name { text-decoration: line-through; color: var(--text-muted); }
+  .bz-qty {
+    flex-shrink: 0; font-size: 14px; font-weight: 700; color: var(--accent);
+    white-space: nowrap;
+  }
+  li.bz-item.done .bz-qty { color: var(--text-muted); }
+  .bz-who { flex-shrink: 0; font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+  .bz-del {
+    flex-shrink: 0; width: 34px; height: 34px; border: none; background: none;
+    color: var(--text-muted); font-size: 20px; line-height: 1; cursor: pointer;
+  }
+  .bz-del:hover { color: var(--accent); }
+  .bz-group-title {
+    font-size: 11.5px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--text-muted);
+    margin: 18px 0 8px;
+  }
+  .bz-empty { padding: 26px 4px; text-align: center; color: var(--text-muted); font-size: 13.5px; line-height: 1.6; }
   .sb-dot {
     margin-left: auto; flex-shrink: 0;
     min-width: 19px; height: 19px; padding: 0 5px; border-radius: 10px;
@@ -1291,6 +1360,10 @@
       <button class="sb-item active" id="tabZayavkaBtn" type="button">
         <svg class="sb-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6a1 1 0 011 1v1H8V4a1 1 0 011-1z"></path><path d="M16 5h2a1 1 0 011 1v14a1 1 0 01-1 1H6a1 1 0 01-1-1V6a1 1 0 011-1h2"></path><path d="M9 11h6M9 15h4"></path></svg>
         <span>Zayavka</span>
+      </button>
+      <button class="sb-item" id="tabBozorBtn" type="button" style="display:none">
+        <svg class="sb-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6h15l-1.5 9h-12z"></path><path d="M6 6L5 3H2"></path><circle cx="9" cy="20" r="1.4"></circle><circle cx="18" cy="20" r="1.4"></circle></svg>
+        <span>Bozor</span>
       </button>
       <button class="sb-item" id="tabInventoryBtn" type="button">
         <svg class="sb-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="6" rx="1"></rect><path d="M5 10v9a1 1 0 001 1h12a1 1 0 001-1v-9"></path><path d="M10 14h4"></path></svg>
@@ -1453,6 +1526,27 @@
 
         <button class="al-save" id="lgSaveBtn" type="button" disabled>💾 Saqlash</button>
         <p class="al-status" id="lgStatus"></p>
+      </section>
+
+      <section id="bozorSection">
+        <p class="bz-sub">Bozordan olinadigan mahsulotlarni shu yerga yozing. Bozorchi ro'yxatni ko'radi va olgan narsasini belgilaydi. Mahsulotlar iikodagi <b>Бозор</b> postavchigidan kelgan tovarlardan olinadi.</p>
+
+        <div class="bz-top">
+          <div class="bz-search-wrap">
+            <input class="bz-search" id="bzSearch" type="text" placeholder="Mahsulot nomini yozing (lotincha ham bo'ladi)..." autocomplete="off" autocapitalize="off" spellcheck="false" />
+            <ul class="bz-results" id="bzResults"></ul>
+          </div>
+          <div class="ctl-group">
+            <span class="ctl-label">📅 Sana</span>
+            <div class="date-toggle" id="bzDateToggle">
+              <button type="button" class="date-toggle-btn active" data-day="0">Bugun</button>
+              <button type="button" class="date-toggle-btn" data-day="1">Ertaga</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="bzBody"></div>
+        <p class="al-status" id="bzStatus"></p>
       </section>
 
       <section id="feedbackSection">
@@ -1729,6 +1823,8 @@
       // 2026-09-28: adminda "Taklif" (yozish) KERAK EMAS -- u xabarlarni
       // qabul qiluvchi tomon. Ikkita o'xshash nom chalkashtirardi.
       document.getElementById("tabFeedbackBtn").style.display = hasAdminAccess() ? "none" : "";
+      // Bozor -- faqat Garden loginlari (va admin). Serverda ham tekshiriladi.
+      document.getElementById("tabBozorBtn").style.display = hasBozorAccess() ? "" : "none";
       fillSidebarUser(login, role);
       startAnnouncement();
       if (hasAdminAccess()) refreshUnreadBadge();
@@ -2721,6 +2817,7 @@
     inventory: ["Zagotovka · Inventarizatsiya", "Haqiqiy qoldiqni kiriting"],
     adminlist: ["Admin · Zayavka ro'yxati", "Ro'yxatga mahsulot qo'shish"],
     logins: ["Admin · Loginlar", "Xodim loginlarini boshqarish"],
+    bozor: ["Garden · Bozor", "Bozordan olinadigan mahsulotlar"],
     feedback: ["Zagotovka · Taklif va shikoyat", "Fikringizni yozing"],
     inbox: ["Admin · E'lon va xabarlar", "E'lon matni va xodimlar bilan yozishma"],
   };
@@ -2734,7 +2831,10 @@
     // zayavka ko'rinishi qolaverardi (bo'lim sinfi body'ga qo'yilmagani uchun).
     document.body.classList.toggle("mode-feedback", mode === "feedback");
     document.body.classList.toggle("mode-inbox", mode === "inbox");
+    document.body.classList.toggle("mode-bozor", mode === "bozor");
     tabZayavkaBtn.classList.toggle("active", mode === "zayavka");
+    var bzBtn = document.getElementById("tabBozorBtn");
+    if (bzBtn) bzBtn.classList.toggle("active", mode === "bozor");
     tabInventoryBtn.classList.toggle("active", mode === "inventory");
     var alBtn = document.getElementById("tabAdminListBtn");
     if (alBtn) alBtn.classList.toggle("active", mode === "adminlist");
@@ -2894,6 +2994,13 @@
   function hasAdminAccess() {
     var role = ROLES[siteAuth.login];
     return !!(role && role.admin === true);
+  }
+
+  // 2026-09-28: Bozor bo'limi FAQAT Garden loginlariga (va adminga).
+  function hasBozorAccess() {
+    var role = ROLES[siteAuth.login];
+    if (!role) return false;
+    return role.admin === true || role.org === "OLIMP GARDEN";
   }
 
   function allDestsList() {
@@ -3806,6 +3913,202 @@
         annStatus.textContent = "Internet aloqasi bilan muammo. Qayta urinib ko'ring.";
         annStatus.classList.add("al-err");
       });
+  });
+
+  // ---- 2026-09-28: "Bozor" -- bozordan olinadigan mahsulotlar ro'yxati ----
+  // Xodim qidirib qo'shadi, bozorchi olganini belgilaydi (Listonic uslubida).
+  // Katalog iikodagi "Бозор" postavchigidan kelgan tovarlardan (serverда).
+  var tabBozorBtn = document.getElementById("tabBozorBtn");
+  var bzSearch = document.getElementById("bzSearch");
+  var bzResults = document.getElementById("bzResults");
+  var bzBody = document.getElementById("bzBody");
+  var bzStatus = document.getElementById("bzStatus");
+  var bzDateToggle = document.getElementById("bzDateToggle");
+
+  var bzCatalog = null;   // {names, index, tokenIndex} -- qidiruv uchun
+  var bzUnitByName = {};
+  var bzItems = [];
+  var bzDayOffset = 0;
+
+  function bzSana() {
+    var d = new Date(Date.now() + bzDayOffset * 24 * 60 * 60 * 1000);
+    var p = tashkentParts(d);
+    return p.year + "-" + p.month + "-" + p.day;
+  }
+
+  function bzSetStatus(msg, isErr) {
+    bzStatus.textContent = msg || "";
+    bzStatus.classList.toggle("al-err", !!isErr);
+  }
+
+  function bzRender() {
+    bzBody.innerHTML = "";
+    var kerak = bzItems.filter(function (i) { return !i.bought; });
+    var olindi = bzItems.filter(function (i) { return i.bought; });
+
+    if (bzItems.length === 0) {
+      bzBody.innerHTML = '<div class="bz-empty">Ro\'yxat bo\'sh.<br>Tepadan mahsulot qidirib qo\'shing.</div>';
+      return;
+    }
+
+    function group(title, arr) {
+      if (arr.length === 0) return;
+      var t = document.createElement("p");
+      t.className = "bz-group-title";
+      t.textContent = title + " — " + arr.length + " ta";
+      bzBody.appendChild(t);
+      var ul = document.createElement("ul");
+      ul.className = "bz-list";
+      arr.forEach(function (it) {
+        var li = document.createElement("li");
+        li.className = "bz-item" + (it.bought ? " done" : "");
+
+        var chk = document.createElement("button");
+        chk.className = "bz-check";
+        chk.type = "button";
+        chk.setAttribute("aria-label", it.bought ? "Olinmagan deb belgilash" : "Olindi deb belgilash");
+        chk.textContent = "✓";
+        chk.addEventListener("click", function () {
+          bzAction({ mark: { id: it.id, bought: !it.bought } });
+        });
+
+        var nm = document.createElement("span");
+        nm.className = "bz-name";
+        nm.textContent = it.name;
+
+        var qty = document.createElement("span");
+        qty.className = "bz-qty";
+        qty.textContent = (it.qty || "") + (it.unit ? " " + it.unit : "");
+
+        var who = document.createElement("span");
+        who.className = "bz-who";
+        who.textContent = it.bought
+          ? "✓ " + (it.boughtBy || "")
+          : "👤 " + (it.addedBy || "");
+
+        var del = document.createElement("button");
+        del.className = "bz-del";
+        del.type = "button";
+        del.setAttribute("aria-label", "O'chirish");
+        del.textContent = "×";
+        del.addEventListener("click", function () {
+          bzAction({ remove: it.id });
+        });
+
+        li.appendChild(chk);
+        li.appendChild(nm);
+        li.appendChild(qty);
+        li.appendChild(who);
+        li.appendChild(del);
+        ul.appendChild(li);
+      });
+      bzBody.appendChild(ul);
+    }
+
+    group("Olish kerak", kerak);
+    group("Olindi", olindi);
+  }
+
+  function bzAction(extra) {
+    var payload = { login: siteAuth.login, pass: siteAuth.pass, sana: bzSana() };
+    Object.keys(extra || {}).forEach(function (k) { payload[k] = extra[k]; });
+    return fetch(SEND_ENDPOINT + "/bozor/action", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (!data.ok) { bzSetStatus("Xato: " + (data.error || "noma'lum"), true); return; }
+        bzItems = data.items || [];
+        bzSetStatus("");
+        bzRender();
+      })
+      .catch(function () { bzSetStatus("Internet aloqasi bilan muammo.", true); });
+  }
+
+  function bzLoad() {
+    bzBody.innerHTML = '<div class="bz-empty">Yuklanmoqda...</div>';
+    fetch(SEND_ENDPOINT + "/bozor/list", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ login: siteAuth.login, pass: siteAuth.pass, sana: bzSana() }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (!data.ok) { bzSetStatus("Xato: " + (data.error || "noma'lum"), true); bzBody.innerHTML = ""; return; }
+        bzItems = data.items || [];
+        if (data.catalog && data.catalog.length) {
+          var names = [];
+          data.catalog.forEach(function (p) { names.push(p.name); bzUnitByName[p.name] = p.unit || ""; });
+          var idx = buildIndex(names);
+          bzCatalog = { names: names, index: idx, tokenIndex: buildTokenIndex(idx) };
+        }
+        if (data.catalogError) bzSetStatus("Katalog yuklanmadi: " + data.catalogError, true);
+        else bzSetStatus("");
+        bzRender();
+      })
+      .catch(function () {
+        bzSetStatus("Internet aloqasi bilan muammo.", true);
+        bzBody.innerHTML = "";
+      });
+  }
+
+  function bzHideResults() { bzResults.classList.remove("show"); bzResults.innerHTML = ""; }
+
+  function bzRenderResults(q) {
+    bzResults.innerHTML = "";
+    if (!bzCatalog || q.trim().length < 2) { bzHideResults(); return; }
+    var matches = search(q, 20, bzCatalog);
+    if (matches.length === 0) { bzHideResults(); return; }
+    matches.forEach(function (name) {
+      var li = document.createElement("li");
+      li.className = "bz-res";
+      var nm = document.createElement("span");
+      nm.className = "bz-res-name";
+      nm.textContent = name;
+      var un = document.createElement("span");
+      un.className = "bz-res-unit";
+      un.textContent = bzUnitByName[name] || "";
+      li.appendChild(nm);
+      li.appendChild(un);
+      li.addEventListener("click", function () { bzPick(name); });
+      bzResults.appendChild(li);
+    });
+    bzResults.classList.add("show");
+  }
+
+  function bzPick(name) {
+    var unit = bzUnitByName[name] || "";
+    var qty = prompt("\"" + name + "\" — qancha kerak?" + (unit ? " (" + unit + ")" : ""), "");
+    if (qty === null) return;
+    qty = String(qty).trim();
+    if (!qty) return;
+    bzSearch.value = "";
+    bzHideResults();
+    bzAction({ add: { name: name, unit: unit, qty: qty } }).then(function () {
+      showToast("✅ \"" + name + "\" qo'shildi");
+    });
+  }
+
+  bzSearch.addEventListener("input", function () { bzRenderResults(bzSearch.value); });
+  bzSearch.addEventListener("blur", function () { setTimeout(bzHideResults, 180); });
+
+  bzDateToggle.addEventListener("click", function (e) {
+    var btn = e.target.closest(".date-toggle-btn");
+    if (!btn) return;
+    bzDayOffset = parseInt(btn.getAttribute("data-day"), 10);
+    Array.prototype.forEach.call(bzDateToggle.querySelectorAll(".date-toggle-btn"), function (b) {
+      b.classList.toggle("active", b === btn);
+    });
+    bzLoad();
+  });
+
+  tabBozorBtn.addEventListener("click", function () {
+    setMode("bozor");
+    bzSearch.value = "";
+    bzHideResults();
+    bzLoad();
   });
 
   tabInboxBtn.addEventListener("click", function () {
