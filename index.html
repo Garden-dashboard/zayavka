@@ -1887,8 +1887,24 @@
     ],
   };
 
-  // ---- Kirish (login/parol) -- har login faqat o'z tashkilotiga (OLIMP GARDEN
-  // yoki OLIMP 1) tegishli qabul qiluvchilarni ko'radi ----
+  // 2026-09-29: UCHINCHI TASHKILOT -- ZAGOTOVKA (foydalanuvchi so'rovi).
+  // Zagotovka bo'limlari bir-biridan zayavka yozadi (masalan Кухня Главнийdan
+  // so'raydi), shuning uchun bu omborlar HAR BIR manba uchun qabul qiluvchi
+  // bo'la oladi. ROUTES faqat ro'yxatni to'ldiradi, cheklov emas
+  // (2026-08-25 qarori -- tarixga asoslangan cheklovlar yolg'on-blok beradi).
+  var ZAGOTOVKA_DESTS = [
+    "ZAGOTOVKA: Барак склад", "ZAGOTOVKA: Главний склад", "ZAGOTOVKA: Гушт склад",
+    "ZAGOTOVKA: Кухня склад", "ZAGOTOVKA: Мангал склад", "ZAGOTOVKA: Салат склад",
+    "ZAGOTOVKA: Хамир склад", "ZAGOTOVKA: Инвентарь",
+  ];
+  Object.keys(ROUTES).forEach(function (src) {
+    ZAGOTOVKA_DESTS.forEach(function (d) {
+      if (ROUTES[src].indexOf(d) === -1) ROUTES[src].push(d);
+    });
+  });
+
+  // ---- Kirish (login/parol) -- har login faqat o'z tashkilotiga (OLIMP GARDEN,
+  // OLIMP 1 yoki ZAGOTOVKA) tegishli qabul qiluvchilarni ko'radi ----
   // Ba'zi loginlar (masalan aniq bir ombor xodimi) qo'shimcha "dest"ga ega --
   // bunday login kirganda qabul qiluvchi tanlash ro'yxati chiqmaydi, avtomatik
   // shu qiymatga o'rnatiladi (tanlov o'chirilgan holda ko'rsatiladi). Serverda
