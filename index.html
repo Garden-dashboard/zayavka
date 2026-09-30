@@ -973,6 +973,19 @@
   body.mode-inbox #inboxSection { display: block; }
 
   .inv-sub { margin: 0 0 16px; font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+  /* 2026-09-30: inventarizatsiyada qidiruv -- 155 ta mahsulot ichidan
+     tez topish uchun. Qatorlar QAYTA CHIZILMAYDI, faqat yashiriladi --
+     shunda yozilgan sonlar yo'qolmaydi. */
+  .inv-filter-row { position: relative; margin-bottom: 8px; }
+  .inv-filter-clear {
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    width: 34px; height: 34px; border: none; border-radius: 50%;
+    background: var(--surface-2); color: var(--text-muted);
+    font-size: 19px; line-height: 1; cursor: pointer; display: none;
+  }
+  .inv-filter-clear.show { display: block; }
+  .inv-filter-info { font-size: 12px; color: var(--text-muted); margin: 0 2px 12px; min-height: 16px; }
+  li.inv-item.hidden { display: none; }
   ul#inventoryList { list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
   li.inv-item {
     display: flex; align-items: center; gap: 8px;
@@ -1633,6 +1646,11 @@
 
       <section id="inventorySection">
         <p class="inv-sub">Har mahsulot yoniga omborda hozir haqiqatda bor miqdorni yozing. Bo'sh qoldirilgan bandlar yuborilmaydi.</p>
+        <div class="inv-filter-row">
+          <input class="bz-search" id="invFilter" type="text" placeholder="Mahsulotni tez topish uchun yozing (lotincha ham bo'ladi)..." autocomplete="off" autocapitalize="off" spellcheck="false" />
+          <button class="inv-filter-clear" id="invFilterClear" type="button" aria-label="Tozalash">&times;</button>
+        </div>
+        <div class="inv-filter-info" id="invFilterInfo"></div>
         <div class="cart-date-row">
           <label class="cart-date-label">📅 Sana</label>
           <div class="date-toggle" id="invDateToggle">
@@ -3053,6 +3071,9 @@
   var tabZayavkaBtn = document.getElementById("tabZayavkaBtn");
   var tabInventoryBtn = document.getElementById("tabInventoryBtn");
   var inventoryList = document.getElementById("inventoryList");
+  var invFilter = document.getElementById("invFilter");
+  var invFilterClear = document.getElementById("invFilterClear");
+  var invFilterInfo = document.getElementById("invFilterInfo");
   var inventorySendBtn = document.getElementById("inventorySendBtn");
   var inventoryResult = document.getElementById("inventoryResult");
   var invDateToggle = document.getElementById("invDateToggle");
@@ -3161,6 +3182,48 @@
       }
       inventoryList.appendChild(li);
     });
+    invAllNames = items.map(function (x) { return x.name; });
+    var idx = buildIndex(invAllNames);
+    invCatalog = { names: invAllNames, index: idx, tokenIndex: buildTokenIndex(idx) };
+    applyInvFilter();
+  }
+
+  // Qidiruv: saytning mavjud (lotin->kirill, xatoga chidamli) mantig'idan
+  // foydalanadi. Faqat ko'rinishni o'zgartiradi -- kiritilgan sonlarga
+  // TEGMAYDI, chunki qatorlar qayta yaratilmaydi.
+  var invAllNames = [];
+  var invCatalog = null;
+
+  function applyInvFilter() {
+    var q = (invFilter.value || "").trim();
+    var rows = inventoryList.querySelectorAll("li.inv-item");
+    invFilterClear.classList.toggle("show", !!q);
+
+    if (q.length < 2 || !invCatalog) {
+      Array.prototype.forEach.call(rows, function (li) { li.classList.remove("hidden"); });
+      var toldirilgan = 0;
+      Array.prototype.forEach.call(inventoryList.querySelectorAll(".inv-qty"), function (i) {
+        if (i.value.trim()) toldirilgan++;
+      });
+      invFilterInfo.textContent = rows.length
+        ? rows.length + " ta mahsulot" + (toldirilgan ? " · to'ldirilgan: " + toldirilgan : "")
+        : "";
+      return;
+    }
+
+    var mos = {};
+    search(q, 500, invCatalog).forEach(function (n) { mos[n] = true; });
+    var ko = 0;
+    Array.prototype.forEach.call(rows, function (li) {
+      var inp = li.querySelector(".inv-qty");
+      var nom = inp ? inp.dataset.name : "";
+      var bor = !!mos[nom];
+      li.classList.toggle("hidden", !bor);
+      if (bor) ko++;
+    });
+    invFilterInfo.textContent = ko
+      ? ko + " ta topildi (" + rows.length + " tadan)"
+      : "Hech narsa topilmadi — boshqacha yozib ko'ring";
   }
 
   // 2026-09-22: foydalanuvchi so'rovi bilan -- ro'yxat endi zagotovka
@@ -3202,6 +3265,19 @@
     setMode("inventory");
     inventoryResult.textContent = "";
     renderInventoryList();
+  });
+
+  invFilter.addEventListener("input", applyInvFilter);
+  invFilterClear.addEventListener("click", function () {
+    invFilter.value = "";
+    applyInvFilter();
+    invFilter.focus();
+  });
+  // Son yozilganda "to'ldirilgan" sanog'i yangilanib tursin
+  inventoryList.addEventListener("input", function (e) {
+    if (e.target && e.target.classList && e.target.classList.contains("inv-qty")) {
+      if (!(invFilter.value || "").trim()) applyInvFilter();
+    }
   });
 
   inventorySendBtn.addEventListener("click", function () {
