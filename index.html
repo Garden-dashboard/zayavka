@@ -1170,6 +1170,19 @@
     padding: 16px;
   }
   .ann-overlay.open { display: flex; }
+  /* Kirishdagi "qaysi kunga?" tanlovi */
+  #dayOverlay { z-index: 310; }
+  .day-choice { display: flex; gap: 12px; }
+  .day-btn {
+    flex: 1; padding: 20px 10px; border-radius: 14px;
+    border: 2px solid var(--border); background: var(--surface);
+    color: inherit; cursor: pointer; font: inherit;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+  }
+  .day-btn b { font-size: 19px; }
+  .day-btn span { font-size: 13px; opacity: 0.7; }
+  .day-btn:hover, .day-btn:focus-visible { border-color: var(--accent); }
+  .day-hint { margin: 16px 0 0; font-size: 12.5px; opacity: 0.65; }
   .ann-card {
     width: 100%; max-width: 440px;
     background: var(--surface); border: 1px solid var(--border);
@@ -1859,6 +1872,20 @@
   </div>
 </div>
 
+<!-- 2026-10-03: kirishda "zayavka qaysi kunga?" so'rovi (sinov: Мангал
+     omborlari loginlari). E'lon oynasi yopilgandan KEYIN ochiladi. -->
+<div class="ann-overlay" id="dayOverlay">
+  <div class="ann-card" role="dialog" aria-modal="true" aria-labelledby="dayAskTitle">
+    <p class="ann-eyebrow">Zayavka sanasi</p>
+    <p class="ann-text" id="dayAskTitle">Bu zayavka qaysi kunga?</p>
+    <div class="day-choice">
+      <button class="day-btn" type="button" data-day="0"><b>Bugun</b><span id="dayAskToday"></span></button>
+      <button class="day-btn" type="button" data-day="1"><b>Ertaga</b><span id="dayAskTomorrow"></span></button>
+    </div>
+    <p class="day-hint">Keyin tepadagi tugmadan o'zgartirish mumkin.</p>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script id="catalog-data" type="application/json">["1-свой Напалеон,Рулет маринад кг п\\ф", "2-свой Напалеон маринад (думба) кг п\\ф", "2-свой Рулет маринад (думба) кг п\\ф", "7 Уп", "Heinz Кетчуп", "Автомат сода", "Адана шашлик (шт) п/ф", "Аджика п/ф", "Адреналин 0,45", "Аланга бурунч", "Алпен Голд", "Ананас Консерва катта п/ф", "Ананас консерва катта", "Анти жир", "Арк Теа 1.25л", "Арк-Теа 0.5л", "Баклажан", "Барбекю колбаса", "Бедана (пишган) п\\ф", "Бешбармак хамир п/ф", "Бешбармок гушт п/ф", "Бифштекс  ижжон п/ф  кг", "Близна", "Бодринг салёный п/ф", "Болгарский", "Боржоми", "Борщ П/Ф", "Борщ П/Ф (олимп)", "Боунтий кичик", "Бумажный салфетка", "Бургер булика 130гр  п\\ф", "Бургер булика 80гр  п\\ф", "Вагури п/ф", "Вико 1л", "Вилка  одноразовая", "Вириска стейк п\\ф", "Влажний салфетка 1шт", "Вырезка", "Гарох 1л", "Гиждуван шашлик 200гр п\\ф", "Гиждувон 100гр (шт) п/ф", "Гиждувон 80гр (шт) п/ф", "Гиждувон маринад (кг) п\\ф", "Голд Сари йог", "Голубцы п/ф", "Гречка", "Гугурт (тавар) шт", "Гужа п/ф", "Гужа хом", "Гумма кофте п\\ф", "Гупка", "Гурвак шт", "Гушт 2-сорт", "Гушт 3-сорт", "Гушт 4-сорт", "Гушт Манти  п/ф", "Гушт йоги", "Гушт прес п/ф", "Дери", "Дил пишган п/ф", "Дода барак п\\ф", "Докторская Колбаса", "Думба", "Думба шашлик (шт) п/ф", "Етикетка стикер", "Жидки мило 5л", "Жужа (200гр) шт", "Жуйан Курдик п/ф", "Жуйан хамир п/ф", "Зайчик молоко", "Зелен", "Зира", "Зубочистка", "Ижжон (1 чикарилган) п/ф", "Ижжон (2 чикарилган) п/ф", "Ижжон шашлик (шт)  П/ф", "Ижжон шашлик 200гр п\\ф", "Индейка", "Индейка п/ф", "Исмалок п/ф", "КОРМА гушт п/ф", "Кади Манти п/ф", "Кайнаган картошка  п/ф", "Кайнаган лавлаги п/ф", "Карам", "Карам Китай", "Карам салёний п/ф", "Карейс туз", "Картошка", "Картошка Коврилган п/ф (олимп)", "Картошка коврилган п/ф", "Картошка фри", "Катик", "Катик (литр)", "Катта Бедана (пишган) п\\ф", "Кенза (зелен)", "Кенза (переправа)", "Кепка", "Кетчуп", "Кизил бурч (майдаланган)", "Кизил сабзи", "Кишмиш", "КоВРилган лавлаги п/ф", "Коврилган гушт п\\ф", "Ковун (шт)", "Кози", "Козок ун", "Козон кабоб п\\ф", "Кола 0,5", "Кола 1 л", "Кола 1,5 л", "Кола баночний 0,45", "Кола баночный 0,25", "Контейнер кичик 500 гр", "Контр Вырезка", "Копкокли идиш катта", "Кора бурч (майда)", "Кора чой кг", "Корин туйок п/ф", "Кофе лавазза кг(зерновой)", "Кофте п/ф", "Кошик одноразовая", "Крахмал", "Крылиишки маринад (кг) п\\ф", "Крылишки шашлик (шт)  п/ф", "Куза Тушонка п\\ф", "Куза Шорва Мол п/ф", "Кузикорин п/ф", "Куй буйин п/ф", "Кук Памидор Саленний п/ф", "Кук Ушок барак (КГ)  п/ф", "Кук чой кг", "Кукуруз (макка) 1л", "Кунжут", "Кусковой куй  маринад (кг) п\\ф", "Кусковой куй (шт) п/ф", "Кусковой мол (шт) П/ф", "Кусковой мол маринад (кг) п\\ф", "Кухиний крылишка п\\ф", "Лаваш хамр", "Лагмон хамир п/ф", "Ланч катлет 40 гр п/ф", "Лимон сироп", "Лозер бурунч", "Лули фарш  п/ф", "Макарон", "Макка", "Манти (гуштли) Ассорти п/ф", "Манти (кади) Ассорти п/ф", "Манти (янги) п/ф", "Маунтинт дюв 1л", "Маянез", "Маянез бутилка", "Мева безак (КИЧИК)", "Местний товук п/ф", "Миллий кола 0,5л", "Миллий лимоо 1,5л шт", "Миллий миксни котлети п/ф", "Мини котлет (шт) п/ф", "Мини котлет 40 гр п/ф", "Миринда 1,5л", "Мишак- пишган п/ф", "Мохито 0,45", "Мохито сироп", "Муср пакет", "Муср пакет катта", "Напалеон  шашлик (шт) п/ф", "Норин гушт П/Ф", "Норин хамир п/ф", "Нуш пийоз", "Однаразовой идиш кичик", "Одноразовая Перчатка", "Одноразовый Стакан", "Ок куйлак", "Окорочка Фаршированный п\\ф", "Оливка", "Оливка п\\ф", "Олимп Пакет 3 кг", "Олимп кулча п/ф", "Олимп товук п\\ф", "Олот сомса гушт тугралган п/ф", "Орбит", "Освижитель", "Осма шорва п/ф", "Пакет 3кг", "Пакет рулон", "Пакет рулон (кичик)", "Памидор кг", "Паприка", "Патир шашлик (шт) п/ф", "Пахта йоги", "Пепси (баночный) 0.45", "Пепси 0,5л", "Пепси 1,5л", "Пепси 1л", "Перчатка кора", "Пийоз", "Плиточный (КиЧиК)", "Плиточный (катта)", "Пол трапка", "Преправа унверсал", "Принтер чек когоз (шт)", "Приправа шашлик", "Разрихител", "Ред-булл 0.25", "Резинка Перчатка сори", "Рулет  шашлик (шт) п\\ф", "Сабзи сарик", "Салат гушт п/ф", "Салат лист", "Салфетка", "Салют шт", "Салёни помидор п/ф", "Сарик катта стреч", "Свежи Аччи бурч", "Семечка йог", "Сетка товук п/ф", "Сим чутка (шт)", "Сникерс катта шт", "Сникерс кичик шт", "Сода", "Сок 1 л", "Сок детски", "Солихан Салфетка", "Сомса гушт тугралган п/ф", "Сомса томчи (кг) п/ф", "Соус идиш (250гр)", "Соус идиш 40гр", "Соя соус (литр)", "Спрайт 0,5л", "Спрайт 1,5л", "Спрайт 1л", "Спрей 500 мл", "Стейк карейка кг п/ф", "Стейк куй  п/ф", "Стейк мол кухня п/ф", "Стейк мол п\\ф", "Стреч катта", "Сув 0,5л", "Сув 1,5л", "Сув 1л", "Сув 1л (сайхун)", "Сут", "Сут лактел", "Сухарик п/ф", "Сыр янтар", "Тала гел", "Тарвуз шт", "Тифтел п/ф", "Товук Филе (пишган) п/ф", "Товук Шорва п/ф", "Товук катта (суйак)", "Товук кози", "Товук козон кабоб п\\ф", "Товук фарш (загатовка)  п/ф", "Товук филе", "Товук шашлик маринад П/Ф", "Товук шашлик п/ф", "Томатний паста", "Тошкент Суви 0,5л", "Туалетный бумага", "Туз", "Туйок п\\ф", "Тухум", "Уксус 100%", "Уксус яблочний", "Умонник Салфетка", "Уноши Шарик п/ф", "Уноши хамир п/ф", "Урама долма п/ф", "Урганч УН", "Урдак сели п\\ф", "Урдак шашлик мариновка п\\ф", "Урдак шашлик п\\ф", "Урик компот п/ф", "Ушок барак  (КГ)  П/ф", "Фалга", "Фанта 0,5л", "Фанта 1,5л", "Фанта 1л", "Фартук", "Фергамент когоз", "Флеш 0,45", "Фрит жир", "Футболка", "Хон п/ф", "Хохланд сыр (сыр) шт", "Хуроз чихомбил п/ф", "Хуроз шорва п\\ф", "Чеснок", "Чили сладки соус (ЛИТР)", "Чит перечатка", "Чия компот п/ф", "Чококрем", "Чорток 0,5", "ШОРВА гушти П/ф", "Шакар 1шт (пакетли)", "Шакар кг", "Шампинион банка", "Шарик маккен (картошка)", "Шашлик Полка шт", "Шашлик ижжон (кг) п/ф", "Шивит оши хамир п/ф", "Шпажки  бургер чоп", "Щедрое лето", "держатель для стакана", "кетчуп идиш", "коврилган кузикорин п/ф", "кола бутылка 0,250", "кофе стакан", "раквина сетка", "фанта бутылка 0,250"]</script>
@@ -2042,6 +2069,7 @@
       lockScreen.style.display = "none";
       lockError.textContent = "";
       applyDefaultDayOffset();
+      pendingDayAsk = DAY_ASK_LOGINS.indexOf(login) !== -1;
       populateDestOptions();
       prefillChecklist(cartDestSelect.value);
       // Chap paneldagi bo'limlar faqat huquqi bor loginlarda ko'rinadi:
@@ -2367,6 +2395,41 @@
     Array.prototype.forEach.call(dateToggle.querySelectorAll(".date-toggle-btn"), function (b) {
       b.classList.toggle("active", b === btn);
     });
+  });
+
+  // 2026-10-03 (sinov): quyidagi loginlar kirganda "zayavka qaysi kunga?"
+  // degan savol ALOHIDA oynada chiqadi -- tepadagi Bugun/Ertaga tugmasini
+  // e'tibordan chetda qoldirib yuborish holatlari bo'lgani uchun. Ro'yxatga
+  // Мангал omborlari kiritilgan; yaxshi ishlasa qolganlarga ham yoyiladi.
+  var DAY_ASK_LOGINS = ["Hosil", "Anvar", "Azizbek", "Nodirbek", "Nodir"];
+  var dayOverlay = document.getElementById("dayOverlay");
+  var pendingDayAsk = false;
+
+  function setDayOffset(off) {
+    selectedDayOffset = off;
+    Array.prototype.forEach.call(dateToggle.querySelectorAll(".date-toggle-btn"), function (b) {
+      b.classList.toggle("active", parseInt(b.getAttribute("data-day"), 10) === off);
+    });
+  }
+
+  function dayLabelFor(off) {
+    var d = new Date(Date.now() + off * 24 * 60 * 60 * 1000);
+    var p = tashkentParts(d);
+    return p.day + "." + p.month;
+  }
+
+  function openDayAsk() {
+    pendingDayAsk = false;
+    document.getElementById("dayAskToday").textContent = dayLabelFor(0);
+    document.getElementById("dayAskTomorrow").textContent = dayLabelFor(1);
+    dayOverlay.classList.add("open");
+  }
+
+  dayOverlay.addEventListener("click", function (e) {
+    var btn = e.target.closest(".day-btn");
+    if (!btn) return;
+    setDayOffset(parseInt(btn.getAttribute("data-day"), 10));
+    dayOverlay.classList.remove("open");
   });
 
   function applyDefaultDayOffset() {
@@ -3970,6 +4033,7 @@
   function closeAnnouncement() {
     if (annCountdown) { clearInterval(annCountdown); annCountdown = null; }
     annOverlay.classList.remove("open");
+    if (pendingDayAsk) openDayAsk();
   }
 
   function openAnnouncement(text) {
@@ -3999,6 +4063,7 @@
         var text = (data && data.ok ? data.text : "") || "";
         if (!text.trim()) {
           annBanner.classList.remove("show");
+          if (pendingDayAsk) openDayAsk();
           return;
         }
         annBannerText.textContent = text;
@@ -4006,9 +4071,11 @@
         if (!annAlreadySeen(siteAuth.login, data.updatedAt)) {
           openAnnouncement(text);
           annMarkSeen(siteAuth.login, data.updatedAt);
+        } else if (pendingDayAsk) {
+          openDayAsk();
         }
       })
-      .catch(function () {});
+      .catch(function () { if (pendingDayAsk) openDayAsk(); });
   }
 
   annCloseBtn.addEventListener("click", closeAnnouncement);
