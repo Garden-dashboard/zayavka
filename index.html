@@ -1060,7 +1060,6 @@
       opacity: 0; visibility: hidden; transition: opacity .22s ease;
     }
     body.nav-open .nav-scrim { opacity: 1; visibility: visible; }
-    .nav-burger { display: inline-flex; }
     .app-main { padding-bottom: 20px; }
     .topbar { padding: 14px 16px; gap: 12px; }
     .topbar-text h1 { font-size: 19px; }
@@ -1081,7 +1080,14 @@
     font-size: 18px; line-height: 1; cursor: pointer;
   }
   .nav-scrim { display: none; }
-  @media (max-width: 900px) { .nav-scrim { display: block; } }
+  /* DIQQAT: bu ikki qoida .nav-burger/.nav-scrim ta'riflaridan KEYIN turishi
+     SHART. Avval "display:inline-flex" yuqoridagi media blokda edi, lekin
+     pastdagi "display:none" uni bosib ketib, telefonda ☰ umuman
+     ko'rinmay qolgandi (2026-10-05 da shu xato chiqdi). */
+  @media (max-width: 900px) {
+    .nav-burger { display: inline-flex; }
+    .nav-scrim { display: block; }
+  }
 
   .al-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
   .al-label { font-size: 12.5px; font-weight: 700; color: var(--accent); white-space: nowrap; }
