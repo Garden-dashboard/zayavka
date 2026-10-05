@@ -927,7 +927,9 @@
   body.mode-bozor .col-left,
   body.mode-bozor .cart,
   body.mode-spis .col-left,
-  body.mode-spis .cart { display: none !important; }
+  body.mode-spis .cart,
+  body.mode-store .col-left,
+  body.mode-store .cart { display: none !important; }
   #inventorySection,
   #adminListSection,
   #loginsSection,
@@ -968,6 +970,20 @@
   }
   .sp-send:disabled { opacity: 0.5; cursor: default; }
   body.mode-inventory #inventorySection { display: block; }
+  body.mode-store #storeSection { display: block; }
+  /* Ombor qoldig'i (2026-10-05) */
+  .st-head { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:12px; }
+  .st-meta { font-size:12.5px; opacity:.7; }
+  .st-refresh { padding:8px 14px; border-radius:10px; border:1px solid var(--border);
+    background:var(--surface); color:inherit; cursor:pointer; font-size:14px; }
+  .st-list { list-style:none; margin:0; padding:0; }
+  .st-row { display:flex; justify-content:space-between; gap:12px; align-items:baseline;
+    padding:11px 4px; border-bottom:1px solid var(--border); }
+  .st-name { font-size:15.5px; }
+  .st-qty { font-size:15.5px; font-weight:700; white-space:nowrap; }
+  .st-qty.neg { color:#d93636; }
+  .st-unit { font-size:12.5px; opacity:.6; font-weight:400; margin-left:4px; }
+  .st-empty { padding:18px 4px; opacity:.7; }
   body.mode-logins #loginsSection { display: block; }
   body.mode-feedback #feedbackSection { display: block; }
   body.mode-inbox #inboxSection { display: block; }
@@ -1554,6 +1570,10 @@
         <svg class="sb-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"></path><path d="M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2"></path><path d="M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"></path><path d="M10 11v6M14 11v6"></path></svg>
         <span>Spisaniya</span>
       </button>
+      <button class="sb-item" id="tabStoreBtn" type="button" style="display:none">
+        <svg class="sb-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-6 9 6v11a1 1 0 01-1 1H4a1 1 0 01-1-1z"></path><path d="M3 9h18"></path><path d="M9 21v-7h6v7"></path></svg>
+        <span>Ombor</span>
+      </button>
       <button class="sb-item" id="tabInventoryBtn" type="button">
         <svg class="sb-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="6" rx="1"></rect><path d="M5 10v9a1 1 0 001 1h12a1 1 0 001-1v-9"></path><path d="M10 14h4"></path></svg>
         <span>Inventarizatsiya</span>
@@ -1676,6 +1696,19 @@
           <button class="cart-send-btn" id="inventorySendBtn" type="button">Yuborish</button>
         </div>
         <p class="inv-result" id="inventoryResult"></p>
+      </section>
+
+      <section id="storeSection">
+        <p class="inv-sub">Omboringizda hozir nima borligi — iikodagi jonli qoldiq. Faqat ko'rish uchun, hech narsa o'zgarmaydi.</p>
+        <div class="st-head">
+          <button class="st-refresh" id="storeRefreshBtn" type="button">↻ Yangilash</button>
+          <span class="st-meta" id="storeMeta"></span>
+        </div>
+        <div class="inv-filter-row">
+          <input class="bz-search" id="storeFilter" type="text" placeholder="Mahsulotni tez topish uchun yozing..." autocomplete="off" autocapitalize="off" spellcheck="false" />
+          <button class="inv-filter-clear" id="storeFilterClear" type="button" aria-label="Tozalash">&times;</button>
+        </div>
+        <ul class="st-list" id="storeList"></ul>
       </section>
 
       <section id="adminListSection">
@@ -2078,6 +2111,8 @@
       var faqatBozor = isBozorOnly();
       document.getElementById("tabZayavkaBtn").style.display = faqatBozor ? "none" : "";
       document.getElementById("tabInventoryBtn").style.display = (!faqatBozor && hasInventoryAccess()) ? "" : "none";
+      document.getElementById("tabStoreBtn").style.display = (!faqatBozor && hasStoreAccess()) ? "" : "none";
+      storeItems = [];
       document.getElementById("tabAdminListBtn").style.display = hasAdminAccess() ? "" : "none";
       document.getElementById("tabLoginsBtn").style.display = hasAdminAccess() ? "" : "none";
       document.getElementById("tabInboxBtn").style.display = hasAdminAccess() ? "" : "none";
@@ -3160,6 +3195,62 @@
     return p.day + "." + p.month + "." + p.year;
   }
 
+  // ===== OMBOR QOLDIG'I (2026-10-05) =====
+  // Har Garden logini o'z omborida nima borligini jonli ko'rib turadi.
+  // Faqat o'qiydi. Ma'lumot Worker'da keshlanadi (10 daqiqa "yangi"),
+  // "↻ Yangilash" bosilganda qayta so'raladi.
+  var storeItems = [];
+  function hasStoreAccess() {
+    var role = ROLES[siteAuth.login];
+    return !!(role && role.org === "OLIMP GARDEN" && role.dest);
+  }
+  function renderStore() {
+    var list = document.getElementById("storeList");
+    var q = (document.getElementById("storeFilter").value || "").trim().toLowerCase();
+    var rows = storeItems.filter(function (it) {
+      var nm = it.name.toLowerCase();
+      return !q || nm.indexOf(q) !== -1 || nm.indexOf(toCyrillicPhonetic(q)) !== -1;
+    });
+    if (!rows.length) {
+      list.innerHTML = '<li class="st-empty">' + (storeItems.length ? "Topilmadi" : "Ro'yxat bo'sh") + "</li>";
+      return;
+    }
+    list.innerHTML = rows.map(function (it) {
+      return '<li class="st-row"><span class="st-name">' + escapeHtml(it.name.trim()) +
+        '</span><span class="st-qty' + (it.amount < 0 ? " neg" : "") + '">' + it.amount +
+        '<span class="st-unit">' + escapeHtml(it.unit || "") + "</span></span></li>";
+    }).join("");
+  }
+  function loadStore(force) {
+    var meta = document.getElementById("storeMeta");
+    var list = document.getElementById("storeList");
+    if (!force && storeItems.length) { renderStore(); return; }
+    meta.textContent = "Yuklanmoqda...";
+    list.innerHTML = '<li class="st-empty">Yuklanmoqda...</li>';
+    fetch(SEND_ENDPOINT + "/store/balance", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ login: siteAuth.login, pass: siteAuth.pass, force: !!force }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (!data.ok) {
+          meta.textContent = "";
+          list.innerHTML = '<li class="st-empty">' + escapeHtml(data.error || "Xatolik") + "</li>";
+          return;
+        }
+        storeItems = data.items || [];
+        var d = data.updatedAt ? new Date(data.updatedAt) : null;
+        meta.textContent = storeItems.length + " ta mahsulot" +
+          (d ? "  ·  yangilangan " + d.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }) : "");
+        renderStore();
+      })
+      .catch(function () {
+        meta.textContent = "";
+        list.innerHTML = "<li class=\"st-empty\">Ulanmadi — qayta urinib ko'ring</li>";
+      });
+  }
+
   function hasInventoryAccess() {
     var role = ROLES[siteAuth.login];
     return !!(role && role.dest === GORACHIY_DEST);
@@ -3175,6 +3266,7 @@
     logins: ["Admin · Loginlar", "Xodim loginlarini boshqarish"],
     bozor: ["Garden · Bozor", "Bozordan olinadigan mahsulotlar"],
     spis: ["Garden · Spisaniya", "Mahsulotni spisaniya qilish"],
+    store: ["Garden · Ombor qoldig'i", "Omboringizda hozir nima bor"],
     feedback: ["Zagotovka · Taklif va shikoyat", "Fikringizni yozing"],
     inbox: ["Admin · E'lon va xabarlar", "E'lon matni va xodimlar bilan yozishma"],
   };
@@ -3190,11 +3282,14 @@
     document.body.classList.toggle("mode-inbox", mode === "inbox");
     document.body.classList.toggle("mode-bozor", mode === "bozor");
     document.body.classList.toggle("mode-spis", mode === "spis");
+    document.body.classList.toggle("mode-store", mode === "store");
     tabZayavkaBtn.classList.toggle("active", mode === "zayavka");
     var bzBtn = document.getElementById("tabBozorBtn");
     if (bzBtn) bzBtn.classList.toggle("active", mode === "bozor");
     var spBtn = document.getElementById("tabSpisBtn");
     if (spBtn) spBtn.classList.toggle("active", mode === "spis");
+    var stBtn = document.getElementById("tabStoreBtn");
+    if (stBtn) stBtn.classList.toggle("active", mode === "store");
     tabInventoryBtn.classList.toggle("active", mode === "inventory");
     var alBtn = document.getElementById("tabAdminListBtn");
     if (alBtn) alBtn.classList.toggle("active", mode === "adminlist");
@@ -3324,6 +3419,19 @@
   }
 
   tabZayavkaBtn.addEventListener("click", function () { setMode("zayavka"); });
+  var tabStoreBtn = document.getElementById("tabStoreBtn");
+  tabStoreBtn.addEventListener("click", function () {
+    setMode("store");
+    loadStore(false);
+  });
+  document.getElementById("storeRefreshBtn").addEventListener("click", function () { loadStore(true); });
+  document.getElementById("storeFilter").addEventListener("input", renderStore);
+  document.getElementById("storeFilterClear").addEventListener("click", function () {
+    document.getElementById("storeFilter").value = "";
+    renderStore();
+    document.getElementById("storeFilter").focus();
+  });
+
   tabInventoryBtn.addEventListener("click", function () {
     setMode("inventory");
     inventoryResult.textContent = "";
