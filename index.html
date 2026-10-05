@@ -1040,26 +1040,28 @@
 
   /* ---- TELEFON: chap panel PASTKI qatorga aylanadi ---- */
   @media (max-width: 900px) {
+    /* 2026-10-05 (egasi "A variant"ni tanladi): telefonda bo'limlar pastki
+       qatorda emas, CHAPDAN OCHILADIGAN panelda. Sabab: 7 ta bo'lim pastki
+       qatorga sig'may, nomlar "Zayav.../Inven..." bo'lib kesilardi. Endi
+       nomlar to'liq, ro'yxatga esa butun ekran qoladi. */
     .app { flex-direction: column; }
     .sidebar {
-      position: fixed; left: 0; right: 0; bottom: 0; z-index: 120;
-      width: auto; height: auto;
-      flex-direction: row; gap: 4px;
-      padding: 7px 7px calc(7px + env(safe-area-inset-bottom, 0px));
-      border-top: 1px solid #253029;
+      position: fixed; top: 0; left: 0; bottom: 0; z-index: 140;
+      width: 236px; height: auto;
+      transform: translateX(-100%);
+      transition: transform .22s ease;
+      padding: 18px 0 calc(16px + env(safe-area-inset-bottom, 0px));
+      box-shadow: 0 0 40px rgba(0,0,0,.45);
+      overflow-y: auto;
     }
-    .sb-brand, .sb-user { display: none; }
-    .sb-nav {
-      flex-direction: row; flex-grow: 1; gap: 4px; padding: 0;
+    body.nav-open .sidebar { transform: translateX(0); }
+    .nav-scrim {
+      position: fixed; inset: 0; z-index: 130; background: rgba(0,0,0,.42);
+      opacity: 0; visibility: hidden; transition: opacity .22s ease;
     }
-    .sb-item {
-      flex: 1 1 0; min-width: 0;
-      flex-direction: column; justify-content: center; gap: 3px;
-      min-height: 52px; padding: 0 4px;
-      font-size: 10.5px; font-weight: 600; text-align: center;
-    }
-    .sb-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
-    .app-main { padding-bottom: 74px; }
+    body.nav-open .nav-scrim { opacity: 1; visibility: visible; }
+    .nav-burger { display: inline-flex; }
+    .app-main { padding-bottom: 20px; }
     .topbar { padding: 14px 16px; gap: 12px; }
     .topbar-text h1 { font-size: 19px; }
     .topbar-controls { width: 100%; flex-direction: column; align-items: stretch; gap: 9px; }
@@ -1069,6 +1071,17 @@
     .cart { width: auto; align-self: stretch; }
     .al-cols { flex-direction: column; }
   }
+
+  /* ☰ -- faqat telefonda ko'rinadi (yuqoridagi media ichida yoqiladi) */
+  .nav-burger {
+    display: none; align-items: center; justify-content: center;
+    width: 40px; height: 38px; flex: none; margin-right: 2px;
+    border-radius: 10px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text);
+    font-size: 18px; line-height: 1; cursor: pointer;
+  }
+  .nav-scrim { display: none; }
+  @media (max-width: 900px) { .nav-scrim { display: block; } }
 
   .al-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
   .al-label { font-size: 12.5px; font-weight: 700; color: var(--accent); white-space: nowrap; }
@@ -1551,6 +1564,7 @@
 
 <div class="app" id="app">
 
+  <div class="nav-scrim" id="navScrim"></div>
   <aside class="sidebar" id="sidebar">
     <div class="sb-brand">
       <span class="sb-logo" aria-hidden="true">
@@ -1618,6 +1632,7 @@
   <div class="app-main">
 
     <header class="topbar">
+      <button class="nav-burger" id="navBurger" type="button" aria-label="Bo'limlar">&#9776;</button>
       <div class="topbar-text">
         <p class="eyebrow" id="pageEyebrow">Zagotovka &middot; Ombor katalogi</p>
         <h1 id="pageTitle">Mahsulot nomini toping</h1>
@@ -3339,6 +3354,8 @@
     // inventarizatsiya va ro'yxat bo'limlarining o'z tanlovlari bor.
     var ctls = document.getElementById("topbarControls");
     if (ctls) ctls.style.display = mode === "zayavka" ? "" : "none";
+    // Bo'lim tanlandi -- telefonda panel o'zi yopilsin
+    document.body.classList.remove("nav-open");
   }
 
   var inventoryLoaded = false;
@@ -3447,6 +3464,19 @@
         inventoryResult.textContent = "Internet aloqasi bilan muammo. Qayta urinib ko'ring.";
       });
   }
+
+  // 2026-10-05: telefonda chap panel ☰ bilan ochiladi/yopiladi.
+  // Bo'lim tanlangach o'zi yopiladi (setMode ichida).
+  var navBurger = document.getElementById("navBurger");
+  var navScrim = document.getElementById("navScrim");
+  function setNav(open) { document.body.classList.toggle("nav-open", !!open); }
+  navBurger.addEventListener("click", function () {
+    setNav(!document.body.classList.contains("nav-open"));
+  });
+  navScrim.addEventListener("click", function () { setNav(false); });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") setNav(false);
+  });
 
   tabZayavkaBtn.addEventListener("click", function () { setMode("zayavka"); });
   var tabStoreBtn = document.getElementById("tabStoreBtn");
