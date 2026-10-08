@@ -17,7 +17,7 @@ param(
 $ENDPOINT = "https://zagotovka-zayavka-send.olimpzagotovka.workers.dev/print/poll"
 $INTERVAL = 4
 $LOG      = Join-Path $PSScriptRoot "chek_log.txt"
-$KENGLIK  = 32
+$KENGLIK  = 48   # Xprinter Q80A -- 80 mm qogoz = 48 belgi
 
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
