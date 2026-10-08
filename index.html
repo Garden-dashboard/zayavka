@@ -1228,6 +1228,11 @@
   .chg-row.chg-na b:first-child { text-decoration: line-through; }
   .chg-real { margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--border); font-size: 13px; line-height: 1.6; }
   .chg-real-t { font-weight: 700; margin-bottom: 4px; }
+  .chg-wip {
+    font-size: 12px; font-weight: 600; color: var(--accent);
+    background: var(--surface); border: 1px dashed var(--accent);
+    border-radius: 8px; padding: 4px 8px; margin-bottom: 8px; display: inline-block;
+  }
   .day-choice { display: flex; gap: 12px; }
   .day-btn {
     flex: 1; padding: 20px 10px; border-radius: 14px;
@@ -2562,6 +2567,9 @@
     items.forEach(function (rec) {
       var html = "<div class=\"chg-head\">" + chgEsc(rec.source || "") +
         (rec.when ? " \u00B7 " + chgEsc(rec.when) : "") + "</div>";
+      if (!rec.final) {
+        html += "<div class=\"chg-wip\">\u23F3 zagotovka hali tugatmagan \u2014 yana o'zgarishi mumkin</div>";
+      }
       (rec.changes || []).forEach(function (c) {
         if (c.na) {
           html += "<div class=\"chg-row chg-na\"><b>" + chgEsc(c.name) + "</b>" +
