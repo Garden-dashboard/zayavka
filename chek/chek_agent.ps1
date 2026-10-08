@@ -181,7 +181,12 @@ while ($true) {
     if ($bajarildi.Count -gt 0) { $sorov.done = $bajarildi }
     $tana = $sorov | ConvertTo-Json -Compress
     $baytlar = [System.Text.Encoding]::UTF8.GetBytes($tana)
-    $javob = Invoke-RestMethod -Uri $ENDPOINT -Method Post -ContentType "application/json; charset=utf-8" -Body $baytlar -TimeoutSec 20
+    # 2026-10-08: javob MAJBURIY UTF-8 deb o'qiladi. Invoke-RestMethod
+    # (PowerShell 5.1) charset ko'rsatilmasa ISO-8859-1 deb o'qib, kirill
+    # harflarni buzadi -- chekda "???" bo'lib chiqqandi.
+    $javobRaw = Invoke-WebRequest -Uri $ENDPOINT -Method Post -ContentType "application/json; charset=utf-8" -Body $baytlar -TimeoutSec 20 -UseBasicParsing
+    $matnJson = [System.Text.Encoding]::UTF8.GetString($javobRaw.RawContentStream.ToArray())
+    $javob = $matnJson | ConvertFrom-Json
     $bajarildi = @()
 
     if ($javob.ok -and $javob.jobs) {
