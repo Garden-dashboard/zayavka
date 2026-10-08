@@ -1213,6 +1213,21 @@
   .ann-overlay.open { display: flex; }
   /* Kirishdagi "qaysi kunga?" tanlovi */
   #dayOverlay { z-index: 310; }
+  /* 2026-10-08: zagotovka ro'yxatdagi sonni o'zgartirsa ko'rinadigan oyna */
+  #chgOverlay { z-index: 320; }
+  .chg-body { text-align: left; max-height: 56vh; overflow-y: auto; margin: 10px 0 14px; }
+  .chg-rec {
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 10px 12px; margin-bottom: 10px; background: var(--surface-2);
+  }
+  .chg-head { font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 7px; text-transform: uppercase; letter-spacing: .04em; }
+  .chg-row { font-size: 14px; line-height: 1.45; padding: 5px 0; border-top: 1px dashed var(--border); }
+  .chg-row:first-of-type { border-top: 0; }
+  .chg-row span { display: block; color: var(--accent); font-weight: 600; }
+  .chg-row.chg-na span { color: var(--text-muted); }
+  .chg-row.chg-na b:first-child { text-decoration: line-through; }
+  .chg-real { margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--border); font-size: 13px; line-height: 1.6; }
+  .chg-real-t { font-weight: 700; margin-bottom: 4px; }
   .day-choice { display: flex; gap: 12px; }
   .day-btn {
     flex: 1; padding: 20px 10px; border-radius: 14px;
@@ -1608,6 +1623,10 @@
         <svg class="sb-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M4 12h16M4 18h7"></path><circle cx="18" cy="6" r="2"></circle><circle cx="15" cy="18" r="2"></circle></svg>
         <span>Ro'yxat</span>
       </button>
+      <button class="sb-item" id="tabChangesBtn" type="button" style="display:none">
+        <svg class="sb-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.7 21a2 2 0 01-3.4 0"></path></svg>
+        <span>Javoblar</span>
+      </button>
       <button class="sb-item" id="tabFeedbackBtn" type="button">
         <svg class="sb-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 01-8 8H7l-4 3V12a8 8 0 018-8h2a8 8 0 018 8z"></path><path d="M9 11h6M9 15h3"></path></svg>
         <span>Taklif</span>
@@ -1954,6 +1973,17 @@
   </div>
 </div>
 
+<!-- 2026-10-08: zagotovka Telegramda sonni o'zgartirsa yoki "bera olmayman"
+     desa, zayavkani YOZGAN login kirganda shu oyna ochiladi. -->
+<div class="ann-overlay" id="chgOverlay">
+  <div class="ann-card" role="dialog" aria-modal="true" aria-labelledby="chgTitle">
+    <p class="ann-eyebrow">Zagotovka javobi</p>
+    <p class="ann-text" id="chgTitle">Ro'yxatingiz o'zgardi</p>
+    <div class="chg-body" id="chgBody"></div>
+    <button class="ann-close" id="chgCloseBtn" type="button">Tushunarli</button>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script id="catalog-data" type="application/json">["1-свой Напалеон,Рулет маринад кг п\\ф", "2-свой Напалеон маринад (думба) кг п\\ф", "2-свой Рулет маринад (думба) кг п\\ф", "7 Уп", "Heinz Кетчуп", "Автомат сода", "Адана шашлик (шт) п/ф", "Аджика п/ф", "Адреналин 0,45", "Аланга бурунч", "Алпен Голд", "Ананас Консерва катта п/ф", "Ананас консерва катта", "Анти жир", "Арк Теа 1.25л", "Арк-Теа 0.5л", "Баклажан", "Барбекю колбаса", "Бедана (пишган) п\\ф", "Бешбармак хамир п/ф", "Бешбармок гушт п/ф", "Бифштекс  ижжон п/ф  кг", "Близна", "Бодринг салёный п/ф", "Болгарский", "Боржоми", "Борщ П/Ф", "Борщ П/Ф (олимп)", "Боунтий кичик", "Бумажный салфетка", "Бургер булика 130гр  п\\ф", "Бургер булика 80гр  п\\ф", "Вагури п/ф", "Вико 1л", "Вилка  одноразовая", "Вириска стейк п\\ф", "Влажний салфетка 1шт", "Вырезка", "Гарох 1л", "Гиждуван шашлик 200гр п\\ф", "Гиждувон 100гр (шт) п/ф", "Гиждувон 80гр (шт) п/ф", "Гиждувон маринад (кг) п\\ф", "Голд Сари йог", "Голубцы п/ф", "Гречка", "Гугурт (тавар) шт", "Гужа п/ф", "Гужа хом", "Гумма кофте п\\ф", "Гупка", "Гурвак шт", "Гушт 2-сорт", "Гушт 3-сорт", "Гушт 4-сорт", "Гушт Манти  п/ф", "Гушт йоги", "Гушт прес п/ф", "Дери", "Дил пишган п/ф", "Дода барак п\\ф", "Докторская Колбаса", "Думба", "Думба шашлик (шт) п/ф", "Етикетка стикер", "Жидки мило 5л", "Жужа (200гр) шт", "Жуйан Курдик п/ф", "Жуйан хамир п/ф", "Зайчик молоко", "Зелен", "Зира", "Зубочистка", "Ижжон (1 чикарилган) п/ф", "Ижжон (2 чикарилган) п/ф", "Ижжон шашлик (шт)  П/ф", "Ижжон шашлик 200гр п\\ф", "Индейка", "Индейка п/ф", "Исмалок п/ф", "КОРМА гушт п/ф", "Кади Манти п/ф", "Кайнаган картошка  п/ф", "Кайнаган лавлаги п/ф", "Карам", "Карам Китай", "Карам салёний п/ф", "Карейс туз", "Картошка", "Картошка Коврилган п/ф (олимп)", "Картошка коврилган п/ф", "Картошка фри", "Катик", "Катик (литр)", "Катта Бедана (пишган) п\\ф", "Кенза (зелен)", "Кенза (переправа)", "Кепка", "Кетчуп", "Кизил бурч (майдаланган)", "Кизил сабзи", "Кишмиш", "КоВРилган лавлаги п/ф", "Коврилган гушт п\\ф", "Ковун (шт)", "Кози", "Козок ун", "Козон кабоб п\\ф", "Кола 0,5", "Кола 1 л", "Кола 1,5 л", "Кола баночний 0,45", "Кола баночный 0,25", "Контейнер кичик 500 гр", "Контр Вырезка", "Копкокли идиш катта", "Кора бурч (майда)", "Кора чой кг", "Корин туйок п/ф", "Кофе лавазза кг(зерновой)", "Кофте п/ф", "Кошик одноразовая", "Крахмал", "Крылиишки маринад (кг) п\\ф", "Крылишки шашлик (шт)  п/ф", "Куза Тушонка п\\ф", "Куза Шорва Мол п/ф", "Кузикорин п/ф", "Куй буйин п/ф", "Кук Памидор Саленний п/ф", "Кук Ушок барак (КГ)  п/ф", "Кук чой кг", "Кукуруз (макка) 1л", "Кунжут", "Кусковой куй  маринад (кг) п\\ф", "Кусковой куй (шт) п/ф", "Кусковой мол (шт) П/ф", "Кусковой мол маринад (кг) п\\ф", "Кухиний крылишка п\\ф", "Лаваш хамр", "Лагмон хамир п/ф", "Ланч катлет 40 гр п/ф", "Лимон сироп", "Лозер бурунч", "Лули фарш  п/ф", "Макарон", "Макка", "Манти (гуштли) Ассорти п/ф", "Манти (кади) Ассорти п/ф", "Манти (янги) п/ф", "Маунтинт дюв 1л", "Маянез", "Маянез бутилка", "Мева безак (КИЧИК)", "Местний товук п/ф", "Миллий кола 0,5л", "Миллий лимоо 1,5л шт", "Миллий миксни котлети п/ф", "Мини котлет (шт) п/ф", "Мини котлет 40 гр п/ф", "Миринда 1,5л", "Мишак- пишган п/ф", "Мохито 0,45", "Мохито сироп", "Муср пакет", "Муср пакет катта", "Напалеон  шашлик (шт) п/ф", "Норин гушт П/Ф", "Норин хамир п/ф", "Нуш пийоз", "Однаразовой идиш кичик", "Одноразовая Перчатка", "Одноразовый Стакан", "Ок куйлак", "Окорочка Фаршированный п\\ф", "Оливка", "Оливка п\\ф", "Олимп Пакет 3 кг", "Олимп кулча п/ф", "Олимп товук п\\ф", "Олот сомса гушт тугралган п/ф", "Орбит", "Освижитель", "Осма шорва п/ф", "Пакет 3кг", "Пакет рулон", "Пакет рулон (кичик)", "Памидор кг", "Паприка", "Патир шашлик (шт) п/ф", "Пахта йоги", "Пепси (баночный) 0.45", "Пепси 0,5л", "Пепси 1,5л", "Пепси 1л", "Перчатка кора", "Пийоз", "Плиточный (КиЧиК)", "Плиточный (катта)", "Пол трапка", "Преправа унверсал", "Принтер чек когоз (шт)", "Приправа шашлик", "Разрихител", "Ред-булл 0.25", "Резинка Перчатка сори", "Рулет  шашлик (шт) п\\ф", "Сабзи сарик", "Салат гушт п/ф", "Салат лист", "Салфетка", "Салют шт", "Салёни помидор п/ф", "Сарик катта стреч", "Свежи Аччи бурч", "Семечка йог", "Сетка товук п/ф", "Сим чутка (шт)", "Сникерс катта шт", "Сникерс кичик шт", "Сода", "Сок 1 л", "Сок детски", "Солихан Салфетка", "Сомса гушт тугралган п/ф", "Сомса томчи (кг) п/ф", "Соус идиш (250гр)", "Соус идиш 40гр", "Соя соус (литр)", "Спрайт 0,5л", "Спрайт 1,5л", "Спрайт 1л", "Спрей 500 мл", "Стейк карейка кг п/ф", "Стейк куй  п/ф", "Стейк мол кухня п/ф", "Стейк мол п\\ф", "Стреч катта", "Сув 0,5л", "Сув 1,5л", "Сув 1л", "Сув 1л (сайхун)", "Сут", "Сут лактел", "Сухарик п/ф", "Сыр янтар", "Тала гел", "Тарвуз шт", "Тифтел п/ф", "Товук Филе (пишган) п/ф", "Товук Шорва п/ф", "Товук катта (суйак)", "Товук кози", "Товук козон кабоб п\\ф", "Товук фарш (загатовка)  п/ф", "Товук филе", "Товук шашлик маринад П/Ф", "Товук шашлик п/ф", "Томатний паста", "Тошкент Суви 0,5л", "Туалетный бумага", "Туз", "Туйок п\\ф", "Тухум", "Уксус 100%", "Уксус яблочний", "Умонник Салфетка", "Уноши Шарик п/ф", "Уноши хамир п/ф", "Урама долма п/ф", "Урганч УН", "Урдак сели п\\ф", "Урдак шашлик мариновка п\\ф", "Урдак шашлик п\\ф", "Урик компот п/ф", "Ушок барак  (КГ)  П/ф", "Фалга", "Фанта 0,5л", "Фанта 1,5л", "Фанта 1л", "Фартук", "Фергамент когоз", "Флеш 0,45", "Фрит жир", "Футболка", "Хон п/ф", "Хохланд сыр (сыр) шт", "Хуроз чихомбил п/ф", "Хуроз шорва п\\ф", "Чеснок", "Чили сладки соус (ЛИТР)", "Чит перечатка", "Чия компот п/ф", "Чококрем", "Чорток 0,5", "ШОРВА гушти П/ф", "Шакар 1шт (пакетли)", "Шакар кг", "Шампинион банка", "Шарик маккен (картошка)", "Шашлик Полка шт", "Шашлик ижжон (кг) п/ф", "Шивит оши хамир п/ф", "Шпажки  бургер чоп", "Щедрое лето", "держатель для стакана", "кетчуп идиш", "коврилган кузикорин п/ф", "кола бутылка 0,250", "кофе стакан", "раквина сетка", "фанта бутылка 0,250"]</script>
@@ -2138,6 +2168,8 @@
       lockError.textContent = "";
       applyDefaultDayOffset();
       pendingDayAsk = DAY_ASK_LOGINS.indexOf(login) !== -1;
+      document.getElementById("tabChangesBtn").style.display = "none";
+      loadChangeNotices(login);
       populateDestOptions();
       prefillChecklist(cartDestSelect.value);
       // Chap paneldagi bo'limlar faqat huquqi bor loginlarda ko'rinadi:
@@ -2500,6 +2532,96 @@
     if (!btn) return;
     setDayOffset(parseInt(btn.getAttribute("data-day"), 10));
     dayOverlay.classList.remove("open");
+  });
+
+  // ---- 2026-10-08: ZAGOTOVKA JAVOBI -------------------------------------
+  // Zagotovka Telegram guruhida sonni o'zgartirsa yoki "bera olmayman" desa,
+  // worker shu login uchun yozib qo'yadi (/changes). Kirganda ko'rsatamiz,
+  // keyin chap panelda "Javoblar" tugmasidan qayta ochish mumkin.
+  var chgOverlay = document.getElementById("chgOverlay");
+  var chgSeenLogin = null;
+  var chgAll = [];
+
+  function chgEsc(s) {
+    return String(s).replace(/[&<>]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c];
+    });
+  }
+
+  function chgQty(n, suffix) {
+    return (Math.round(Number(n) * 1000) / 1000) + (suffix || "");
+  }
+
+  function chgRender(items) {
+    var box = document.getElementById("chgBody");
+    box.innerHTML = "";
+    if (!items.length) {
+      box.innerHTML = "<div class=\"chg-rec\">Hozircha o'zgarish yo'q.</div>";
+      return;
+    }
+    items.forEach(function (rec) {
+      var html = "<div class=\"chg-head\">" + chgEsc(rec.source || "") +
+        (rec.when ? " \u00B7 " + chgEsc(rec.when) : "") + "</div>";
+      (rec.changes || []).forEach(function (c) {
+        if (c.na) {
+          html += "<div class=\"chg-row chg-na\"><b>" + chgEsc(c.name) + "</b>" +
+            "<span>bera olmaydi (so'ralgan " + chgEsc(chgQty(c.asked, c.suffix)) + ")</span></div>";
+        } else {
+          html += "<div class=\"chg-row\"><b>" + chgEsc(c.name) + "</b>" +
+            "<span>" + chgEsc(chgQty(c.asked, c.suffix)) + " \u2192 " + chgEsc(chgQty(c.given, c.suffix)) + "</span></div>";
+        }
+      });
+      if (rec.real && rec.real.length) {
+        html += "<div class=\"chg-real\"><div class=\"chg-real-t\">Haqiqiy ro'yxat</div>" +
+          rec.real.map(function (it, i) {
+            return (i + 1) + ". " + chgEsc(it.name) + " \u2014 " + chgEsc(chgQty(it.num, it.suffix));
+          }).join("<br>") + "</div>";
+      }
+      var wrap = document.createElement("div");
+      wrap.className = "chg-rec";
+      wrap.innerHTML = html;
+      box.appendChild(wrap);
+    });
+  }
+
+  function chgMarkSeen() {
+    if (!chgSeenLogin) return;
+    var login = chgSeenLogin;
+    chgSeenLogin = null;
+    fetch(SEND_ENDPOINT + "/changes/seen", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ login: login })
+    }).catch(function () {});
+  }
+
+  function loadChangeNotices(login) {
+    if (!login) return;
+    fetch(SEND_ENDPOINT + "/changes?login=" + encodeURIComponent(login))
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d || !d.ok || !d.items) return;
+        chgAll = d.items;
+        if (!chgAll.length) return;
+        document.getElementById("tabChangesBtn").style.display = "";
+        var yangi = chgAll.filter(function (x) { return (x.ts || 0) > (d.seenAt || 0); });
+        if (!yangi.length) return;
+        chgRender(yangi);
+        chgSeenLogin = login;
+        chgOverlay.classList.add("open");
+      })
+      .catch(function () {});
+  }
+
+  document.getElementById("chgCloseBtn").addEventListener("click", function () {
+    chgOverlay.classList.remove("open");
+    chgMarkSeen();
+  });
+
+  document.getElementById("tabChangesBtn").addEventListener("click", function () {
+    chgRender(chgAll);
+    chgOverlay.classList.add("open");
+    document.body.classList.remove("nav-open");
   });
 
   function applyDefaultDayOffset() {
