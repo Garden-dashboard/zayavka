@@ -77,7 +77,8 @@ $MARKAZ    = $E + "a" + [char]1
 $CHAP      = $E + "a" + [char]0
 $QALIN_ON  = $E + "E" + [char]1
 $QALIN_OFF = $E + "E" + [char]0
-$KATTA     = $G + "!" + [char]17
+$KATTA     = $G + "!" + [char]17   # 2x en + 2x boy (sarlavha)
+$BALAND    = $G + "!" + [char]1    # 2x BOY, en o'zgarmaydi -> 48 belgi saqlanadi
 $ODDIY     = $G + "!" + [char]0
 $KES       = $G + "V" + [char]66 + [char]3
 
@@ -108,11 +109,15 @@ function ChekQatorlar($ish) {
 function ChekMatni($ish) {
   $q = ChekQatorlar $ish
   $s = $INIT + $CP866
-  $s += $MARKAZ + $QALIN_ON + $KATTA + $q[0] + "`n" + $ODDIY
-  $s += $q[1] + "`n" + $QALIN_OFF + $CHAP
+  # Sarlavha -- eng katta
+  $s += $MARKAZ + $QALIN_ON + $KATTA + $q[0] + "`n"
+  $s += $q[1] + "`n" + $QALIN_OFF + $ODDIY + $CHAP
+  # 2026-10-08 (egasi so'rovi): tana matni ham KATTAROQ -- ikki barobar
+  # baland. En o'zgarmagani uchun qator hamon 48 belgi, nomlar kesilmaydi.
+  $s += $BALAND
   for ($i = 2; $i -lt $q.Count - 2; $i++) { $s += $q[$i] + "`n" }
   $s += $QALIN_ON + $q[$q.Count - 2] + "`n" + $QALIN_OFF
-  $s += $q[$q.Count - 1] + "`n"
+  $s += $ODDIY + $q[$q.Count - 1] + "`n"
   $s += "`n`n`n" + $KES
   return $s
 }
