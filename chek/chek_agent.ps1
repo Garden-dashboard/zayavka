@@ -1,32 +1,23 @@
 ﻿# ============================================================
-#  OLIMP ZAGOTOVKA - CHEK AGENTI
-#  Telegramda "Tayyor" bosilganda zayavka ro'yxatini Xprinter'ga chiqaradi.
-#  Monoblokda fonda ishlaydi. Printer bilan BIR TARMOQDA bo'lsa kifoya.
+#  OLIMP ZAGOTOVKA - CHEK AGENTI  (USB printer uchun)
+#  Telegramda "Tayyor" bosilganda zayavka ro'yxatini chek printerida chiqaradi.
+#  Printer monoblokka USB bilan ulangan -- IP manzil KERAK EMAS.
 #
-#  Sinov:  powershell -ExecutionPolicy Bypass -File chek_agent.ps1 -Test
-#          (printerga hech narsa yuborilmaydi, chek ekranga chiqadi)
+#  SINOV.bat        - chek ko'rinishi (printerga yuborilmaydi)
+#  PRINTERLAR.bat   - o'rnatilgan printerlar ro'yxati
+#  ISHGA_TUSHIRISH.bat - ishga tushirish
 # ============================================================
-#  SOZLAMA: faqat quyidagi ikki qatorni to'g'rilang
-# ------------------------------------------------------------
 param(
-  [string]$Ip   = "192.168.123.100",
-  [string]$Port = "9100",
-  [string]$Key  = "",
-  [switch]$Test
+  [string]$PrinterName = "",
+  [string]$Key = "",
+  [switch]$Test,
+  [switch]$ListPrinters
 )
-$PRINTER_IP   = $Ip
-$PRINTER_PORT = [int]$Port
-# ------------------------------------------------------------
 
-$ENDPOINT  = "https://zagotovka-zayavka-send.olimpzagotovka.workers.dev/print/poll"
-if ([string]::IsNullOrWhiteSpace($Key)) {
-  $kf = Join-Path $PSScriptRoot "chek_key.txt"
-  if (Test-Path $kf) { $Key = (Get-Content $kf -Raw).Trim() }
-}
-$AGENT_KEY = $Key
-$INTERVAL  = 4
-$LOG       = Join-Path $PSScriptRoot "chek_log.txt"
-$KENGLIK   = 32
+$ENDPOINT = "https://zagotovka-zayavka-send.olimpzagotovka.workers.dev/print/poll"
+$INTERVAL = 4
+$LOG      = Join-Path $PSScriptRoot "chek_log.txt"
+$KENGLIK  = 32
 
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
@@ -35,6 +26,47 @@ function Yoz($matn) {
   Write-Host $qator
   try { Add-Content -Path $LOG -Value $qator -Encoding UTF8 } catch {}
 }
+
+# --- RAW chop etish: ESC/POS baytlarini to'g'ridan-to'g'ri printerga ---
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+public class RawPrint {
+  [StructLayout(LayoutKind.Sequential, CharSet=CharSet.Unicode)]
+  public struct DOCINFO { [MarshalAs(UnmanagedType.LPWStr)] public string pDocName;
+                          [MarshalAs(UnmanagedType.LPWStr)] public string pOutputFile;
+                          [MarshalAs(UnmanagedType.LPWStr)] public string pDataType; }
+  [DllImport("winspool.drv", CharSet=CharSet.Unicode, SetLastError=true)]
+  public static extern bool OpenPrinter(string src, out IntPtr hPrinter, IntPtr pd);
+  [DllImport("winspool.drv", SetLastError=true)] public static extern bool ClosePrinter(IntPtr hPrinter);
+  [DllImport("winspool.drv", CharSet=CharSet.Unicode, SetLastError=true)]
+  public static extern bool StartDocPrinter(IntPtr hPrinter, int level, ref DOCINFO di);
+  [DllImport("winspool.drv", SetLastError=true)] public static extern bool EndDocPrinter(IntPtr hPrinter);
+  [DllImport("winspool.drv", SetLastError=true)] public static extern bool StartPagePrinter(IntPtr hPrinter);
+  [DllImport("winspool.drv", SetLastError=true)] public static extern bool EndPagePrinter(IntPtr hPrinter);
+  [DllImport("winspool.drv", SetLastError=true)]
+  public static extern bool WritePrinter(IntPtr hPrinter, IntPtr pBytes, int dwCount, out int dwWritten);
+
+  public static string Send(string printer, byte[] data) {
+    IntPtr h = IntPtr.Zero;
+    if (!OpenPrinter(printer, out h, IntPtr.Zero)) return "printer ochilmadi (OpenPrinter)";
+    try {
+      DOCINFO di = new DOCINFO();
+      di.pDocName = "Zayavka chek"; di.pDataType = "RAW";
+      if (!StartDocPrinter(h, 1, ref di)) return "StartDocPrinter xato";
+      if (!StartPagePrinter(h)) { EndDocPrinter(h); return "StartPagePrinter xato"; }
+      IntPtr buf = Marshal.AllocCoTaskMem(data.Length);
+      Marshal.Copy(data, 0, buf, data.Length);
+      int yozildi = 0;
+      bool ok = WritePrinter(h, buf, data.Length, out yozildi);
+      Marshal.FreeCoTaskMem(buf);
+      EndPagePrinter(h); EndDocPrinter(h);
+      if (!ok) return "WritePrinter xato";
+      return "";
+    } finally { ClosePrinter(h); }
+  }
+}
+"@
 
 # --- ESC/POS buyruqlari ---
 $E = [char]27
@@ -62,9 +94,7 @@ function ChekQatorlar($ish) {
   foreach ($b in $ish.items) {
     $nom = [string]$b.name
     $son = [string]$b.num
-    if ($nom.Length -gt ($KENGLIK - $son.Length - 1)) {
-      $nom = $nom.Substring(0, $KENGLIK - $son.Length - 1)
-    }
+    if ($nom.Length -gt ($KENGLIK - $son.Length - 1)) { $nom = $nom.Substring(0, $KENGLIK - $son.Length - 1) }
     $bosh = $KENGLIK - $nom.Length - $son.Length
     if ($bosh -lt 1) { $bosh = 1 }
     $q += $nom + (" " * $bosh) + $son
@@ -87,54 +117,67 @@ function ChekMatni($ish) {
   return $s
 }
 
-function Chop($matn) {
-  $mijoz = New-Object System.Net.Sockets.TcpClient
-  try {
-    $ulanish = $mijoz.BeginConnect($PRINTER_IP, $PRINTER_PORT, $null, $null)
-    if (-not $ulanish.AsyncWaitHandle.WaitOne(4000, $false)) { throw "printer javob bermadi (4 s)" }
-    $mijoz.EndConnect($ulanish)
-    $oqim = $mijoz.GetStream()
-    $baytlar = [System.Text.Encoding]::GetEncoding(866).GetBytes($matn)
-    $oqim.Write($baytlar, 0, $baytlar.Length)
-    $oqim.Flush()
-    Start-Sleep -Milliseconds 300
-  } finally {
-    $mijoz.Close()
+function PrinterTop {
+  $hammasi = @(Get-WmiObject -Class Win32_Printer -ErrorAction SilentlyContinue)
+  if ($hammasi.Count -eq 0) { return $null }
+  if (-not [string]::IsNullOrWhiteSpace($PrinterName)) {
+    $t = @($hammasi | Where-Object { $_.Name -eq $PrinterName })
+    if ($t.Count -gt 0) { return $t[0].Name }
+    $t = @($hammasi | Where-Object { $_.Name -like "*$PrinterName*" })
+    if ($t.Count -gt 0) { return $t[0].Name }
+    return $null
   }
+  $t = @($hammasi | Where-Object { $_.Name -match "XP-|Xprinter|POS|Thermal|Receipt|58|80mm" })
+  if ($t.Count -gt 0) { return $t[0].Name }
+  $t = @($hammasi | Where-Object { $_.Default -eq $true })
+  if ($t.Count -gt 0) { return $t[0].Name }
+  return $hammasi[0].Name
 }
 
-# --- SINOV REJIMI ---
+if ($ListPrinters) {
+  Write-Host "O'rnatilgan printerlar:"
+  Get-WmiObject -Class Win32_Printer -ErrorAction SilentlyContinue | ForEach-Object {
+    $bel = if ($_.Default) { "[standart]" } else { "          " }
+    Write-Host ("   {0} {1}    port: {2}" -f $bel, $_.Name, $_.PortName)
+  }
+  Write-Host ""
+  Write-Host ("Avtomatik tanlanadigan printer: " + (PrinterTop))
+  exit 0
+}
+
 if ($Test) {
   $namuna = [pscustomobject]@{
-    source = "MANGAL"
-    dest   = "OLIMP 1: Mangal sklad"
-    login  = "Hosil"
-    when   = "08.10.2026"
+    source = "MANGAL"; dest = "OLIMP 1: Mangal sklad"; login = "Hosil"; when = "08.10.2026"
     items  = @(
       [pscustomobject]@{ name = "Ijjon shashlik (sht)"; num = 200 },
       [pscustomobject]@{ name = "Kuskovoy mol (sht)";   num = 90 },
-      [pscustomobject]@{ name = "Gijduvon 100gr (sht)"; num = 60 },
-      [pscustomobject]@{ name = "Krilishki marinad kg"; num = 17.2 }
+      [pscustomobject]@{ name = "Gijduvon 100gr (sht)"; num = 60 }
     )
   }
   Write-Host ("=" * 34)
   foreach ($qator in (ChekQatorlar $namuna)) { Write-Host ("|" + $qator.PadRight($KENGLIK) + "|") }
   Write-Host ("=" * 34)
-  Write-Host "Yuqoridagi ko'rinish chekda shunday chiqadi (32 belgi kenglikda)."
+  Write-Host ""
+  Write-Host ("Topilgan printer: " + (PrinterTop))
   exit 0
 }
 
-if ([string]::IsNullOrWhiteSpace($AGENT_KEY)) {
-  Write-Host "XATO: kalit berilmagan. Ishga tushirish: .\chek_agent.ps1 -Key <kalit>" -ForegroundColor Red
+if ([string]::IsNullOrWhiteSpace($Key)) {
+  Write-Host "XATO: kalit berilmagan." -ForegroundColor Red
   exit 1
 }
 
-Yoz "=== Chek agenti ishga tushdi. Printer: $PRINTER_IP port $PRINTER_PORT ==="
-$bajarildi = @()
+$PRINTER = PrinterTop
+if (-not $PRINTER) {
+  Yoz "XATO: bu kompyuterda birorta printer topilmadi."
+  exit 1
+}
+Yoz "=== Chek agenti ishga tushdi. Printer: $PRINTER ==="
 
+$bajarildi = @()
 while ($true) {
   try {
-    $sorov = @{ key = $AGENT_KEY }
+    $sorov = @{ key = $Key }
     if ($bajarildi.Count -gt 0) { $sorov.done = $bajarildi }
     $tana = $sorov | ConvertTo-Json -Compress
     $baytlar = [System.Text.Encoding]::UTF8.GetBytes($tana)
@@ -143,12 +186,14 @@ while ($true) {
 
     if ($javob.ok -and $javob.jobs) {
       foreach ($ish in $javob.jobs) {
-        try {
-          Chop (ChekMatni $ish)
+        $matn = ChekMatni $ish
+        $data = [System.Text.Encoding]::GetEncoding(866).GetBytes($matn)
+        $xato = [RawPrint]::Send($PRINTER, $data)
+        if ($xato -eq "") {
           $bajarildi += $ish.id
           Yoz ("CHEK CHIQDI  {0} -> {1}  ({2} band)" -f $ish.source, $ish.dest, @($ish.items).Count)
-        } catch {
-          Yoz ("XATO (printer): " + $_.Exception.Message)
+        } else {
+          Yoz ("XATO (printer): " + $xato)
           break
         }
       }
