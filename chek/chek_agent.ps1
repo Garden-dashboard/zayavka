@@ -17,7 +17,8 @@ param(
 $ENDPOINT = "https://zagotovka-zayavka-send.olimpzagotovka.workers.dev/print/poll"
 $INTERVAL = 4
 $LOG      = Join-Path $PSScriptRoot "chek_log.txt"
-$KENGLIK  = 48   # Xprinter Q80A -- 80 mm qogoz = 48 belgi
+$KENGLIK  = 48   # oddiy shriftda 80 mm = 48 belgi
+$KENG_KATTA = 24 # ikki barobar kengaytirilgan shriftda = 24 belgi
 
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
@@ -92,11 +93,15 @@ function ChekQatorlar($ish) {
   $q += "Yozgan: " + [string]$ish.login
   $q += "Sana  : " + [string]$ish.when
   $q += $chiziq
+  # 2026-10-08: mahsulot qatorlari IKKI BAROBAR KENG shriftda chiqadi,
+  # shuning uchun ular 24 belgiga moslanadi (48 emas). Nom uzun bo'lsa
+  # qisqaradi -- "(шт) П/ф" kabi qo'shimchalar ahamiyatsiz, asosiy nom qoladi.
   foreach ($b in $ish.items) {
     $nom = [string]$b.name
     $son = [string]$b.num
-    if ($nom.Length -gt ($KENGLIK - $son.Length - 1)) { $nom = $nom.Substring(0, $KENGLIK - $son.Length - 1) }
-    $bosh = $KENGLIK - $nom.Length - $son.Length
+    $joy = $KENG_KATTA - $son.Length - 1
+    if ($nom.Length -gt $joy) { $nom = $nom.Substring(0, $joy) }
+    $bosh = $KENG_KATTA - $nom.Length - $son.Length
     if ($bosh -lt 1) { $bosh = 1 }
     $q += $nom + (" " * $bosh) + $son
   }
@@ -114,8 +119,13 @@ function ChekMatni($ish) {
   $s += $q[1] + "`n" + $QALIN_OFF + $ODDIY + $CHAP
   # 2026-10-08 (egasi so'rovi): tana matni ham KATTAROQ -- ikki barobar
   # baland. En o'zgarmagani uchun qator hamon 48 belgi, nomlar kesilmaydi.
+  # Ma'lumot qatorlari (Kimga/Yozgan/Sana) -- baland, 48 belgi
   $s += $BALAND
-  for ($i = 2; $i -lt $q.Count - 2; $i++) { $s += $q[$i] + "`n" }
+  for ($i = 2; $i -lt 7; $i++) { $s += $q[$i] + "`n" }
+  # Mahsulotlar -- ENG KATTA (2x en + 2x boy)
+  $s += $KATTA
+  for ($i = 7; $i -lt $q.Count - 3; $i++) { $s += $q[$i] + "`n" }
+  $s += $BALAND + $q[$q.Count - 3] + "`n"
   $s += $QALIN_ON + $q[$q.Count - 2] + "`n" + $QALIN_OFF
   $s += $ODDIY + $q[$q.Count - 1] + "`n"
   $s += "`n`n`n" + $KES
