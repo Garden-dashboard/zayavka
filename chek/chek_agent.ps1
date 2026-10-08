@@ -93,17 +93,26 @@ function ChekQatorlar($ish) {
   $q += "Yozgan: " + [string]$ish.login
   $q += "Sana  : " + [string]$ish.when
   $q += $chiziq
-  # 2026-10-08: mahsulot qatorlari IKKI BAROBAR KENG shriftda chiqadi,
-  # shuning uchun ular 24 belgiga moslanadi (48 emas). Nom uzun bo'lsa
-  # qisqaradi -- "(шт) П/ф" kabi qo'shimchalar ahamiyatsiz, asosiy nom qoladi.
+  # 2026-10-08: mahsulot qatorlari IKKI BAROBAR KENG shriftda -- 24 belgi.
+  # Nom oxiridagi "п/ф" (yarim tayyor) belgisi olib tashlanadi: u hech qanday
+  # ma'lumot bermaydi, lekin joyni egallaydi. "(шт)"/"(кг)" QOLDIRILADI --
+  # ular dona yoki kilogrammni ajratadi, aks holda mahsulotlar chalkashadi.
+  # Nom baribir sig'masa -- miqdor KEYINGI qatorga, o'ngga tortilib chiqadi
+  # (avval nom kesilib, miqdor unga yopishib qolardi: "Шашлик ижжон (кг) п/ 6.7").
   foreach ($b in $ish.items) {
-    $nom = [string]$b.name
+    $nom = ([string]$b.name).Trim()
+    $nom = $nom -replace '\s*[пПpP]\s*.\s*[фФfF]\s*$', ''
+    $nom = $nom -replace '\s{2,}', ' '
+    $nom = $nom.Trim()
     $son = [string]$b.num
-    $joy = $KENG_KATTA - $son.Length - 1
-    if ($nom.Length -gt $joy) { $nom = $nom.Substring(0, $joy) }
-    $bosh = $KENG_KATTA - $nom.Length - $son.Length
-    if ($bosh -lt 1) { $bosh = 1 }
-    $q += $nom + (" " * $bosh) + $son
+    if (($nom.Length + 1 + $son.Length) -le $KENG_KATTA) {
+      $bosh = $KENG_KATTA - $nom.Length - $son.Length
+      $q += $nom + (" " * $bosh) + $son
+    } else {
+      if ($nom.Length -gt $KENG_KATTA) { $nom = $nom.Substring(0, $KENG_KATTA) }
+      $q += $nom
+      $q += (" " * ($KENG_KATTA - $son.Length)) + $son
+    }
   }
   $q += $chiziq
   $q += "Jami: {0} band" -f @($ish.items).Count
@@ -164,9 +173,10 @@ if ($Test) {
   $namuna = [pscustomobject]@{
     source = "MANGAL"; dest = "OLIMP 1: Mangal sklad"; login = "Hosil"; when = "08.10.2026"
     items  = @(
-      [pscustomobject]@{ name = "Ijjon shashlik (sht)"; num = 200 },
-      [pscustomobject]@{ name = "Kuskovoy mol (sht)";   num = 90 },
-      [pscustomobject]@{ name = "Gijduvon 100gr (sht)"; num = 60 }
+      [pscustomobject]@{ name = "Ижжон шашлик (шт)  П/ф";      num = 200 },
+      [pscustomobject]@{ name = "Шашлик ижжон (кг) п/ф";       num = 6.7 },
+      [pscustomobject]@{ name = "Крылиишки маринад (кг) п\ф";  num = 17.2 },
+      [pscustomobject]@{ name = "Гиждувон 100гр (шт) п/ф";     num = 60 }
     )
   }
   Write-Host ("=" * 34)
