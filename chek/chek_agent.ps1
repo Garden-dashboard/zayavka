@@ -99,22 +99,36 @@ function ChekQatorlar($ish) {
   # ular dona yoki kilogrammni ajratadi, aks holda mahsulotlar chalkashadi.
   # Nom baribir sig'masa -- miqdor KEYINGI qatorga, o'ngga tortilib chiqadi
   # (avval nom kesilib, miqdor unga yopishib qolardi: "Шашлик ижжон (кг) п/ 6.7").
+  # 2026-10-08 (egasi so'rovi): mahsulot nomi ASL HOLICHA qoladi -- hech narsa
+  # olib tashlanmaydi va KESILMAYDI. Nom sig'masa so'zlar bo'yicha keyingi
+  # qatorga o'tkaziladi, miqdor esa oxirida o'ngga tortiladi.
   foreach ($b in $ish.items) {
-    $nom = ([string]$b.name).Trim()
-    $nom = $nom -replace '\s*[пПpP]\s*.\s*[фФfF]\s*$', ''
-    $nom = $nom -replace '\s{2,}', ' '
-    $nom = $nom.Trim()
+    $nom = [string]$b.name
     $son = [string]$b.num
     if (($nom.Length + 1 + $son.Length) -le $KENG_KATTA) {
-      $bosh = $KENG_KATTA - $nom.Length - $son.Length
-      $q += $nom + (" " * $bosh) + $son
+      $q += $nom + (" " * ($KENG_KATTA - $nom.Length - $son.Length)) + $son
     } else {
-      if ($nom.Length -gt $KENG_KATTA) { $nom = $nom.Substring(0, $KENG_KATTA) }
-      $q += $nom
+      $qator = ""
+      foreach ($w in ($nom -split ' ')) {
+        if ($w -eq "") { continue }
+        if ($qator -eq "") {
+          $qator = $w
+        } elseif (($qator.Length + 1 + $w.Length) -le $KENG_KATTA) {
+          $qator = $qator + " " + $w
+        } else {
+          $q += $qator
+          $qator = $w
+        }
+        # bitta so'zning o'zi juda uzun bo'lsa -- bo'lib yuboramiz
+        while ($qator.Length -gt $KENG_KATTA) {
+          $q += $qator.Substring(0, $KENG_KATTA)
+          $qator = $qator.Substring($KENG_KATTA)
+        }
+      }
+      if ($qator -ne "") { $q += $qator }
       $q += (" " * ($KENG_KATTA - $son.Length)) + $son
     }
-  }
-  $q += $chiziq
+  }  $q += $chiziq
   $q += "Jami: {0} band" -f @($ish.items).Count
   $q += "Chiqarildi: " + (Get-Date -Format "dd.MM.yyyy HH:mm")
   return $q
@@ -132,8 +146,9 @@ function ChekMatni($ish) {
   $s += $BALAND
   for ($i = 2; $i -lt 7; $i++) { $s += $q[$i] + "`n" }
   # Mahsulotlar -- ENG KATTA (2x en + 2x boy)
-  $s += $KATTA
+  $s += $KATTA + $QALIN_ON   # mahsulotlar: eng katta va QALIN
   for ($i = 7; $i -lt $q.Count - 3; $i++) { $s += $q[$i] + "`n" }
+  $s += $QALIN_OFF
   $s += $BALAND + $q[$q.Count - 3] + "`n"
   $s += $QALIN_ON + $q[$q.Count - 2] + "`n" + $QALIN_OFF
   $s += $ODDIY + $q[$q.Count - 1] + "`n"
