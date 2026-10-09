@@ -987,6 +987,8 @@
   .kr-drop li { padding: 11px 14px; font-size: 14.5px; cursor: pointer; border-bottom: 1px solid var(--border); }
   .kr-drop li:last-child { border-bottom: 0; }
   .kr-drop li:hover { background: var(--surface-2); }
+  .kr-drop li.kr-drop-info { color: var(--text-muted); font-size: 13px; cursor: default; }
+  .kr-drop li.kr-drop-info:hover { background: transparent; }
   .kr-pick { margin-top: 7px; font-size: 14.5px; font-weight: 700; color: var(--accent-2); display: none; }
   .kr-pick.on { display: block; }
   .kr-date { width: 100%; min-height: 48px; padding: 0 14px; font-size: 16px; font-family: inherit;
@@ -1825,14 +1827,14 @@
 
         <div class="kr-row">
           <label class="kr-lab" for="krSupSearch">Ta'minotchi</label>
-          <input class="bz-search" id="krSupSearch" type="text" placeholder="Ta'minotchi nomini yozing..." autocomplete="off" autocapitalize="off" spellcheck="false" />
+          <input class="bz-search" id="krSupSearch" type="text" placeholder="Bosing — ro'yxat ochiladi" autocomplete="off" autocapitalize="off" spellcheck="false" />
           <ul class="kr-drop" id="krSupDrop"></ul>
           <div class="kr-pick" id="krSupPick"></div>
         </div>
 
         <div class="kr-row">
           <label class="kr-lab" for="krStoreSearch">Qaysi omborga</label>
-          <input class="bz-search" id="krStoreSearch" type="text" placeholder="Ombor nomini yozing..." autocomplete="off" autocapitalize="off" spellcheck="false" />
+          <input class="bz-search" id="krStoreSearch" type="text" placeholder="Bosing — ro'yxat ochiladi" autocomplete="off" autocapitalize="off" spellcheck="false" />
           <ul class="kr-drop" id="krStoreDrop"></ul>
           <div class="kr-pick" id="krStorePick"></div>
         </div>
@@ -1844,7 +1846,7 @@
 
         <div class="kr-row">
           <label class="kr-lab" for="krProdSearch">Mahsulot qo'shish</label>
-          <input class="bz-search" id="krProdSearch" type="text" placeholder="Mahsulot nomini yozing..." autocomplete="off" autocapitalize="off" spellcheck="false" />
+          <input class="bz-search" id="krProdSearch" type="text" placeholder="Bosing yoki nomini yozing" autocomplete="off" autocapitalize="off" spellcheck="false" />
           <ul class="kr-drop" id="krProdDrop"></ul>
         </div>
 
@@ -3762,15 +3764,25 @@
     var el = document.getElementById(dropId);
     var q = matn.trim().toLowerCase();
     el.innerHTML = "";
-    if (!q) { el.classList.remove("open"); return; }
-    var mos = ro.filter(function (x) { return x.n.toLowerCase().indexOf(q) !== -1; }).slice(0, 30);
-    if (!mos.length) { el.classList.remove("open"); return; }
+    function info(matn2) {
+      var li = document.createElement("li");
+      li.className = "kr-drop-info";
+      li.textContent = matn2;
+      el.appendChild(li);
+    }
+    // Ro'yxat bo'sh bo'lsa ham oyna ochiladi -- odam nima bo'layotganini bilsin
+    if (!ro.length) { info("Ro'yxat yuklanmoqda..."); el.classList.add("open"); return; }
+    // Yozilmagan bo'lsa -- iikodagi ro'yxatning boshi ko'rsatiladi
+    var hammasi = q ? ro.filter(function (x) { return x.n.toLowerCase().indexOf(q) !== -1; }) : ro;
+    var mos = hammasi.slice(0, 50);
+    if (!mos.length) { info("Topilmadi"); el.classList.add("open"); return; }
     mos.forEach(function (x) {
       var li = document.createElement("li");
       li.textContent = x.n;
       li.addEventListener("click", function () { tanla(x); krDropYop(); });
       el.appendChild(li);
     });
+    if (hammasi.length > mos.length) info("\u2026 yana " + (hammasi.length - mos.length) + " ta \u2014 nomini yozib qidiring");
     el.classList.add("open");
   }
 
@@ -3807,7 +3819,7 @@
     note.className = "kr-note"; note.textContent = "Ro'yxatlar yuklanmoqda...";
     fetch(SEND_ENDPOINT + "/kirim/meta", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password: siteAuth.pass })
+      body: JSON.stringify({ login: siteAuth.login, pass: siteAuth.pass })
     }).then(function (r) { return r.json(); }).then(function (d) {
       if (!d || !d.ok) { note.className = "kr-note err"; note.textContent = "Yuklanmadi: " + ((d && d.error) || "xato"); return; }
       krMeta = d;
@@ -3832,7 +3844,8 @@
     fetch(SEND_ENDPOINT + "/kirim/submit", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        password: siteAuth.pass,
+        login: siteAuth.login,
+        pass: siteAuth.pass,
         supplierId: krSup.i,
         storeId: krStore.i,
         date: document.getElementById("krDate").value,
@@ -3861,23 +3874,23 @@
     var sup = document.getElementById("krSupSearch");
     var sto = document.getElementById("krStoreSearch");
     var pro = document.getElementById("krProdSearch");
-    sup.addEventListener("input", function () {
+    function supOch() {
       krToldir("krSupDrop", (krMeta && krMeta.suppliers) || [], sup.value, function (x) {
         krSup = x; sup.value = "";
         var p = document.getElementById("krSupPick");
         p.textContent = "\u2713 " + x.n; p.classList.add("on");
         krYangila();
       });
-    });
-    sto.addEventListener("input", function () {
+    }
+    function stoOch() {
       krToldir("krStoreDrop", (krMeta && krMeta.stores) || [], sto.value, function (x) {
         krStore = x; sto.value = "";
         var p = document.getElementById("krStorePick");
         p.textContent = "\u2713 " + x.n; p.classList.add("on");
         krYangila();
       });
-    });
-    pro.addEventListener("input", function () {
+    }
+    function proOch() {
       krToldir("krProdDrop", (krMeta && krMeta.products) || [], pro.value, function (x) {
         krProd = x; pro.value = "";
         document.getElementById("krAddName").textContent = x.n;
@@ -3887,7 +3900,14 @@
         document.getElementById("krAddSum").textContent = "";
         document.getElementById("krAmount").focus();
       });
-    });
+    }
+    // Maydonga bosilsa ham ro'yxat ochiladi -- yozish shart emas
+    sup.addEventListener("input", supOch);
+    sup.addEventListener("focus", supOch);
+    sto.addEventListener("input", stoOch);
+    sto.addEventListener("focus", stoOch);
+    pro.addEventListener("input", proOch);
+    pro.addEventListener("focus", proOch);
     function krHisob() {
       var a = parseFloat(String(document.getElementById("krAmount").value).replace(",", ".")) || 0;
       var p = parseFloat(String(document.getElementById("krPrice").value).replace(",", ".")) || 0;
