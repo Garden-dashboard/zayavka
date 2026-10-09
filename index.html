@@ -929,8 +929,11 @@
   body.mode-spis .col-left,
   body.mode-spis .cart,
   body.mode-store .col-left,
-  body.mode-store .cart { display: none !important; }
+  body.mode-store .cart,
+  body.mode-kirim .col-left,
+  body.mode-kirim .cart { display: none !important; }
   #inventorySection,
+  #kirimSection,
   #storeSection,
   #adminListSection,
   #loginsSection,
@@ -972,6 +975,44 @@
   .sp-send:disabled { opacity: 0.5; cursor: default; }
   body.mode-inventory #inventorySection { display: block; }
   body.mode-store #storeSection { display: block; }
+  body.mode-kirim #kirimSection { display: block; }
+  /* ---- Kirim: ta'minotchidan tovar (2026-10-09) ---- */
+  .kr-row { position: relative; margin-bottom: 16px; }
+  .kr-lab { display: block; font-size: 11.5px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+  .kr-drop { list-style: none; margin: 4px 0 0; padding: 0; position: absolute; z-index: 40;
+    left: 0; right: 0; max-height: 240px; overflow-y: auto; background: var(--surface);
+    border: 1.5px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); display: none; }
+  .kr-drop.open { display: block; }
+  .kr-drop li { padding: 11px 14px; font-size: 14.5px; cursor: pointer; border-bottom: 1px solid var(--border); }
+  .kr-drop li:last-child { border-bottom: 0; }
+  .kr-drop li:hover { background: var(--surface-2); }
+  .kr-pick { margin-top: 7px; font-size: 14.5px; font-weight: 700; color: var(--accent-2); display: none; }
+  .kr-pick.on { display: block; }
+  .kr-date { width: 100%; min-height: 48px; padding: 0 14px; font-size: 16px; font-family: inherit;
+    border: 1.5px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--text); }
+  .kr-add { border: 1.5px solid var(--accent); border-radius: 13px; padding: 14px; margin-bottom: 16px;
+    background: var(--surface); }
+  .kr-add-name { font-size: 15.5px; font-weight: 800; margin-bottom: 10px; }
+  .kr-add-fields { display: flex; gap: 8px; flex-wrap: wrap; }
+  .kr-num { flex: 1 1 90px; min-width: 90px; min-height: 48px; padding: 0 12px; font-size: 16px;
+    font-family: inherit; border: 1.5px solid var(--border); border-radius: 11px;
+    background: var(--bg); color: var(--text); }
+  .kr-add-btn { flex: 0 0 auto; min-height: 48px; padding: 0 20px; border: none; border-radius: 11px;
+    background: var(--accent); color: var(--accent-ink); font-size: 15px; font-weight: 800;
+    font-family: inherit; cursor: pointer; }
+  .kr-add-sum { margin-top: 9px; font-size: 13.5px; color: var(--text-muted); }
+  .kr-list { list-style: none; margin: 0 0 12px; padding: 0; }
+  .kr-item { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--border); }
+  .kr-item-main { flex: 1; min-width: 0; }
+  .kr-item-nom { font-size: 14.5px; font-weight: 600; word-break: break-word; }
+  .kr-item-hisob { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+  .kr-del { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 10px; border: 1.5px solid var(--border);
+    background: var(--surface); color: var(--accent); font-size: 18px; cursor: pointer; line-height: 1; }
+  .kr-total { font-size: 17px; font-weight: 800; text-align: right; margin: 6px 0 2px; }
+  .kr-note { font-size: 13px; margin-top: 12px; line-height: 1.5; }
+  .kr-note.ok { color: var(--accent-2); font-weight: 700; }
+  .kr-note.err { color: var(--accent); font-weight: 700; }
   /* Ombor qoldig'i (2026-10-05) */
   .st-head { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:12px; }
   .st-meta { font-size:12.5px; opacity:.7; }
@@ -1624,6 +1665,10 @@
         <svg class="sb-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="6" rx="1"></rect><path d="M5 10v9a1 1 0 001 1h12a1 1 0 001-1v-9"></path><path d="M10 14h4"></path></svg>
         <span>Inventarizatsiya</span>
       </button>
+      <button class="sb-item" id="tabKirimBtn" type="button" style="display:none">
+        <svg class="sb-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11"></path><path d="M8 11l4 4 4-4"></path><path d="M4 17v2a1 1 0 001 1h14a1 1 0 001-1v-2"></path></svg>
+        <span>Kirim</span>
+      </button>
       <button class="sb-item" id="tabAdminListBtn" type="button" style="display:none">
         <svg class="sb-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M4 12h16M4 18h7"></path><circle cx="18" cy="6" r="2"></circle><circle cx="15" cy="18" r="2"></circle></svg>
         <span>Ro'yxat</span>
@@ -1772,6 +1817,51 @@
         </div>
         <p class="st-sum" id="storeSum"></p>
         <ul class="st-list" id="storeList"></ul>
+      </section>
+
+      <section id="kirimSection">
+        <p class="inv-sub">Ta'minotchidan kelgan tovarni iikoga kiritish. Hujjat <b>darhol o'tkaziladi</b> —
+           yuborishdan oldin ro'yxatni tekshiring.</p>
+
+        <div class="kr-row">
+          <label class="kr-lab" for="krSupSearch">Ta'minotchi</label>
+          <input class="bz-search" id="krSupSearch" type="text" placeholder="Ta'minotchi nomini yozing..." autocomplete="off" autocapitalize="off" spellcheck="false" />
+          <ul class="kr-drop" id="krSupDrop"></ul>
+          <div class="kr-pick" id="krSupPick"></div>
+        </div>
+
+        <div class="kr-row">
+          <label class="kr-lab" for="krStoreSearch">Qaysi omborga</label>
+          <input class="bz-search" id="krStoreSearch" type="text" placeholder="Ombor nomini yozing..." autocomplete="off" autocapitalize="off" spellcheck="false" />
+          <ul class="kr-drop" id="krStoreDrop"></ul>
+          <div class="kr-pick" id="krStorePick"></div>
+        </div>
+
+        <div class="kr-row">
+          <label class="kr-lab" for="krDate">Sana</label>
+          <input class="kr-date" id="krDate" type="date" />
+        </div>
+
+        <div class="kr-row">
+          <label class="kr-lab" for="krProdSearch">Mahsulot qo'shish</label>
+          <input class="bz-search" id="krProdSearch" type="text" placeholder="Mahsulot nomini yozing..." autocomplete="off" autocapitalize="off" spellcheck="false" />
+          <ul class="kr-drop" id="krProdDrop"></ul>
+        </div>
+
+        <div class="kr-add" id="krAdd" style="display:none">
+          <div class="kr-add-name" id="krAddName"></div>
+          <div class="kr-add-fields">
+            <input class="kr-num" id="krAmount" type="text" inputmode="decimal" placeholder="Soni" />
+            <input class="kr-num" id="krPrice" type="text" inputmode="decimal" placeholder="Narxi" />
+            <button class="kr-add-btn" id="krAddBtn" type="button">Qo'shish</button>
+          </div>
+          <div class="kr-add-sum" id="krAddSum"></div>
+        </div>
+
+        <ul class="kr-list" id="krList"></ul>
+        <p class="kr-total" id="krTotal"></p>
+        <button class="sp-send" id="krSend" type="button" disabled>📥 iikoga yuborish</button>
+        <p class="kr-note" id="krNote"></p>
       </section>
 
       <section id="adminListSection">
@@ -2192,6 +2282,7 @@
       document.getElementById("tabStoreBtn").style.display = (!faqatBozor && hasStoreAccess()) ? "" : "none";
       storeItems = [];
       document.getElementById("tabAdminListBtn").style.display = hasAdminAccess() ? "" : "none";
+      document.getElementById("tabKirimBtn").style.display = hasAdminAccess() ? "" : "none";
       document.getElementById("tabLoginsBtn").style.display = hasAdminAccess() ? "" : "none";
       document.getElementById("tabInboxBtn").style.display = hasAdminAccess() ? "" : "none";
       // 2026-09-28: adminda "Taklif" (yozish) KERAK EMAS -- u xabarlarni
@@ -2643,6 +2734,16 @@
   document.getElementById("chgCloseBtn").addEventListener("click", function () {
     chgOverlay.classList.remove("open");
     chgMarkSeen();
+  });
+
+  document.getElementById("tabKirimBtn").addEventListener("click", function () {
+    setMode("kirim");
+    var d = document.getElementById("krDate");
+    if (!d.value) {
+      var t = tashkentParts(new Date());
+      d.value = t.year + "-" + t.month + "-" + t.day;
+    }
+    krMetaYukla();
   });
 
   document.getElementById("tabTgBtn").addEventListener("click", chgTgOch);
@@ -3471,6 +3572,7 @@
     bozor: ["Garden · Bozor", "Bozordan olinadigan mahsulotlar"],
     spis: ["Garden · Spisaniya", "Mahsulotni spisaniya qilish"],
     store: ["Garden · Ombor qoldig'i", "Omboringizda hozir nima bor"],
+    kirim: ["Admin · Kirim", "Ta'minotchidan tovar kiritish"],
     feedback: ["Zagotovka · Taklif va shikoyat", "Fikringizni yozing"],
     inbox: ["Admin · E'lon va xabarlar", "E'lon matni va xodimlar bilan yozishma"],
   };
@@ -3487,6 +3589,9 @@
     document.body.classList.toggle("mode-bozor", mode === "bozor");
     document.body.classList.toggle("mode-spis", mode === "spis");
     document.body.classList.toggle("mode-store", mode === "store");
+    document.body.classList.toggle("mode-kirim", mode === "kirim");
+    var krBtn = document.getElementById("tabKirimBtn");
+    if (krBtn) krBtn.classList.toggle("active", mode === "kirim");
     tabZayavkaBtn.classList.toggle("active", mode === "zayavka");
     var bzBtn = document.getElementById("tabBozorBtn");
     if (bzBtn) bzBtn.classList.toggle("active", mode === "bozor");
@@ -3638,6 +3743,175 @@
   });
 
   tabZayavkaBtn.addEventListener("click", function () { setMode("zayavka"); });
+  // ---- KIRIM: ta'minotchidan tovar (2026-10-09, faqat admin) -------------
+  var krMeta = null, krSup = null, krStore = null, krProd = null;
+  var krCart = [];
+
+  function krSon(n) {
+    var x = Math.round(Number(n) * 100) / 100;
+    return String(x).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  }
+
+  function krDropYop() {
+    ["krSupDrop", "krStoreDrop", "krProdDrop"].forEach(function (id) {
+      document.getElementById(id).classList.remove("open");
+    });
+  }
+
+  function krToldir(dropId, ro, matn, tanla) {
+    var el = document.getElementById(dropId);
+    var q = matn.trim().toLowerCase();
+    el.innerHTML = "";
+    if (!q) { el.classList.remove("open"); return; }
+    var mos = ro.filter(function (x) { return x.n.toLowerCase().indexOf(q) !== -1; }).slice(0, 30);
+    if (!mos.length) { el.classList.remove("open"); return; }
+    mos.forEach(function (x) {
+      var li = document.createElement("li");
+      li.textContent = x.n;
+      li.addEventListener("click", function () { tanla(x); krDropYop(); });
+      el.appendChild(li);
+    });
+    el.classList.add("open");
+  }
+
+  function krYangila() {
+    var ul = document.getElementById("krList");
+    ul.innerHTML = "";
+    var jami = 0;
+    krCart.forEach(function (it, i) {
+      jami += it.amount * it.price;
+      var li = document.createElement("li");
+      li.className = "kr-item";
+      var main = document.createElement("div");
+      main.className = "kr-item-main";
+      var nom = document.createElement("div");
+      nom.className = "kr-item-nom";
+      nom.textContent = (i + 1) + ". " + it.name;
+      var his = document.createElement("div");
+      his.className = "kr-item-hisob";
+      his.textContent = krSon(it.amount) + " \u00D7 " + krSon(it.price) + " = " + krSon(it.amount * it.price) + " so'm";
+      main.appendChild(nom); main.appendChild(his);
+      var del = document.createElement("button");
+      del.className = "kr-del"; del.type = "button"; del.textContent = "\u00D7";
+      del.addEventListener("click", function () { krCart.splice(i, 1); krYangila(); });
+      li.appendChild(main); li.appendChild(del);
+      ul.appendChild(li);
+    });
+    document.getElementById("krTotal").textContent = krCart.length ? "JAMI: " + krSon(jami) + " so'm" : "";
+    document.getElementById("krSend").disabled = !(krCart.length && krSup && krStore);
+  }
+
+  function krMetaYukla() {
+    if (krMeta) return;
+    var note = document.getElementById("krNote");
+    note.className = "kr-note"; note.textContent = "Ro'yxatlar yuklanmoqda...";
+    fetch(SEND_ENDPOINT + "/kirim/meta", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: siteAuth.pass })
+    }).then(function (r) { return r.json(); }).then(function (d) {
+      if (!d || !d.ok) { note.className = "kr-note err"; note.textContent = "Yuklanmadi: " + ((d && d.error) || "xato"); return; }
+      krMeta = d;
+      note.className = "kr-note"; note.textContent = "";
+    }).catch(function () {
+      note.className = "kr-note err"; note.textContent = "Internet bilan bog'lanib bo'lmadi";
+    });
+  }
+
+  function krYubor() {
+    if (!krSup || !krStore || !krCart.length) return;
+    var jami = krCart.reduce(function (a, b) { return a + b.amount * b.price; }, 0);
+    var savol = "Ta'minotchi: " + krSup.n + "\nOmbor: " + krStore.n +
+      "\nSana: " + document.getElementById("krDate").value +
+      "\nMahsulot: " + krCart.length + " ta\nJAMI: " + krSon(jami) + " so'm\n\n" +
+      "\u041d\u0430\u043a\u043b\u0430\u0434noy DARHOL o'tkaziladi. Yuboraymi?";
+    if (!window.confirm(savol)) return;
+    var btn = document.getElementById("krSend");
+    var note = document.getElementById("krNote");
+    btn.disabled = true;
+    note.className = "kr-note"; note.textContent = "Yuborilmoqda...";
+    fetch(SEND_ENDPOINT + "/kirim/submit", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        password: siteAuth.pass,
+        supplierId: krSup.i,
+        storeId: krStore.i,
+        date: document.getElementById("krDate").value,
+        items: krCart.map(function (x) { return { id: x.i, name: x.name, amount: x.amount, price: x.price }; })
+      })
+    }).then(function (r) { return r.json(); }).then(function (d) {
+      if (d && d.ok) {
+        note.className = "kr-note ok";
+        note.textContent = "\u2705 \u041d\u0430\u043a\u043b\u0430\u0434noy \u2116" + (d.documentNumber || "?") +
+          " yaratildi va o'tkazildi (" + d.qator + " qator, " + krSon(d.jami) + " so'm)";
+        krCart = [];
+        krYangila();
+      } else {
+        note.className = "kr-note err";
+        note.textContent = "Xato: " + ((d && d.error) || "noma'lum");
+        btn.disabled = false;
+      }
+    }).catch(function () {
+      note.className = "kr-note err";
+      note.textContent = "Internet bilan bog'lanib bo'lmadi";
+      btn.disabled = false;
+    });
+  }
+
+  (function krSozla() {
+    var sup = document.getElementById("krSupSearch");
+    var sto = document.getElementById("krStoreSearch");
+    var pro = document.getElementById("krProdSearch");
+    sup.addEventListener("input", function () {
+      krToldir("krSupDrop", (krMeta && krMeta.suppliers) || [], sup.value, function (x) {
+        krSup = x; sup.value = "";
+        var p = document.getElementById("krSupPick");
+        p.textContent = "\u2713 " + x.n; p.classList.add("on");
+        krYangila();
+      });
+    });
+    sto.addEventListener("input", function () {
+      krToldir("krStoreDrop", (krMeta && krMeta.stores) || [], sto.value, function (x) {
+        krStore = x; sto.value = "";
+        var p = document.getElementById("krStorePick");
+        p.textContent = "\u2713 " + x.n; p.classList.add("on");
+        krYangila();
+      });
+    });
+    pro.addEventListener("input", function () {
+      krToldir("krProdDrop", (krMeta && krMeta.products) || [], pro.value, function (x) {
+        krProd = x; pro.value = "";
+        document.getElementById("krAddName").textContent = x.n;
+        document.getElementById("krAdd").style.display = "";
+        document.getElementById("krAmount").value = "";
+        document.getElementById("krPrice").value = "";
+        document.getElementById("krAddSum").textContent = "";
+        document.getElementById("krAmount").focus();
+      });
+    });
+    function krHisob() {
+      var a = parseFloat(String(document.getElementById("krAmount").value).replace(",", ".")) || 0;
+      var p = parseFloat(String(document.getElementById("krPrice").value).replace(",", ".")) || 0;
+      document.getElementById("krAddSum").textContent = (a > 0 && p > 0) ? ("Summa: " + krSon(a * p) + " so'm") : "";
+    }
+    document.getElementById("krAmount").addEventListener("input", krHisob);
+    document.getElementById("krPrice").addEventListener("input", krHisob);
+    document.getElementById("krAddBtn").addEventListener("click", function () {
+      if (!krProd) return;
+      var a = parseFloat(String(document.getElementById("krAmount").value).replace(",", ".")) || 0;
+      var p = parseFloat(String(document.getElementById("krPrice").value).replace(",", ".")) || 0;
+      if (!(a > 0)) { window.alert("Soni kiritilmagan"); return; }
+      if (!(p > 0)) { window.alert("Narxi kiritilmagan"); return; }
+      krCart.push({ i: krProd.i, name: krProd.n, amount: a, price: p });
+      krProd = null;
+      document.getElementById("krAdd").style.display = "none";
+      krYangila();
+    });
+    document.getElementById("krSend").addEventListener("click", krYubor);
+    document.addEventListener("click", function (e) {
+      if (!e.target.closest(".kr-row")) krDropYop();
+    });
+  })();
+
   var tabStoreBtn = document.getElementById("tabStoreBtn");
   tabStoreBtn.addEventListener("click", function () {
     setMode("store");
