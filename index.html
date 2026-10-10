@@ -2269,7 +2269,10 @@
       lockScreen.style.display = "none";
       lockError.textContent = "";
       applyDefaultDayOffset();
-      pendingDayAsk = DAY_ASK_LOGINS.indexOf(login) !== -1;
+      // 2026-10-10 (egasi): savol HAMMA loginlardan so'raladi. Sabab —
+      // ertangi kunga yozilgan zayavka "Tayyor" tugmasi ertaga bosiladi,
+      // bugungisi esa bugun; shuning uchun sana aniq tanlanishi shart.
+      pendingDayAsk = !isBozorOnly();
       document.getElementById("tabChangesBtn").style.display = "none";
       document.getElementById("tabTgBtn").style.display = "none";
       loadChangeNotices(login);
@@ -2607,6 +2610,8 @@
   // degan savol ALOHIDA oynada chiqadi -- tepadagi Bugun/Ertaga tugmasini
   // e'tibordan chetda qoldirib yuborish holatlari bo'lgani uchun. Ro'yxatga
   // Мангал omborlari kiritilgan; yaxshi ishlasa qolganlarga ham yoyiladi.
+  // 2026-10-10 dan boshlab bu ro'yxat ISHLATILMAYDI — savol hamma logindan
+  // so'raladi. Tarix uchun qoldirildi (avval faqat shular so'ralardi).
   var DAY_ASK_LOGINS = ["Hosil", "Anvar", "Azizbek", "Nodirbek", "Nodir"];
   var dayOverlay = document.getElementById("dayOverlay");
   var pendingDayAsk = false;
@@ -3744,7 +3749,12 @@
     if (e.key === "Escape") setNav(false);
   });
 
-  tabZayavkaBtn.addEventListener("click", function () { setMode("zayavka"); });
+  tabZayavkaBtn.addEventListener("click", function () {
+    setMode("zayavka");
+    // Bo'limga har kirganda sana qaytadan so'raladi — oshpaz avvalgi
+    // tanlovini esidan chiqarib, noto'g'ri kunga yozib yubormasligi uchun.
+    if (siteAuth.login && !isBozorOnly()) openDayAsk();
+  });
   // ---- KIRIM: ta'minotchidan tovar (2026-10-09, faqat admin) -------------
   var krMeta = null, krSup = null, krStore = null, krProd = null;
   var krCart = [];
