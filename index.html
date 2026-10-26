@@ -2209,11 +2209,40 @@
       }
       lockSubmitBtn.disabled = false;
       lockError.textContent = "";
+      tgAvtoKirish();
     })
     .catch(function () {
       lockSubmitBtn.disabled = false;
       lockError.textContent = "";
+      tgAvtoKirish();
     });
+
+  // Telegram Mini App ichida parol so'ralmaydi: `initData` ni Worker bot
+  // tokeni bilan tekshiradi va loginni o'zi aytadi. Brauzerda bu funksiya
+  // darhol qaytib ketadi -- oddiy parol ekrani qoladi.
+  function tgAvtoKirish() {
+    var tg = window.Telegram && window.Telegram.WebApp;
+    if (!tg || !tg.initData) return;
+    lockError.textContent = "Telegram orqali kirilmoqda...";
+    fetch(SEND_ENDPOINT + "/miniapp/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ initData: tg.initData })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d || !d.ok) {
+          lockError.textContent = (d && d.error) ? d.error : "Telegram orqali kirib bo'lmadi";
+          return;
+        }
+        document.getElementById("lockLogin").value = d.login;
+        document.getElementById("lockPass").value = d.pass;
+        lockError.textContent = "";
+        if (lockForm.requestSubmit) lockForm.requestSubmit();
+        else lockForm.dispatchEvent(new Event("submit", { cancelable: true }));
+      })
+      .catch(function () { lockError.textContent = ""; });
+  }
 
   // 2026-09-27: chap panel pastida kim kirgani ko'rinadi (haqiqiy dastur kabi).
   function fillSidebarUser(login, role) {
