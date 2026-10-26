@@ -2239,23 +2239,29 @@
   var cartDestSelect = document.getElementById("cartDestSelect");
   var productSourceMap = {}; // GET /admin/map orqali yuklanadi -- faqat "❓" belgisi uchun
 
-  lockSubmitBtn.disabled = true;
-  lockError.textContent = "Yuklanmoqda...";
-  fetch(SEND_ENDPOINT + "/admin/roles")
-    .then(function (r) { return r.json(); })
-    .then(function (data) {
-      if (data.ok && data.roles) {
-        Object.keys(data.roles).forEach(function (login) { ROLES[login] = data.roles[login]; });
-      }
-      lockSubmitBtn.disabled = false;
-      lockError.textContent = "";
-      tgAvtoKirish();
+  // B2 (2026-10-26): BOSHQA odamlarning parollari endi brauzerga umuman
+  // yuklanmaydi. Oldin /admin/roles barcha loginni paroli bilan berardi va
+  // solishtirish brauzerda bo'lardi -- ya'ni parollar hammaga ochiq edi.
+  // Endi parolni /site/login SERVERDA tekshiradi.
+  lockSubmitBtn.disabled = false;
+  lockError.textContent = "";
+  tgAvtoKirish();
+
+  function siteLoginTekshir(login, pass, keyin) {
+    fetch(SEND_ENDPOINT + "/site/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ login: login, pass: pass })
     })
-    .catch(function () {
-      lockSubmitBtn.disabled = false;
-      lockError.textContent = "";
-      tgAvtoKirish();
-    });
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d || !d.ok || !d.role) { keyin(null); return; }
+        var rol = d.role;
+        rol.pass = pass;   // faqat O'ZINING paroli -- keyingi so'rovlar uchun kerak
+        keyin(rol);
+      })
+      .catch(function () { keyin(null); });
+  }
 
   // Telegram Mini App ichida parol so'ralmaydi: `initData` ni Worker bot
   // tokeni bilan tekshiradi va loginni o'zi aytadi. Brauzerda bu funksiya
@@ -2360,8 +2366,12 @@
     e.preventDefault();
     var login = document.getElementById("lockLogin").value.trim();
     var pass = document.getElementById("lockPass").value.trim();
-    var role = ROLES[login];
-    if (role && role.pass === pass) {
+    lockSubmitBtn.disabled = true;
+    lockError.textContent = "Tekshirilmoqda...";
+    siteLoginTekshir(login, pass, function (role) {
+      lockSubmitBtn.disabled = false;
+      if (!role) { lockError.textContent = "Login yoki parol noto'g'ri"; return; }
+      ROLES[login] = role;
       siteAuth.login = login;
       siteAuth.pass = pass;
       lockScreen.style.display = "none";
@@ -2412,9 +2422,7 @@
         .then(function (r) { return r.json(); })
         .then(function (data) { if (data.ok) productSourceMap = data.map || {}; })
         .catch(function () {});
-    } else {
-      lockError.textContent = "Login yoki parol noto'g'ri";
-    }
+    });
   });
 
   var RAW_NAMES = JSON.parse(document.getElementById("catalog-data").textContent);
@@ -4750,7 +4758,11 @@
   function lgLoad() {
     if (lgLoaded) return;
     lgSetStatus("Yuklanmoqda...");
-    fetch(SEND_ENDPOINT + "/admin/roles")
+    fetch(SEND_ENDPOINT + "/admin/roles-full", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ login: siteAuth.login, pass: siteAuth.pass })
+    })
       .then(function (r) { return r.json(); })
       .then(function (data) {
         if (!data.ok) { lgSetStatus("Xato: " + (data.error || "noma'lum"), true); return; }

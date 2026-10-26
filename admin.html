@@ -1991,7 +1991,11 @@
     adminPass = pass;
     Promise.all([
       fetch(API_BASE + "/admin/map").then(function (r) { return r.json(); }),
-      fetch(API_BASE + "/admin/roles").then(function (r) { return r.json(); }),
+      fetch(API_BASE + "/admin/roles-full", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: adminPass })
+      }).then(function (r) { return r.json(); }),
     ])
       .then(function (results) {
         var mapData = results[0];
