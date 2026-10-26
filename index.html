@@ -1005,6 +1005,30 @@
   body.mode-inventory #inventorySection { display: block; }
   body.mode-store #storeSection { display: block; }
   body.mode-kirim #kirimSection { display: block; }
+  /* ---- 2026-10-26: Ko'chirish (Перемещение) ---- */
+  body.mode-kochirish .col-left,
+  body.mode-kochirish .cart { display: none !important; }
+  #kochirishSection { display: none; flex-grow: 1; min-width: 0; }
+  body.mode-kochirish #kochirishSection { display: block; }
+  .kc-from { font-size: 15px; font-weight: 700; }
+  .kc-sel, .kc-find {
+    width: 100%; min-height: 48px; padding: 0 13px; border: 1.5px solid var(--border);
+    border-radius: 11px; background: var(--surface); color: var(--text);
+    font-size: 15px; font-family: inherit;
+  }
+  .kc-find { font-size: 16px; margin-bottom: 4px; }
+  .kc-list { max-height: 46vh; overflow-y: auto; }
+  .kc-row { display: flex; align-items: center; gap: 10px; padding: 9px 2px; border-bottom: 1px solid var(--border); }
+  .kc-nom { flex: 1; min-width: 0; font-size: 14.5px; overflow-wrap: anywhere; }
+  .kc-qol { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+  .kc-inp {
+    width: 86px; min-height: 42px; text-align: center; border: 1.5px solid var(--border);
+    border-radius: 10px; background: var(--surface); color: var(--text);
+    font-size: 15px; font-family: inherit;
+  }
+  .kc-inp.on { border-color: var(--accent); font-weight: 700; }
+  .kc-sum { font-size: 13.5px; color: var(--text-muted); margin-top: 12px; }
+  .kc-msg { margin-top: 12px; font-size: 14px; }
   /* ---- Kirim: ta'minotchidan tovar (2026-10-09) ---- */
   .kr-row { position: relative; margin-bottom: 16px; }
   .kr-lab { display: block; font-size: 11.5px; font-weight: 700; letter-spacing: .06em;
@@ -1692,6 +1716,10 @@
         <svg class="sb-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-6 9 6v11a1 1 0 01-1 1H4a1 1 0 01-1-1z"></path><path d="M3 9h18"></path><path d="M9 21v-7h6v7"></path></svg>
         <span>Ombor</span>
       </button>
+      <button class="sb-item" id="tabKochirishBtn" type="button" style="display:none">
+        <svg class="sb-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13"></path><path d="M14 5l3 3-3 3"></path><path d="M20 16H7"></path><path d="M10 13l-3 3 3 3"></path></svg>
+        <span>Ko'chirish</span>
+      </button>
       <button class="sb-item" id="tabInventoryBtn" type="button">
         <svg class="sb-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="6" rx="1"></rect><path d="M5 10v9a1 1 0 001 1h12a1 1 0 001-1v-9"></path><path d="M10 14h4"></path></svg>
         <span>Inventarizatsiya</span>
@@ -1808,6 +1836,18 @@
         </div>
       </aside>
 
+      <section id="kochirishSection">
+        <div class="sp-title">Qayerdan</div>
+        <div class="kc-from" id="kcFrom">—</div>
+        <div class="sp-title">Qayerga</div>
+        <select class="kc-sel" id="kcTo"></select>
+        <div class="sp-title">Tovarlar</div>
+        <input class="kc-find" id="kcFind" type="text" placeholder="Tovar nomini yozing..." autocomplete="off">
+        <div class="kc-list" id="kcList"></div>
+        <div class="kc-sum" id="kcSum"></div>
+        <button class="sp-send" id="kcSend" type="button">Ko'chirishni yuborish</button>
+        <div class="kc-msg" id="kcMsg"></div>
+      </section>
       <section id="inventorySection">
         <p class="inv-sub">Har mahsulot yoniga omborda hozir haqiqatda bor miqdorni yozing. Bo'sh qoldirilgan bandlar yuborilmaydi.</p>
         <div class="inv-filter-row">
@@ -2343,6 +2383,7 @@
       document.getElementById("tabZayavkaBtn").style.display = faqatBozor ? "none" : "";
       document.getElementById("tabInventoryBtn").style.display = (!faqatBozor && hasInventoryAccess()) ? "" : "none";
       document.getElementById("tabStoreBtn").style.display = (!faqatBozor && hasStoreAccess()) ? "" : "none";
+      document.getElementById("tabKochirishBtn").style.display = (!faqatBozor && hasStoreAccess()) ? "" : "none";
       storeItems = [];
       document.getElementById("tabAdminListBtn").style.display = hasAdminAccess() ? "" : "none";
       document.getElementById("tabKirimBtn").style.display = hasAdminAccess() ? "" : "none";
@@ -3636,6 +3677,7 @@
     logins: ["Admin · Loginlar", "Xodim loginlarini boshqarish"],
     bozor: ["Garden · Bozor", "Bozordan olinadigan mahsulotlar"],
     spis: ["Garden · Spisaniya", "Mahsulotni spisaniya qilish"],
+    kochirish: ["Garden · Ko'chirish", "Omborlar orasida tovar berish"],
     store: ["Garden · Ombor qoldig'i", "Omboringizda hozir nima bor"],
     kirim: ["Admin · Kirim", "Ta'minotchidan tovar kiritish"],
     feedback: ["Zagotovka · Taklif va shikoyat", "Fikringizni yozing"],
@@ -3655,6 +3697,9 @@
     document.body.classList.toggle("mode-spis", mode === "spis");
     document.body.classList.toggle("mode-store", mode === "store");
     document.body.classList.toggle("mode-kirim", mode === "kirim");
+    document.body.classList.toggle("mode-kochirish", mode === "kochirish");
+    var kcBtn = document.getElementById("tabKochirishBtn");
+    if (kcBtn) kcBtn.classList.toggle("active", mode === "kochirish");
     var krBtn = document.getElementById("tabKirimBtn");
     if (krBtn) krBtn.classList.toggle("active", mode === "kirim");
     tabZayavkaBtn.classList.toggle("active", mode === "zayavka");
@@ -4030,6 +4075,106 @@
     renderStore();
     document.getElementById("storeFilter").focus();
   });
+
+  // ===== Ko'chirish (Перемещение) =====
+  // Hujjat PROCESSED bo'lib yaratiladi -- qoldiq DARHOL o'zgaradi.
+  var kcData = null, kcQty = {}, kcYub = false;
+  function kcEl(id) { return document.getElementById(id); }
+  function kcRender() {
+    var q = (kcEl("kcFind").value || "").trim().toLowerCase();
+    var list = (kcData && kcData.tovarlar) || [];
+    var mos = list.filter(function (t) {
+      if (kcQty[t.name] > 0) return true;
+      return !q || t.name.toLowerCase().indexOf(q) !== -1;
+    });
+    mos.sort(function (a, b) {
+      var x = (kcQty[b.name] > 0 ? 1 : 0) - (kcQty[a.name] > 0 ? 1 : 0);
+      return x || a.name.localeCompare(b.name, "ru");
+    });
+    var box = kcEl("kcList");
+    box.innerHTML = "";
+    mos.slice(0, 120).forEach(function (t) {
+      var row = document.createElement("div"); row.className = "kc-row";
+      var nom = document.createElement("div"); nom.className = "kc-nom"; nom.textContent = t.name;
+      var qol = document.createElement("div"); qol.className = "kc-qol"; qol.textContent = t.qoldiq;
+      var inp = document.createElement("input");
+      inp.className = "kc-inp" + (kcQty[t.name] > 0 ? " on" : "");
+      inp.type = "text"; inp.inputMode = "decimal";
+      inp.value = kcQty[t.name] ? String(kcQty[t.name]) : "";
+      inp.addEventListener("input", function () {
+        var v = parseFloat(String(inp.value).replace(",", ".")) || 0;
+        if (v > 0) { kcQty[t.name] = v; inp.classList.add("on"); }
+        else { delete kcQty[t.name]; inp.classList.remove("on"); }
+        kcSum();
+      });
+      row.appendChild(nom); row.appendChild(qol); row.appendChild(inp);
+      box.appendChild(row);
+    });
+    kcSum();
+  }
+  function kcSum() {
+    var n = Object.keys(kcQty).length;
+    kcEl("kcSum").textContent = n ? (n + " ta tovar tanlandi") : "Tovar tanlanmagan";
+    kcEl("kcSend").disabled = !n || kcYub;
+  }
+  function kcYukla() {
+    kcEl("kcMsg").textContent = "";
+    kcEl("kcFrom").textContent = "Yuklanmoqda...";
+    fetch(SEND_ENDPOINT + "/transfer/init", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ login: siteAuth.login, pass: siteAuth.pass })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d || !d.ok) { kcEl("kcFrom").textContent = (d && d.error) || "Xato"; return; }
+        kcData = d; kcQty = {};
+        kcEl("kcFrom").textContent = d.ozi.name;
+        var sel = kcEl("kcTo");
+        sel.innerHTML = "";
+        var bosh = document.createElement("option");
+        bosh.value = ""; bosh.textContent = "— omborni tanlang —";
+        sel.appendChild(bosh);
+        d.omborlar.forEach(function (o) {
+          var op = document.createElement("option");
+          op.value = o.id; op.textContent = o.name; sel.appendChild(op);
+        });
+        kcEl("kcFind").value = "";
+        kcRender();
+      })
+      .catch(function () { kcEl("kcFrom").textContent = "Aloqa yo'q"; });
+  }
+  function kcYubor() {
+    if (kcYub) return;
+    var to = kcEl("kcTo").value;
+    if (!to) { kcEl("kcMsg").textContent = "Qaysi omborga ko'chirilayotganini tanlang"; return; }
+    var items = Object.keys(kcQty).map(function (n) { return { name: n, qty: kcQty[n] }; });
+    if (!items.length) { kcEl("kcMsg").textContent = "Tovar tanlanmagan"; return; }
+    var nomi = kcEl("kcTo").options[kcEl("kcTo").selectedIndex].textContent;
+    if (!window.confirm(nomi + " omboriga " + items.length + " ta tovar ko'chiriladi.\n\nQoldiq DARHOL o'zgaradi. Davom etamizmi?")) return;
+    kcYub = true; kcSum();
+    kcEl("kcMsg").textContent = "Yuborilmoqda...";
+    fetch(SEND_ENDPOINT + "/transfer/submit", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ login: siteAuth.login, pass: siteAuth.pass, toStoreId: to, items: items })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        kcYub = false;
+        if (!d || !d.ok) { kcEl("kcMsg").textContent = (d && d.error) || "Xato"; kcSum(); return; }
+        kcEl("kcMsg").textContent = "✅ Ko'chirildi — №" + (d.documentNumber || "?") + " (" + d.count + " ta tovar)";
+        kcQty = {};
+        kcYukla();
+      })
+      .catch(function () { kcYub = false; kcEl("kcMsg").textContent = "Aloqa yo'q"; kcSum(); });
+  }
+  (function () {
+    var b = document.getElementById("tabKochirishBtn");
+    if (b) b.addEventListener("click", function () { setMode("kochirish"); kcYukla(); });
+    var f = document.getElementById("kcFind");
+    if (f) f.addEventListener("input", kcRender);
+    var s2 = document.getElementById("kcSend");
+    if (s2) s2.addEventListener("click", kcYubor);
+  })();
 
   tabInventoryBtn.addEventListener("click", function () {
     setMode("inventory");
