@@ -2401,7 +2401,9 @@
       document.getElementById("tabInboxBtn").style.display = hasAdminAccess() ? "" : "none";
       // 2026-09-28: adminda "Taklif" (yozish) KERAK EMAS -- u xabarlarni
       // qabul qiluvchi tomon. Ikkita o'xshash nom chalkashtirardi.
-      document.getElementById("tabFeedbackBtn").style.display = (hasAdminAccess() || faqatBozor) ? "none" : "";
+      // 2026-10-27: egasi "Taklif" va "Javoblar" bo'limlari kerak emas dedi.
+      // Kod joyida turibdi -- qaytarish kerak bo'lsa shu ikki qator yetarli.
+      document.getElementById("tabFeedbackBtn").style.display = "none";
       document.getElementById("tabBozorBtn").style.display = hasBozorAccess() ? "" : "none";
       // Spisaniya -- Garden loginlari (bozorchidan tashqari: u faqat Bozor ko'radi)
       document.getElementById("tabSpisBtn").style.display = (hasBozorAccess() && !faqatBozor) ? "" : "none";
@@ -2835,7 +2837,7 @@
         document.getElementById("chgTgBtn").style.display = ulanmagan ? "" : "none";
         chgAll = d.items;
         if (!chgAll.length) return;
-        document.getElementById("tabChangesBtn").style.display = "";
+        document.getElementById("tabChangesBtn").style.display = "none"; // o'chirilgan (2026-10-27)
         var yangi = chgAll.filter(function (x) { return (x.ts || 0) > (d.seenAt || 0); });
         if (!yangi.length) return;
         chgRender(yangi);
