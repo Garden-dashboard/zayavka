@@ -2382,7 +2382,10 @@
       // bugungisi esa bugun; shuning uchun sana aniq tanlanishi shart.
       pendingDayAsk = !isBozorOnly();
       document.getElementById("tabChangesBtn").style.display = "none";
-      document.getElementById("tabTgBtn").style.display = "none";
+      // "Telefonga ogohlantirish" ulangan-ulanmaganidan qat'i nazar turadi:
+      // xodim telefonini almashtirsa yoki boshqa login ostida ulangan bo'lsa
+      // ham qayta ulay olishi kerak (egasi, 2026-10-28).
+      document.getElementById("tabTgBtn").style.display = "";
       loadChangeNotices(login);
       populateDestOptions();
       prefillChecklist(cartDestSelect.value);
@@ -2759,7 +2762,9 @@
   var chgOverlay = document.getElementById("chgOverlay");
   var chgSeenLogin = null;
   var chgAll = [];
-  var chgBot = "";
+  // 2026-10-28 (egasi): tugma HAR DOIM ko'rinsin. Boshlang'ich qiymat
+  // berildi -- /changes javobi kechiksa ham tugma ishlayveradi.
+  var chgBot = "zayavka0038_bot";
 
   // Telegram botga ulanish: telefon qulflangan bo'lsa ham xabar keladi.
   // Havola bosilgach odam faqat "Start" ni bosadi, login avtomatik ulanadi.
@@ -2833,7 +2838,7 @@
         if (!d || !d.ok || !d.items) return;
         chgBot = d.bot || "";
         var ulanmagan = chgBot && d.tgLinked === false;
-        document.getElementById("tabTgBtn").style.display = ulanmagan ? "" : "none";
+        document.getElementById("tabTgBtn").style.display = "";
         document.getElementById("chgTgBtn").style.display = ulanmagan ? "" : "none";
         chgAll = d.items;
         if (!chgAll.length) return;
