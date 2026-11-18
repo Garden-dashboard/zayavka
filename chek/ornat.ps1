@@ -63,8 +63,15 @@ try {
       try { Stop-Process -Id $_.ProcessId -Force -ErrorAction Stop } catch { }
     }
 } catch { }
+# Faqat BIZNING ishga tushirgichlarimiz. Monoblokda boshqa vbs vazifalar
+# bo'lishi mumkin -- ularga tegmaymiz.
 try {
-  Get-Process wscript -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+  Get-WmiObject Win32_Process -Filter "Name='wscript.exe'" |
+    Where-Object { $_.CommandLine -like '*chek*' } |
+    ForEach-Object {
+      $topildi++
+      try { Stop-Process -Id $_.ProcessId -Force -ErrorAction Stop } catch { }
+    }
 } catch { }
 if ($topildi -gt 0) { Yaxshi ("$topildi ta eski nusxa to'xtatildi") } else { Yaxshi "eski nusxa topilmadi" }
 
