@@ -40,6 +40,9 @@ $INTERVAL = 0.3
 # Bulut liniyani 12 soniyagacha ushlaydi, zahira bilan 30 soniya qo'yamiz.
 $TIMEOUT  = 30
 $LOG      = Join-Path $PSScriptRoot "chek_log.txt"
+# Ekrandagi kichik ko'rsatkich (chek_ekran.ps1) shu fayldan o'qiydi.
+# Har aylanishda yangilanadi -- fayl eskirib qolsa, demak agent to'xtagan.
+$HOLAT_FAYL = Join-Path $PSScriptRoot "chek_holat.txt"
 $KENGLIK  = 48   # oddiy shriftda 80 mm = 48 belgi
 $KENG_KATTA = 24 # ikki barobar kengaytirilgan shriftda = 24 belgi
 # Printer nomi berilmasa birinchi navbatda shu qidiriladi.
@@ -283,9 +286,32 @@ if ($PRINTER -match $LAZERNIK) {
   Yoz "!!! shunday ishga tushiring:  -PrinterName `"$KUTILGAN_PRINTER`""
 }
 
+$bugungiSana = (Get-Date).ToString("yyyy-MM-dd")
+$bugungiSon  = 0
+$oxirgiChek  = ""
+
+# Ekrandagi ko'rsatkich uchun holat. Har aylanishda yoziladi -- fayl
+# yangilanmay qolsa ko'rsatkich "ISHLAMAYAPTI" deb qizarib qoladi.
+function HolatYoz($holat) {
+  try {
+    $s = ("vaqt=" + [DateTimeOffset]::Now.ToUnixTimeMilliseconds()),
+         ("printer=" + $PRINTER),
+         ("holat=" + $holat),
+         ("bugun=" + $bugungiSon),
+         ("oxirgi=" + $oxirgiChek)
+    Set-Content -Path $HOLAT_FAYL -Value ($s -join "`r`n") -Encoding UTF8
+  } catch { }
+}
+
+HolatYoz "ishga tushdi"
+
 $bajarildi = @()
 $oxirgiTirik = Get-Date
 while ($true) {
+  # Kun almashsa bugungi hisob noldan boshlanadi
+  $hozirSana = (Get-Date).ToString("yyyy-MM-dd")
+  if ($hozirSana -ne $bugungiSana) { $bugungiSana = $hozirSana; $bugungiSon = 0 }
+  $holatMatni = "ishlayapti"
   try {
     # `wait` -- bulut chekni 12 soniyagacha kutib tursin (ochiq liniya).
     $sorov = @{ key = $Key; wait = $true }
@@ -302,12 +328,14 @@ while ($true) {
 
     if (-not $javob.ok) {
       Yoz ("XATO (bulut): " + [string]$javob.error)
+      $holatMatni = "bulut rad etdi"
     } elseif ($javob.jobs) {
       foreach ($ish in $javob.jobs) {
         # 1) Printer chekni qabul qila oladimi
         $muammo = PrinterMuammo $PRINTER
         if ($muammo -ne "") {
           Yoz ("CHEK KUTYAPTI -- " + $muammo + "  (" + [string]$ish.source + " -> " + [string]$ish.dest + ")")
+          $holatMatni = $muammo
           break    # chek navbatda qoladi, printer tuzalganda chiqadi
         }
         # 2) Yuborish
@@ -316,15 +344,19 @@ while ($true) {
         $xato = [RawPrint]::Send($PRINTER, $data)
         if ($xato -ne "") {
           Yoz ("XATO (printer): " + $xato)
+          $holatMatni = "printer xatosi"
           break
         }
         # 3) Rostdan chiqdimi -- spooler navbatini kuzatamiz
         $qoldi = SpoolMuammo $PRINTER 8
         if ($qoldi -ne "") {
           Yoz ("CHEK CHIQMADI -- " + $qoldi + "  (navbatda qoldi, qayta urinamiz)")
+          $holatMatni = "chek spoolerda qoldi"
           break
         }
         $bajarildi += $ish.id
+        $bugungiSon++
+        $oxirgiChek = (Get-Date -Format "HH:mm") + " " + [string]$ish.source
         Yoz ("CHEK CHIQDI  {0} -> {1}  ({2} band)" -f $ish.source, $ish.dest, @($ish.items).Count)
       }
     }
@@ -336,7 +368,9 @@ while ($true) {
     }
   } catch {
     Yoz ("XATO (internet): " + $_.Exception.Message)
+    $holatMatni = "internet yo'q"
     Start-Sleep -Seconds 3
   }
+  HolatYoz $holatMatni
   Start-Sleep -Seconds $INTERVAL
 }
