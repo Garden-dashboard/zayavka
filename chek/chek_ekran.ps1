@@ -1,6 +1,6 @@
 # ============================================================
 #  OLIMP ZAGOTOVKA - CHEK AGENTI KO'RSATKICHI
-#  Monoblok ekranining burchagida turadigan kichik oyna. Chek agenti
+#  Monoblok ekranining burchagida turadigan kichik belgi. Chek agenti
 #  ishlayotganini bir qarashda ko'rsatadi -- hech qayerga kirish,
 #  hech narsa ochish shart emas.
 #
@@ -10,14 +10,22 @@
 #  yozuvda". Sabab: agent bir marta jimgina to'xtab qolgan va buni hech
 #  kim bilmagan -- cheklar navbatda to'planib qolavergan.
 #
+#  2026-11-18 (ikkinchi so'rov): "bu juda katta ku, ekranni ko'rsatmay
+#  qo'yadi". Shuning uchun IKKI O'LCHAM qilindi:
+#    - hammasi joyida bo'lsa  -> kichkina belgi, yarim shaffof, xalaqit
+#      bermaydi (ustiga sichqoncha olib borilsa tafsiloti chiqadi);
+#    - muammo bo'lsa          -> o'zi kattalashadi, to'liq ko'rinadi va
+#      sababini yozadi. Ya'ni ko'zga faqat KERAK bo'lganda tashlanadi.
+#
 #  QANDAY BILADI: agent har aylanishda `chek_holat.txt` faylini
 #  yangilab turadi. Ko'rsatkich har 2 soniyada shu faylga qaraydi:
-#    - fayl yangi (45 soniyadan yosh) + holat yaxshi -> KO'K "ishlayapti"
+#    - fayl yangi (45 soniyadan yosh) + holat yaxshi -> KO'K
 #    - fayl yangi, lekin printerda muammo bor        -> SARIQ, sababi
-#    - fayl eskirgan yoki yo'q                       -> QIZIL "ishlamayapti"
+#    - fayl eskirgan yoki yo'q                       -> QIZIL
 #  Ya'ni "jarayon bormi" emas, "agent ROSTDAN aylanayaptimi" tekshiriladi.
+#  (Agent bir marta MUZLAB qolgan edi: jarayon tirik, lekin ishlamaydi.)
 #
-#  Oynani sichqoncha bilan tutib ko'chirish mumkin -- joyi eslab qolinadi.
+#  Belgini sichqoncha bilan tutib ko'chirish mumkin -- joyi eslab qolinadi.
 #  -Soniya <n>  : sinov uchun, n soniyadan keyin o'zi yopiladi.
 # ============================================================
 param(
@@ -44,10 +52,9 @@ $form.FormBorderStyle = 'None'
 $form.TopMost         = $true
 $form.ShowInTaskbar   = $false
 $form.BackColor       = [System.Drawing.Color]::White
-$form.Size            = New-Object System.Drawing.Size(272, 62)
 $form.StartPosition   = 'Manual'
+$form.Size            = New-Object System.Drawing.Size(104, 24)
 
-# Ingichka kulrang chegara -- oq fonda ham, rasm ustida ham ko'rinsin
 $form.Add_Paint({
   param($s, $e)
   $qalam = New-Object System.Drawing.Pen ([System.Drawing.Color]::FromArgb(200, 200, 200)), 1
@@ -56,21 +63,51 @@ $form.Add_Paint({
 })
 
 $asosiy = New-Object System.Windows.Forms.Label
-$asosiy.Font      = New-Object System.Drawing.Font("Segoe UI", 11, [System.Drawing.FontStyle]::Bold)
-$asosiy.Location  = New-Object System.Drawing.Point(13, 9)
-$asosiy.Size      = New-Object System.Drawing.Size(246, 22)
 $asosiy.ForeColor = $KULRANG
-$asosiy.Text      = "$NUQTA Tekshirilmoqda..."
 $form.Controls.Add($asosiy)
 
 $past = New-Object System.Windows.Forms.Label
-$past.Font      = New-Object System.Drawing.Font("Segoe UI", 8)
-$past.Location  = New-Object System.Drawing.Point(14, 33)
-$past.Size      = New-Object System.Drawing.Size(246, 18)
 $past.ForeColor = $KULRANG
+$past.Visible   = $false
 $form.Controls.Add($past)
 
-# --- Joyi: avval eslab qolingan joy, bo'lmasa o'ng pastki burchak ---
+$maslahat = New-Object System.Windows.Forms.ToolTip
+$maslahat.InitialDelay = 200
+
+# --- Ikki o'lcham. O'ng pastki burchak qimirlamasin: oyna kattalashganda
+#     chapga va yuqoriga o'sadi, shuning uchun eski chekka saqlanadi. ---
+$script:rejim = ""
+function Olcham($katta) {
+  if ($script:rejim -eq $katta) { return }
+  $script:rejim = $katta
+  $ong = $form.Left + $form.Width
+  $tag = $form.Top + $form.Height
+  if ($katta -eq "katta") {
+    $form.Size        = New-Object System.Drawing.Size(272, 56)
+    $form.Opacity     = 1.0
+    $asosiy.Font      = New-Object System.Drawing.Font("Segoe UI", 10.5, [System.Drawing.FontStyle]::Bold)
+    $asosiy.Location  = New-Object System.Drawing.Point(12, 7)
+    $asosiy.Size      = New-Object System.Drawing.Size(248, 21)
+    $past.Font        = New-Object System.Drawing.Font("Segoe UI", 8)
+    $past.Location    = New-Object System.Drawing.Point(13, 30)
+    $past.Size        = New-Object System.Drawing.Size(248, 18)
+    $past.Visible     = $true
+  } else {
+    $form.Size        = New-Object System.Drawing.Size(104, 24)
+    $form.Opacity     = 0.78
+    $asosiy.Font      = New-Object System.Drawing.Font("Segoe UI", 8.5, [System.Drawing.FontStyle]::Bold)
+    $asosiy.Location  = New-Object System.Drawing.Point(8, 4)
+    $asosiy.Size      = New-Object System.Drawing.Size(92, 16)
+    $past.Visible     = $false
+  }
+  # Ekrandan chiqib ketmasin
+  $ish = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
+  $x = [Math]::Max($ish.Left, [Math]::Min($ong - $form.Width, $ish.Right - $form.Width))
+  $y = [Math]::Max($ish.Top, [Math]::Min($tag - $form.Height, $ish.Bottom - $form.Height))
+  $form.Location = New-Object System.Drawing.Point([int]$x, [int]$y)
+}
+
+# --- Boshlang'ich joy: eslab qolingan joy, bo'lmasa o'ng pastki burchak ---
 $ish = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
 $x = $ish.Right - $form.Width - 14
 $y = $ish.Bottom - $form.Height - 14
@@ -79,15 +116,14 @@ try {
     $b = (Get-Content $JOY -ErrorAction Stop) -split ','
     if ($b.Count -eq 2) {
       $bx = [int]$b[0]; $by = [int]$b[1]
-      # Ekrandan tashqarida qolib ketmasin (monitor almashtirilgan bo'lsa)
       if ($bx -ge $ish.Left -and $by -ge $ish.Top -and
-          $bx -le ($ish.Right - 40) -and $by -le ($ish.Bottom - 30)) { $x = $bx; $y = $by }
+          $bx -le ($ish.Right - 40) -and $by -le ($ish.Bottom - 20)) { $x = $bx; $y = $by }
     }
   }
 } catch { }
 $form.Location = New-Object System.Drawing.Point($x, $y)
+Olcham "kichik"
 
-# --- Holat faylini o'qish ---
 function HolatOqi {
   $n = @{ vaqt = "0"; printer = ""; holat = ""; bugun = "0"; oxirgi = "" }
   try {
@@ -110,6 +146,8 @@ $yangila = {
   } catch { }
 
   if ($yosh -gt $ESKIRISH) {
+    # MUAMMO -- kattalashadi, ko'zga tashlanadi
+    Olcham "katta"
     $asosiy.ForeColor = $QIZIL
     $asosiy.Text      = "$NUQTA Chek printeri ISHLAMAYAPTI"
     $past.ForeColor   = $QIZIL
@@ -120,18 +158,25 @@ $yangila = {
     } else {
       $past.Text = "agent hali ishga tushmagan"
     }
+    $maslahat.SetToolTip($asosiy, $past.Text)
   } elseif ($h.holat -ne "ishlayapti" -and $h.holat -ne "ishga tushdi") {
+    Olcham "katta"
     $asosiy.ForeColor = $SARIQ
     $asosiy.Text      = "$NUQTA Chek printeri -- e'tibor bering"
     $past.ForeColor   = $SARIQ
     $past.Text        = [string]$h.holat
+    $maslahat.SetToolTip($asosiy, $past.Text)
   } else {
+    # HAMMASI JOYIDA -- kichkina belgi, xalaqit bermaydi
+    Olcham "kichik"
     $asosiy.ForeColor = $KOK
-    $asosiy.Text      = "$NUQTA Chek printeri ishlayapti"
-    $past.ForeColor   = $KULRANG
-    $t = "bugun " + $h.bugun + " ta chek"
-    if ($h.oxirgi -ne "") { $t = $t + "   oxirgi " + $h.oxirgi }
-    $past.Text = $t
+    $asosiy.Text      = "$NUQTA chek"
+    $t = "Chek printeri ishlayapti" + [Environment]::NewLine +
+         "printer: " + $h.printer + [Environment]::NewLine +
+         "bugun " + $h.bugun + " ta chek"
+    if ($h.oxirgi -ne "") { $t = $t + [Environment]::NewLine + "oxirgi: " + $h.oxirgi }
+    $maslahat.SetToolTip($asosiy, $t)
+    $maslahat.SetToolTip($form, $t)
   }
 }
 
