@@ -28,12 +28,15 @@
 # ============================================================
 param(
   [Parameter(Mandatory = $true)][string]$Key,
-  [string]$PrinterName = "XP-Q80A"
+  [string]$PrinterName = "XP-Q80A",
+  # Berilsa -- monoblok yordamchisi ham o'rnatiladi (bulutdan topshiriq
+  # olib bajaradigan dastur). Berilmasa o'rnatilmaydi.
+  [string]$YordamchiKey = ""
 )
 
 $BAZA = "https://zagotovka.olimpgarden.uz/chek"
 $AVTO = [Environment]::GetFolderPath('Startup')
-$BIZNIKI = @("OlimpChekAgent.vbs", "OlimpChekEkran.vbs")
+$BIZNIKI = @("OlimpChekAgent.vbs", "OlimpChekEkran.vbs", "OlimpYordamchi.vbs")
 
 function Qadam($n, $matn) { Write-Host ("[" + $n + "/5] " + $matn) -ForegroundColor Cyan }
 function Yaxshi($matn)    { Write-Host ("      " + $matn) -ForegroundColor Green }
@@ -47,7 +50,9 @@ Write-Host "  ------------------------" -ForegroundColor DarkGray
 # --- 1. Yuklab olish -------------------------------------------------------
 Qadam 1 "Fayllar yuklab olinmoqda..."
 try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch { }
-foreach ($f in @(@("chek_agent.ps1", "chek.ps1"), @("chek_ekran.ps1", "chek_ekran.ps1"))) {
+$yuklanadi = @(@("chek_agent.ps1", "chek.ps1"), @("chek_ekran.ps1", "chek_ekran.ps1"))
+if ($YordamchiKey -ne "") { $yuklanadi += , @("yordamchi.ps1", "yordamchi.ps1") }
+foreach ($f in $yuklanadi) {
   $manzil = $BAZA + "/" + $f[0] + "?v=" + (Get-Date -Format "yyyyMMddHHmmss")
   $joy = Join-Path $home $f[1]
   try {
@@ -125,14 +130,30 @@ function VbsYoz($fayl, $buyruq, $izoh) {
   )
   Set-Content -Path (Join-Path $AVTO $fayl) -Value $satrlar -Encoding ASCII
 }
+$yozildi = @()
 try {
   VbsYoz $BIZNIKI[0] `
     ('powershell -NoProfile -ExecutionPolicy Bypass -File "' + $home + '\chek.ps1" -Key ' + $Key + ' -PrinterName "' + $PrinterName + '"') `
     "Olimp zagotovka -- chek agenti"
+  $yozildi += $BIZNIKI[0]
   VbsYoz $BIZNIKI[1] `
     ('powershell -NoProfile -ExecutionPolicy Bypass -File "' + $home + '\chek_ekran.ps1"') `
     "Olimp zagotovka -- ekrandagi ko'rsatkich"
+  $yozildi += $BIZNIKI[1]
+  if ($YordamchiKey -ne "") {
+    VbsYoz $BIZNIKI[2] `
+      ('powershell -NoProfile -ExecutionPolicy Bypass -File "' + $home + '\yordamchi.ps1" -Key ' + $YordamchiKey) `
+      "Olimp zagotovka -- monoblok yordamchisi"
+    $yozildi += $BIZNIKI[2]
+  } else {
+    # Yordamchi so'ralmagan bo'lsa -- eskisi qolib ketmasin
+    try {
+      $eskiY = Join-Path $AVTO $BIZNIKI[2]
+      if (Test-Path $eskiY) { Rename-Item $eskiY ($BIZNIKI[2] + ".eski") -Force }
+    } catch { }
+  }
   Yaxshi ("Автозагрузка papkasiga yozildi (admin huquqi kerak emas)")
+  if ($YordamchiKey -ne "") { Eslat "monoblok yordamchisi ham o'rnatildi" }
 } catch {
   Yomon ("yozib bo'lmadi: " + $_.Exception.Message)
   exit 1
@@ -140,7 +161,7 @@ try {
 
 # --- 4. Darhol ishga tushirish ---------------------------------------------
 Qadam 4 "Ishga tushirilmoqda..."
-foreach ($v in $BIZNIKI) {
+foreach ($v in $yozildi) {
   try {
     Start-Process "wscript.exe" -ArgumentList ('"' + (Join-Path $AVTO $v) + '"') -WindowStyle Hidden
     Yaxshi $v
