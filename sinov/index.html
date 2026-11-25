@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#ffffff">
+<title>Zayavka</title>
+<style>
+:root{
+  --bg:#ffffff; --text:#111614; --mut:#8a948d; --line:#e8ebe6;
+  --accent:#c1440e; --ok:#2f6b4f; --key:#f4f5f2;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%;overscroll-behavior:none}
+html,body{margin:0;height:100%}
+body{
+  background:#e9ebe7; color:var(--text);
+  font:400 17px/1.35 -apple-system,"Segoe UI",Roboto,system-ui,sans-serif;
+}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;
+  touch-action:manipulation;user-select:none;-webkit-user-select:none;cursor:pointer}
+#app{
+  position:relative; display:flex; flex-direction:column;
+  height:100dvh; max-width:430px; margin:0 auto; background:var(--bg);
+  overflow:hidden;
+}
+@media (min-width:640px){
+  body{display:flex;align-items:center;justify-content:center}
+  #app{height:min(880px,96dvh);border-radius:22px;box-shadow:0 10px 40px rgba(0,0,0,.18)}
+}
+
+header{
+  display:flex;align-items:baseline;gap:8px;
+  padding:calc(env(safe-area-inset-top,0px) + 14px) 16px 12px;
+  border-bottom:1px solid var(--line);
+}
+header .dst{font-size:15px;font-weight:600;letter-spacing:.02em}
+header .arr{font-size:12px;color:var(--mut)}
+header .day{margin-left:auto;font-size:14px;color:var(--mut)}
+
+#list{flex:1;overflow-y:auto;overscroll-behavior:contain}
+.row{
+  display:flex;align-items:center;gap:12px;
+  padding:13px 16px;border-bottom:1px solid var(--line);
+  animation:in .18s ease-out;
+}
+@keyframes in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.row .nm{flex:1;font-size:16px;min-width:0}
+.row .qt{font-variant-numeric:tabular-nums;font-weight:600;font-size:17px}
+.row .x{width:34px;height:34px;margin-right:-8px;color:var(--mut);font-size:19px;
+  display:flex;align-items:center;justify-content:center}
+.row:active{background:#fafbf9}
+
+#empty{padding:40px 16px;text-align:center;color:var(--mut)}
+#empty b{display:block;color:var(--text);font-size:17px;font-weight:600;margin-bottom:6px}
+#rep{
+  margin:18px auto 0;display:block;padding:13px 20px;
+  border:1px solid var(--accent);color:var(--accent);border-radius:10px;
+  font-size:16px;font-weight:600;
+}
+#rep:active{background:#fdf3ef}
+
+#bottom{border-top:1px solid var(--line);background:var(--bg);
+  padding-bottom:env(safe-area-inset-bottom,0px)}
+
+#sug{max-height:46dvh;overflow-y:auto;overscroll-behavior:contain}
+.sg{display:flex;align-items:baseline;gap:10px;width:100%;text-align:left;
+  padding:12px 16px;border-bottom:1px solid var(--line)}
+.sg:active{background:#f4f5f2}
+.sg .nm{flex:1;font-size:16px}
+.sg .hint{font-size:13px;color:var(--mut);white-space:nowrap}
+.sg mark{background:none;color:var(--accent);font-weight:600}
+
+#bar{display:flex;align-items:center;gap:10px;padding:10px 12px}
+#q{flex:1;min-width:0;font-size:16px;padding:12px 14px;
+  border:1px solid var(--line);border-radius:10px;background:#fafbf9;outline:none;
+  font-family:inherit;color:inherit}
+#q:focus{border-color:#c9d0c9;background:#fff}
+#send{padding:12px 16px;border-radius:10px;background:var(--accent);color:#fff;
+  font-size:16px;font-weight:600;white-space:nowrap}
+#send:active{transform:scale(.97)}
+#send[hidden]{display:none}
+
+#pad{position:absolute;left:0;right:0;bottom:0;background:var(--bg);
+  border-top:1px solid var(--line);transform:translateY(101%);
+  transition:transform .18s cubic-bezier(.2,.8,.2,1);
+  padding-bottom:env(safe-area-inset-bottom,0px)}
+#pad.on{transform:none}
+#pw{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}
+#pn{flex:1;font-size:16px;min-width:0}
+#pv{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;min-width:62px;text-align:right}
+#pv .ph{color:#cfd4ce}
+#keys{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line)}
+#keys button{background:var(--bg);height:62px;font-size:23px;font-weight:500;
+  display:flex;align-items:center;justify-content:center}
+#keys button:active{background:var(--key)}
+#keys .add{grid-column:4;grid-row:2 / span 3;background:var(--accent);color:#fff;
+  font-size:17px;font-weight:600;height:auto}
+#keys .add:active{background:#a93a0c}
+#keys .sm{font-size:16px;color:var(--mut)}
+
+#done{position:absolute;inset:0;background:var(--bg);display:none;
+  flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:30px}
+#done.on{display:flex}
+#done .tick{width:62px;height:62px;border-radius:50%;background:var(--ok);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:12px}
+#done .t{font-size:20px;font-weight:600}
+#done .s{color:var(--mut);font-size:15px;text-align:center}
+#again{margin-top:26px;padding:13px 22px;border:1px solid var(--line);border-radius:10px;
+  font-size:16px;font-weight:600}
+
+#sheet{position:absolute;inset:0;background:rgba(17,22,20,.35);display:none;
+  align-items:flex-end;opacity:0;transition:opacity .16s}
+#sheet.on{display:flex;opacity:1}
+#sheet .in{width:100%;background:var(--bg);border-radius:16px 16px 0 0;
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  transform:translateY(100%);transition:transform .2s cubic-bezier(.2,.8,.2,1)}
+#sheet.on .in{transform:none}
+#sheet b{display:block;padding:16px;font-size:14px;color:var(--mut);font-weight:500}
+#sheet button{display:block;width:100%;text-align:left;padding:15px 16px;font-size:17px;
+  border-top:1px solid var(--line)}
+#sheet button:active{background:#f4f5f2}
+#sheet .sel{color:var(--accent);font-weight:600}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="hd">
+    <span class="dst" id="dst">МАНГАЛ ЗАГАТОВКА</span><span class="arr">&#9662;</span>
+    <span class="day" id="day"></span>
+  </header>
+
+  <div id="list"></div>
+
+  <div id="bottom">
+    <div id="sug"></div>
+    <div id="bar">
+      <input id="q" placeholder="Tovar nomi" autocomplete="off"
+             autocorrect="off" autocapitalize="off" enterkeyhint="done">
+      <button id="send" hidden></button>
+    </div>
+  </div>
+
+  <div id="pad">
+    <div id="pw"><span id="pn"></span><span id="pv"></span></div>
+    <div id="keys"></div>
+  </div>
+
+  <div id="sheet"><div class="in" id="sin"></div></div>
+
+  <div id="done">
+    <div class="tick">&#10003;</div>
+    <div class="t">Yuborildi</div>
+    <div class="s" id="ds"></div>
+    <button id="again">Yangi zayavka</button>
+  </div>
+</div>
+
+<script>
+var KATALOG = ["1-свой Напалеон,Рулет маринад кг п\\ф", "2-свой Напалеон маринад (думба) кг п\\ф", "2-свой Рулет маринад (думба) кг п\\ф", "7 Уп", "Heinz Кетчуп", "Автомат сода", "Адана шашлик (шт) п/ф", "Аджика п/ф", "Адреналин 0,45", "Аланга бурунч", "Алпен Голд", "Ананас Консерва катта п/ф", "Ананас консерва катта", "Анти жир", "Арк Теа 1.25л", "Арк-Теа 0.5л", "Баклажан", "Барбекю колбаса", "Бедана (пишган) п\\ф", "Бешбармак хамир п/ф", "Бешбармок гушт п/ф", "Бифштекс  ижжон п/ф  кг", "Близна", "Бодринг салёный п/ф", "Болгарский", "Боржоми", "Борщ П/Ф", "Борщ П/Ф (олимп)", "Боунтий кичик", "Бумажный салфетка", "Бургер булика 140гр  п\\ф", "Бургер булика 80гр  п\\ф", "Вагури п/ф", "Вико 1л", "Вилка  одноразовая", "Вириска стейк п\\ф", "Влажний салфетка 1шт", "Вырезка", "Гарох 1л", "Гиждуван шашлик 200гр п\\ф", "Гиждувон 100гр (шт) п/ф", "Гиждувон 80гр (шт) п/ф", "Гиждувон маринад (кг) п\\ф", "Голд Сари йог", "Голубцы п/ф", "Гречка", "Гугурт (тавар) шт", "Гужа п/ф", "Гужа хом", "Гумма кофте п\\ф", "Гупка", "Гурвак шт", "Гушт 2-сорт", "Гушт 3-сорт", "Гушт 4-сорт", "Гушт Манти  п/ф", "Гушт йоги", "Гушт прес п/ф", "Дери", "Дил пишган п/ф", "Дода барак п\\ф", "Докторская Колбаса", "Думба", "Думба шашлик (шт) п/ф", "Етикетка стикер", "Жидки мило 5л", "Жужа (200гр) шт", "Жуйан Курдик п/ф", "Жуйан хамир п/ф", "Зайчик молоко", "Зелен", "Зира", "Зубочистка", "Ижжон (1 чикарилган) п/ф", "Ижжон (2 чикарилган) п/ф", "Ижжон шашлик (шт)  П/ф", "Ижжон шашлик 200гр п\\ф", "Индейка", "Индейка п/ф", "Исмалок п/ф", "КОРМА гушт п/ф", "Кади Манти п/ф", "Кайнаган картошка  п/ф", "Кайнаган лавлаги п/ф", "Карам", "Карам Китай", "Карам салёний п/ф", "Карейс туз", "Картошка", "Картошка Коврилган п/ф (олимп)", "Картошка коврилган п/ф", "Картошка фри", "Катик", "Катик (литр)", "Катта Бедана (пишган) п\\ф", "Кенза (зелен)", "Кенза (переправа)", "Кепка", "Кетчуп", "Кизил бурч (майдаланган)", "Кизил сабзи", "Кишмиш", "КоВРилган лавлаги п/ф", "Коврилган гушт п\\ф", "Ковун (шт)", "Кози", "Козок ун", "Козон кабоб п\\ф", "Кола 0,5", "Кола 1 л", "Кола 1,5 л", "Кола баночний 0,45", "Кола баночный 0,25", "Контейнер кичик 500 гр", "Контр Вырезка", "Копкокли идиш катта", "Кора бурч (майда)", "Кора чой кг", "Корин туйок п/ф", "Кофе лавазза кг(зерновой)", "Кофте п/ф", "Кошик одноразовая", "Крахмал", "Крылиишки маринад (кг) п\\ф", "Крылишки шашлик (шт)  п/ф", "Куза Тушонка п\\ф", "Куза Шорва Мол п/ф", "Кузикорин п/ф", "Куй буйин п/ф", "Кук Памидор Саленний п/ф", "Кук Ушок барак (КГ)  п/ф", "Кук чой кг", "Кукуруз (макка) 1л", "Кунжут", "Кусковой куй  маринад (кг) п\\ф", "Кусковой куй (шт) п/ф", "Кусковой мол (шт) П/ф", "Кусковой мол маринад (кг) п\\ф", "Кухиний крылишка п\\ф", "Лаваш хамр", "Лагмон хамир п/ф", "Ланч катлет 40 гр п/ф", "Лимон сироп", "Лозер бурунч", "Лули фарш  п/ф", "Макарон", "Макка", "Манти (гуштли) Ассорти п/ф", "Манти (кади) Ассорти п/ф", "Манти (янги) п/ф", "Маунтинт дюв 1л", "Маянез", "Маянез бутилка", "Мева безак (КИЧИК)", "Местний товук п/ф", "Миллий кола 0,5л", "Миллий лимоо 1,5л шт", "Миллий миксни котлети п/ф", "Мини котлет (шт) п/ф", "Мини котлет 40 гр п/ф", "Миринда 1,5л", "Мишак- пишган п/ф", "Мохито 0,45", "Мохито сироп", "Муср пакет", "Муср пакет катта", "Напалеон  шашлик (шт) п/ф", "Норин гушт П/Ф", "Норин хамир пишган п/ф", "Нуш пийоз", "Однаразовой идиш кичик", "Одноразовая Перчатка", "Одноразовый Стакан", "Ок куйлак", "Окорочка Фаршированный п\\ф", "Оливка", "Оливка п\\ф", "Олимп Пакет 3 кг", "Олимп кулча п/ф", "Олимп товук п\\ф", "Олот сомса гушт тугралган п/ф", "Орбит", "Освижитель", "Осма шорва п/ф", "Пакет 3кг", "Пакет рулон", "Пакет рулон (кичик)", "Памидор кг", "Паприка", "Патир шашлик (шт) п/ф", "Пахта йоги", "Пепси (баночный) 0.45", "Пепси 0,5л", "Пепси 1,5л", "Пепси 1л", "Перчатка кора", "Пийоз", "Плиточный (КиЧиК)", "Плиточный (катта)", "Пол трапка", "Преправа унверсал", "Принтер чек когоз (шт)", "Приправа шашлик", "Разрихител", "Ред-булл 0.25", "Резинка Перчатка сори", "Рулет  шашлик (шт) п\\ф", "Сабзи сарик", "Салат гушт п/ф", "Салат лист", "Салфетка", "Салют шт", "Салёни помидор п/ф", "Сарик катта стреч", "Свежи Аччи бурч", "Семечка йог", "Сетка товук п/ф", "Сим чутка (шт)", "Сникерс катта шт", "Сникерс кичик шт", "Сода", "Сок 1 л", "Сок детски", "Солихан Салфетка", "Сомса гушт тугралган п/ф", "Сомса томчи (кг) п/ф", "Соус идиш (250гр)", "Соус идиш 40гр", "Соя соус (литр)", "Спрайт 0,5л", "Спрайт 1,5л", "Спрайт 1л", "Спрей 500 мл", "Стейк карейка кг п/ф", "Стейк куй  п/ф", "Стейк мол кухня п/ф", "Стейк мол п\\ф", "Стреч катта", "Сув 0,5л", "Сув 1,5л", "Сув 1л", "Сув 1л (сайхун)", "Сут", "Сут лактел", "Сухарик п/ф", "Сыр янтар", "Тала гел", "Тарвуз шт", "Тифтел п/ф", "Товук Филе (пишган) п/ф", "Товук Шорва п/ф", "Товук катта (суйак)", "Товук кози", "Товук козон кабоб п\\ф", "Товук фарш (загатовка)  п/ф", "Товук филе", "Товук шашлик маринад П/Ф", "Товук шашлик п/ф", "Томатний паста", "Тошкент Суви 0,5л", "Туалетный бумага", "Туз", "Туйок п\\ф", "Тухум", "Уксус 100%", "Уксус яблочний", "Умонник Салфетка", "Уноши Шарик п/ф", "Уноши хамир п/ф", "Урама долма п/ф", "Урганч УН", "Урдак сели п\\ф", "Урдак шашлик мариновка п\\ф", "Урдак шашлик п\\ф", "Урик компот п/ф", "Ушок барак  (КГ)  П/ф", "Фалга", "Фанта 0,5л", "Фанта 1,5л", "Фанта 1л", "Фартук", "Фергамент когоз", "Флеш 0,45", "Фрит жир", "Футболка", "Хон п/ф", "Хохланд сыр (сыр) шт", "Хуроз чихомбил п/ф", "Хуроз шорва п\\ф", "Чеснок", "Чили сладки соус (ЛИТР)", "Чит перечатка", "Чия компот п/ф", "Чококрем", "Чорток 0,5", "ШОРВА гушти П/ф", "Шакар 1шт (пакетли)", "Шакар кг", "Шампинион банка", "Шарик маккен (картошка)", "Шашлик Полка шт", "Шашлик ижжон (кг) п/ф", "Шивит оши хамир пишган п/ф", "Шпажки  бургер чоп", "Щедрое лето", "держатель для стакана", "кетчуп идиш", "коврилган кузикорин п/ф", "кола бутылка 0,250", "кофе стакан", "раквина сетка", "фанта бутылка 0,250"];
+
+var KECHA = [
+  ["Ижжон шашлик 200гр п\\ф", 120],
+  ["Гиждувон 80гр (шт) п/ф", 300],
+  ["Ланч катлет 40 гр п/ф", 60],
+  ["Думба шашлик (шт) п/ф", 150],
+  ["Товук шашлик п/ф", 40],
+  ["Крылишки шашлик (шт)  п/ф", 90],
+  ["Жужа (200гр) шт", 25],
+  ["Адана шашлик (шт) п/ф", 80],
+  ["Урдак шашлик п\\ф", 20]
+];
+var kmap = {};
+KECHA.forEach(function(k){ kmap[k[0]] = k[1]; });
+
+var BOLIMLAR = ["МАНГАЛ ЗАГАТОВКА",
+                "ГОРЯЧИЙ ЦЕХ",
+                "ХОЛОДНЫЙ ЦЕХ",
+                "КОНДИТЕР"];
+
+var el = function(id){ return document.getElementById(id); };
+var items = [];
+var tanlangan = null;
+var tahrir = -1;
+var kiritma = "";
+
+var OYLAR = ["yanvar","fevral","mart","aprel","may","iyun",
+             "iyul","avgust","sentabr","oktabr","noyabr","dekabr"];
+var d = new Date();
+el("day").textContent = d.getDate() + " " + OYLAR[d.getMonth()];
+
+function chizList(){
+  var L = el("list");
+  L.innerHTML = "";
+  if (!items.length){
+    var e = document.createElement("div");
+    e.id = "empty";
+    var b = document.createElement("b");
+    b.textContent = "Kecha " + KECHA.length + " ta tovar yuborgansiz";
+    e.appendChild(b);
+    e.appendChild(document.createTextNode(
+      "Shu ro'yxatni qo'yib, faqat o'zgarganini tuzatasiz."));
+    var rb = document.createElement("button");
+    rb.id = "rep";
+    rb.textContent = "Kechagi ro'yxatni qo'yish";
+    rb.onclick = function(){
+      items = KECHA.map(function(k){ return {nom:k[0], son:k[1]}; });
+      chizList(); chizSend();
+    };
+    e.appendChild(rb);
+    L.appendChild(e);
+    return;
+  }
+  items.forEach(function(it, i){
+    var r = document.createElement("div");
+    r.className = "row";
+    var nm = document.createElement("span"); nm.className = "nm"; nm.textContent = it.nom;
+    var qt = document.createElement("span"); qt.className = "qt"; qt.textContent = it.son;
+    var x  = document.createElement("button"); x.className = "x"; x.textContent = "✕";
+    nm.onclick = function(){ padOch(it.nom, i); };
+    qt.onclick = function(){ padOch(it.nom, i); };
+    x.onclick = function(){ items.splice(i,1); chizList(); chizSend(); };
+    r.appendChild(nm); r.appendChild(qt); r.appendChild(x);
+    L.appendChild(r);
+  });
+}
+
+function chizSend(){
+  var b = el("send");
+  b.hidden = !items.length;
+  b.textContent = "Yuborish " + items.length;
+}
+
+function qidir(s){
+  s = s.trim().toLowerCase();
+  var S = el("sug");
+  S.innerHTML = "";
+  if (!s) return;
+  var bosh = [], ich = [];
+  for (var i=0;i<KATALOG.length;i++){
+    var n = KATALOG[i], p = n.toLowerCase().indexOf(s);
+    if (p === 0) bosh.push([n,p]);
+    else if (p > 0) ich.push([n,p]);
+  }
+  bosh.concat(ich).slice(0, 12).forEach(function(x){
+    var n = x[0], p = x[1];
+    var b = document.createElement("button");
+    b.className = "sg";
+    var nm = document.createElement("span"); nm.className = "nm";
+    nm.appendChild(document.createTextNode(n.slice(0,p)));
+    var mk = document.createElement("mark"); mk.textContent = n.substr(p, s.length);
+    nm.appendChild(mk);
+    nm.appendChild(document.createTextNode(n.slice(p + s.length)));
+    b.appendChild(nm);
+    if (kmap[n] != null){
+      var h = document.createElement("span"); h.className = "hint";
+      h.textContent = "kecha " + kmap[n];
+      b.appendChild(h);
+    }
+    b.onclick = function(){ padOch(n, -1); };
+    S.appendChild(b);
+  });
+}
+
+el("q").addEventListener("input", function(){ qidir(this.value); });
+
+(function(){
+  var K = el("keys");
+  var tartib = [["1","2","3","⌫"], ["4","5","6","ADD"], ["7","8","9"], [".","0","✕"]];
+  tartib.forEach(function(qator){
+    qator.forEach(function(k){
+      var b = document.createElement("button");
+      if (k === "ADD"){ b.className = "add"; b.textContent = "Qo'shish"; }
+      else if (k === "⌫" || k === "✕"){ b.className = "sm"; b.textContent = k; }
+      else b.textContent = k;
+      b.onclick = function(){ bosildi(k); };
+      K.appendChild(b);
+    });
+  });
+})();
+
+function padOch(nom, idx){
+  tanlangan = nom; tahrir = idx;
+  kiritma = idx >= 0 ? String(items[idx].son) : "";
+  el("pn").textContent = nom;
+  padChiz();
+  el("pad").classList.add("on");
+  el("q").blur();
+}
+function padYop(){
+  el("pad").classList.remove("on");
+  tanlangan = null; tahrir = -1; kiritma = "";
+}
+function padChiz(){
+  var v = el("pv");
+  v.innerHTML = "";
+  if (kiritma) v.textContent = kiritma;
+  else { var s = document.createElement("span"); s.className = "ph"; s.textContent = "0"; v.appendChild(s); }
+}
+function bosildi(k){
+  if (k === "✕"){ padYop(); return; }
+  if (k === "⌫"){ kiritma = kiritma.slice(0,-1); padChiz(); return; }
+  if (k === "ADD"){
+    var son = parseFloat(kiritma);
+    if (!son || son <= 0){ padYop(); return; }
+    son = Math.round(son * 1000) / 1000;
+    if (tahrir >= 0) items[tahrir].son = son;
+    else {
+      var bor = -1;
+      for (var i=0;i<items.length;i++) if (items[i].nom === tanlangan) bor = i;
+      if (bor >= 0) items[bor].son = son;
+      else items.push({nom: tanlangan, son: son});
+    }
+    padYop();
+    el("q").value = ""; el("sug").innerHTML = "";
+    chizList(); chizSend();
+    el("q").focus();
+    return;
+  }
+  if (k === "." && kiritma.indexOf(".") >= 0) return;
+  if (k === "." && !kiritma) kiritma = "0";
+  if (kiritma.replace(".","").length >= 6) return;
+  kiritma += k; padChiz();
+}
+
+el("send").onclick = function(){
+  el("ds").textContent = el("dst").textContent + " · " + items.length + " ta tovar";
+  el("done").classList.add("on");
+};
+el("again").onclick = function(){
+  el("done").classList.remove("on");
+  items = []; el("q").value = ""; el("sug").innerHTML = "";
+  chizList(); chizSend();
+};
+
+el("hd").onclick = function(){
+  var S = el("sin");
+  S.innerHTML = "";
+  var t = document.createElement("b"); t.textContent = "Qaysi bo'limga";
+  S.appendChild(t);
+  BOLIMLAR.forEach(function(n){
+    var b = document.createElement("button");
+    b.textContent = n;
+    if (n === el("dst").textContent) b.className = "sel";
+    b.onclick = function(){ el("dst").textContent = n; el("sheet").classList.remove("on"); };
+    S.appendChild(b);
+  });
+  el("sheet").classList.add("on");
+};
+el("sheet").onclick = function(e){ if (e.target === this) this.classList.remove("on"); };
+
+chizList(); chizSend();
+</script>
+</body>
+</html>
